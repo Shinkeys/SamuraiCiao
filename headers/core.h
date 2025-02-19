@@ -1,0 +1,18 @@
+#include <iostream>
+#include "window.h"
+#include "scene/temple.h"
+#include "systems/shaders.h"
+#include "systems/camera.h"
+#include "models/assetManager.h"
+
+class Core : public Window
+{
+private:
+    void Update() override;
+    void Render() override;
+    Shader _mainShader;
+    Camera _camera;
+    AssetManager _assetManager;
+public:
+    bool Initialize() override;
+};
