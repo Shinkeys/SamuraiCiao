@@ -7,10 +7,10 @@ struct Textures
     sampler2D normal;
     sampler2D emission;
 };
+uniform Textures textures;
 
 in vec2 TexCoord;
 
-uniform Textures textures;
 
 out vec4 FragColor;
 void main()

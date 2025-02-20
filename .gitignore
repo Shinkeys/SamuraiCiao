@@ -8,6 +8,8 @@ build.ninja
 compile_commands.json
 *.cmake
 
+imgui.ini
+
 
 .vscode/*
 !.vscode/settings.json

@@ -1,9 +1,10 @@
 #include "../../headers/systems/camera.h"
 #include <algorithm>
 
+Matrices Camera::_matrices;
+
 Camera::Camera()
 {
-
 }
 
 
@@ -16,7 +17,7 @@ void Camera::Update(Window* window)
 {
 	CalculateDirection(window);
 	CalculateKeyboard(window);
-	_matrices.view = glm::lookAt(_position, _position + _direction, _up);
+	Camera::_matrices.view = glm::lookAt(_position, _position + _direction, _up);
 }
 
 void Camera::CalculateKeyboard(Window* window)

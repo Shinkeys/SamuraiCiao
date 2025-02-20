@@ -19,7 +19,9 @@ ${GLSL_SOURCE_FILES} ${HEADER_FILES} vendor/glad/src/glad.c)
 target_include_directories(SamuraiCiao PRIVATE vendor/glad/include)
 
 set_target_properties(SamuraiCiao PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS YES)
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fsanitize=address /Zi /MD")
+
+# ASAN, UBSAN
+
 
 # compiling assimp
 add_subdirectory(vendor/assimp)
@@ -51,7 +53,7 @@ target_include_directories(imgui PRIVATE
     vendor/imgui/backends)
 target_link_directories(SamuraiCiao PRIVATE vendor/glfw/lib)
 target_link_directories(SamuraiCiao PRIVATE vendor/assimp/lib)
-target_link_libraries(SamuraiCiao glfw OpenGL::GL imgui assimp)
+target_link_libraries(SamuraiCiao glfw OpenGL::GL imgui assimp -fsanitize=address -fsanitize=undefined)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)

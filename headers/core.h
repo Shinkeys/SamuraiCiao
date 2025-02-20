@@ -1,9 +1,10 @@
 #include <iostream>
 #include "window.h"
 #include "scene/temple.h"
+#include "scene/skybox.h"
 #include "systems/shaders.h"
 #include "systems/camera.h"
-#include "models/assetManager.h"
+#include "assets/assetManager.h"
 
 class Core : public Window
 {
