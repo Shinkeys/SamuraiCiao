@@ -15,15 +15,21 @@ struct Vertex
     glm::vec2 texCoords;
 };
 
+// basically struct to make it more convenient to operate later
+struct Texture
+{
+    std::string name;
+    uint32_t handle;
+};
 
 struct Matrices // MVP matrices for current camera
 {
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f));
-    glm::mat4 projection = glm::perspective(90.0f, 
+    glm::mat4 projection = glm::perspective(45.0f, 
         static_cast<float>(2560) 
         / static_cast<float>(1440)
-        , 0.1f, 100.0f);
+        , 1.0f, 100.0f);
 };
 
 struct ModelTexDesc

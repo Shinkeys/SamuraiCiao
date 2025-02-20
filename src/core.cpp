@@ -14,18 +14,22 @@ bool Core::Initialize()
     _mainShader.LoadShaders("main.vert", "main.frag");
     _mainShader.UseShader();
 
-
     const std::string characterObjectName = "character.obj";
     _assetManager.AddEntityToLoad(characterObjectName, _mainShader);
     Matrices matrices;
+    matrices.model = glm::scale(matrices.model, glm::vec3(0.5f));
     matrices.model = glm::translate(matrices.model, glm::vec3(0.0f, 5.0f, 0.0f));
     _assetManager.ApplyMVPMatrices(characterObjectName, matrices);
-    
+
     Temple templeObject(_assetManager);
     templeObject.Prepare(_mainShader);
+
+    // skybox
+    Skybox skyboxObject(_assetManager);
+    skyboxObject.Prepare();
+    
+    
     _assetManager.BindStructures();
-
-
     return true;
 }
 

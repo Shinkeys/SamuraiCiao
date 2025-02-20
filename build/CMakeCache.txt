@@ -148,10 +148,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=
-
-//Enable/Disable color output during build.
-CMAKE_COLOR_MAKEFILE:BOOL=ON
+CMAKE_BUILD_TYPE:STRING=Debug
 
 //CXX compiler
 CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++
@@ -226,6 +223,9 @@ CMAKE_EXE_LINKER_FLAGS_RELEASE:STRING=
 //Flags used by the linker during RELWITHDEBINFO builds.
 CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
+//Enable/Disable output of build database during the build.
+CMAKE_EXPORT_BUILD_DATABASE:BOOL=
+
 //Enable/Disable output of compile commands during generation.
 CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
 
@@ -286,8 +286,8 @@ CMAKE_INSTALL_SYSCONFDIR:PATH=etc
 //Path to a program.
 CMAKE_LINKER:FILEPATH=/usr/bin/ld
 
-//Path to a program.
-CMAKE_MAKE_PROGRAM:FILEPATH=/usr/bin/make
+//Program used to build from build.ninja files.
+CMAKE_MAKE_PROGRAM:FILEPATH=/usr/bin/ninja
 
 //Flags used by the linker during the creation of modules during
 // all build types.
@@ -721,10 +721,10 @@ X11_xcb_composite_INCLUDE_PATH:PATH=/usr/include
 X11_xcb_composite_LIB:FILEPATH=/usr/lib/libxcb-composite.so
 
 //Path to a file.
-X11_xcb_cursor_INCLUDE_PATH:PATH=X11_xcb_cursor_INCLUDE_PATH-NOTFOUND
+X11_xcb_cursor_INCLUDE_PATH:PATH=/usr/include
 
 //Path to a library.
-X11_xcb_cursor_LIB:FILEPATH=X11_xcb_cursor_LIB-NOTFOUND
+X11_xcb_cursor_LIB:FILEPATH=/usr/lib/libxcb-cursor.so
 
 //Path to a file.
 X11_xcb_damage_INCLUDE_PATH:PATH=/usr/include
@@ -757,10 +757,10 @@ X11_xcb_errors_INCLUDE_PATH:PATH=X11_xcb_errors_INCLUDE_PATH-NOTFOUND
 X11_xcb_errors_LIB:FILEPATH=X11_xcb_errors_LIB-NOTFOUND
 
 //Path to a file.
-X11_xcb_ewmh_INCLUDE_PATH:PATH=X11_xcb_ewmh_INCLUDE_PATH-NOTFOUND
+X11_xcb_ewmh_INCLUDE_PATH:PATH=/usr/include
 
 //Path to a library.
-X11_xcb_ewmh_LIB:FILEPATH=X11_xcb_ewmh_LIB-NOTFOUND
+X11_xcb_ewmh_LIB:FILEPATH=/usr/lib/libxcb-ewmh.so
 
 //Path to a file.
 X11_xcb_glx_INCLUDE_PATH:PATH=/usr/include
@@ -769,22 +769,22 @@ X11_xcb_glx_INCLUDE_PATH:PATH=/usr/include
 X11_xcb_glx_LIB:FILEPATH=/usr/lib/libxcb-glx.so
 
 //Path to a file.
-X11_xcb_icccm_INCLUDE_PATH:PATH=X11_xcb_icccm_INCLUDE_PATH-NOTFOUND
+X11_xcb_icccm_INCLUDE_PATH:PATH=/usr/include
 
 //Path to a library.
-X11_xcb_icccm_LIB:FILEPATH=X11_xcb_icccm_LIB-NOTFOUND
+X11_xcb_icccm_LIB:FILEPATH=/usr/lib/libxcb-icccm.so
 
 //Path to a file.
-X11_xcb_image_INCLUDE_PATH:PATH=X11_xcb_image_INCLUDE_PATH-NOTFOUND
+X11_xcb_image_INCLUDE_PATH:PATH=/usr/include
 
 //Path to a library.
-X11_xcb_image_LIB:FILEPATH=X11_xcb_image_LIB-NOTFOUND
+X11_xcb_image_LIB:FILEPATH=/usr/lib/libxcb-image.so
 
 //Path to a file.
-X11_xcb_keysyms_INCLUDE_PATH:PATH=X11_xcb_keysyms_INCLUDE_PATH-NOTFOUND
+X11_xcb_keysyms_INCLUDE_PATH:PATH=/usr/include
 
 //Path to a library.
-X11_xcb_keysyms_LIB:FILEPATH=X11_xcb_keysyms_LIB-NOTFOUND
+X11_xcb_keysyms_LIB:FILEPATH=/usr/lib/libxcb-keysyms.so
 
 //Path to a file.
 X11_xcb_present_INCLUDE_PATH:PATH=/usr/include
@@ -811,10 +811,10 @@ X11_xcb_render_INCLUDE_PATH:PATH=/usr/include
 X11_xcb_render_LIB:FILEPATH=/usr/lib/libxcb-render.so
 
 //Path to a file.
-X11_xcb_render_util_INCLUDE_PATH:PATH=X11_xcb_render_util_INCLUDE_PATH-NOTFOUND
+X11_xcb_render_util_INCLUDE_PATH:PATH=/usr/include
 
 //Path to a library.
-X11_xcb_render_util_LIB:FILEPATH=X11_xcb_render_util_LIB-NOTFOUND
+X11_xcb_render_util_LIB:FILEPATH=/usr/lib/libxcb-render-util.so
 
 //Path to a file.
 X11_xcb_res_INCLUDE_PATH:PATH=/usr/include
@@ -975,8 +975,6 @@ CMAKE_CACHE_MAJOR_VERSION:INTERNAL=3
 CMAKE_CACHE_MINOR_VERSION:INTERNAL=31
 //Patch version of cmake used to create the current loaded cache
 CMAKE_CACHE_PATCH_VERSION:INTERNAL=5
-//ADVANCED property for variable: CMAKE_COLOR_MAKEFILE
-CMAKE_COLOR_MAKEFILE-ADVANCED:INTERNAL=1
 //Path to CMake executable.
 CMAKE_COMMAND:INTERNAL=/usr/bin/cmake
 //Path to cpack program executable.
@@ -1031,12 +1029,14 @@ CMAKE_EXE_LINKER_FLAGS_MINSIZEREL-ADVANCED:INTERNAL=1
 CMAKE_EXE_LINKER_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO
 CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_EXPORT_BUILD_DATABASE
+CMAKE_EXPORT_BUILD_DATABASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_EXPORT_COMPILE_COMMANDS
 CMAKE_EXPORT_COMPILE_COMMANDS-ADVANCED:INTERNAL=1
 //Name of external makefile project generator.
 CMAKE_EXTRA_GENERATOR:INTERNAL=
 //Name of generator.
-CMAKE_GENERATOR:INTERNAL=Unix Makefiles
+CMAKE_GENERATOR:INTERNAL=Ninja
 //Generator instance identifier.
 CMAKE_GENERATOR_INSTANCE:INTERNAL=
 //Name of generator platform.
@@ -1109,7 +1109,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=5
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

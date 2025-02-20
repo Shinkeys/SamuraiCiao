@@ -3,7 +3,7 @@
 #include <iostream>
 #include "../../headers/systems/shaders.h"
 #include "../../headers/backend/openglbackend.h"
-#include "../../headers/models/assetManager.h"
+#include "../../headers/assets/assetManager.h"
 
 class Temple
 {

@@ -15,14 +15,14 @@ private:
     void CalculateDirection(Window* window);
     void CalculateKeyboard(Window* window);
 
-    Matrices _matrices;
+    static Matrices _matrices;
 public:
     Camera(const Camera&) = delete;
     Camera& operator=(const Camera&) = delete;
     Camera();
     ~Camera();
     void Update(Window* window);
-    const Matrices& GetMVP() const { return _matrices;}
+    static const Matrices& GetMVP() { return _matrices;}
     void SetMatrices(Matrices& matr) { _matrices = matr;}
 	glm::vec3 GetPosition() { return _position; }
 
