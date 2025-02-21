@@ -8,6 +8,15 @@
 
 #include <vector>
 
+
+namespace SamuraiDefines
+{
+    inline float g_fov = 45.0f;
+    inline float g_nearPlane = 0.002f;
+    inline float g_farPlane = 500.0f;
+};
+
+
 struct Vertex
 {
     glm::vec3 position;
@@ -26,10 +35,10 @@ struct Matrices // MVP matrices for current camera
 {
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f));
-    glm::mat4 projection = glm::perspective(45.0f, 
-        static_cast<float>(2560) 
-        / static_cast<float>(1440)
-        , 1.0f, 100.0f);
+    glm::mat4 projection = glm::perspective(SamuraiDefines::g_fov, 
+        static_cast<float>(2560) // to do
+        / static_cast<float>(1440),
+        SamuraiDefines::g_nearPlane, SamuraiDefines::g_farPlane);
 };
 
 struct ModelTexDesc

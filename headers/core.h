@@ -2,6 +2,7 @@
 #include "window.h"
 #include "scene/temple.h"
 #include "scene/skybox.h"
+#include "scene/lanterns.h"
 #include "systems/shaders.h"
 #include "systems/camera.h"
 #include "assets/assetManager.h"
@@ -13,6 +14,7 @@ private:
     void Render() override;
     Shader _mainShader;
     Camera _camera;
+    Lanterns _lanternsObjects;
     AssetManager _assetManager;
 public:
     bool Initialize() override;

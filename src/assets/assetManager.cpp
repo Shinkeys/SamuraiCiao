@@ -55,7 +55,7 @@ void AssetManager::GlobalDraw()
             const uint32_t offset = it->second.second.meshIndexOffset[i];
             glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
                 (void*)(offset + _model.get()->GetModelsEBOData().indices.data()));
-
+            
             // drew mesh, removing textures as sampler would contain it until would get next
             UnbindTextures();
         }

@@ -53,6 +53,9 @@ int32_t Shader::CheckForErrors(uint32_t operationID, OperationType type)
 
 void Shader::LoadShaders(const std::filesystem::path& vertexPath, const std::filesystem::path& fragmentPath)
 {
+    // storing shader name for later checks
+    _shaderName = vertexPath.string();
+
     std::filesystem::path vertexModifiedPath = "shaders/" / vertexPath;
     std::filesystem::path fragmentModifiedPath = "shaders/" / fragmentPath;
 

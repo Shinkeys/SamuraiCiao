@@ -8,9 +8,27 @@ uniform mat4 view;
 uniform mat4 projection;
 
 out vec2 TexCoord;
+struct VSInput
+{
+    vec3 viewlightPos;
+};
+
+uniform VSInput vsInput;
+
+struct VSOutput
+{
+    vec3 viewfragPos;
+    vec3 viewlightPos;
+    vec3 normals;
+};
+
+out VSOutput vsOutput;
 
 void main()
 {
     gl_Position  = projection * view * model * vec4(aPos, 1.0);
     TexCoord = aTexCoord;
+    vsOutput.viewlightPos = vsInput.viewlightPos;
+    vsOutput.viewfragPos = vec3(view * vec4(aPos, 1.0));
+    vsOutput.normals = aNormal;
 }
