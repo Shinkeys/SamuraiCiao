@@ -27,6 +27,9 @@ bool Core::Initialize()
     // skybox
     Skybox skyboxObject(_assetManager);
     skyboxObject.Prepare();
+
+    // Lantern
+    _lanternsObjects.Prepare(_assetManager, _mainShader);
     
     
     _assetManager.BindStructures();
@@ -39,14 +42,18 @@ void Core::Update()
 
     _mainShader.SetMat4x4("view", _camera.GetMVP().view);
     _mainShader.SetMat4x4("projection", _camera.GetMVP().projection);
+
+    // passing light pos in view to the shader
+    const glm::vec3 lightPosView = _lanternsObjects.LightPositionViewSpace(_camera.GetMVP());
+    _mainShader.SetVec3("vsInput.viewlightPos", lightPosView);
 }
 
 void Core::Render()
 {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
+    
+    
     _assetManager.GlobalDraw();
     
     SamuraiInterface::DebugWindow(_camera.GetPosition());

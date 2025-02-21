@@ -53,9 +53,9 @@ target_include_directories(imgui PRIVATE
     vendor/imgui/backends)
 target_link_directories(SamuraiCiao PRIVATE vendor/glfw/lib)
 target_link_directories(SamuraiCiao PRIVATE vendor/assimp/lib)
-target_link_libraries(SamuraiCiao glfw OpenGL::GL imgui assimp -fsanitize=address -fsanitize=undefined)
+target_link_libraries(SamuraiCiao glfw OpenGL::GL imgui assimp)
+#  -fsanitize=address -fsanitize=undefined remove that to make it possible to work with renderdoc, otherwise place in target libs
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-

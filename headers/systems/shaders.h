@@ -21,6 +21,7 @@ private:
     int32_t CheckForErrors(uint32_t shaderID, OperationType type);
     std::unordered_map<std::string, uint32_t> _uniformLocations;
     GLint _programID = -1;
+    std::string _shaderName = "";
     
 public:
     void UseShader();
