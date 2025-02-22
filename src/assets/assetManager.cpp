@@ -46,6 +46,14 @@ void AssetManager::GlobalDraw()
             it->second.first.SetMat4x4("projection", Camera::GetMVP().projection);
         }
         lastShader = &it->second.first;
+        if(lastShader->GetShaderName() == "main.vert")
+        {    
+            const glm::mat4 currModelMatrix = _assetMatrices[it->first].model;
+            const glm::mat4 currViewMatrix = Camera::GetMVP().view;
+            const glm::mat4 normalMatrix = 
+            glm::transpose(glm::inverse(currViewMatrix * currModelMatrix));
+            lastShader->SetMat4x4("normalMatrix", normalMatrix);
+        }
         
         for(uint32_t i = 0; i < it->second.second.currMeshVertCount.size(); ++i)
         {

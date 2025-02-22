@@ -12,15 +12,13 @@ uniform Textures textures;
 in vec2 TexCoord;
 
 
-in struct VSOutput
-{
-    vec3 viewfragPos;
-    vec3 viewlightPos;
-    vec3 normals;
-} fsInput;
+
+in vec3 viewfragPos;
+in vec3 viewlightPos;
+in vec3 normals;
 
 
-vec3 CalculateLighting(VSOutput data)
+vec3 CalculateLighting()
 {
     // textures
     vec3 diffuseTex = vec3(1.0, 1.0, 1.0);
@@ -35,18 +33,16 @@ vec3 CalculateLighting(VSOutput data)
     // lights
     const vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
-    const float ambient = 0.35;
+    const float ambient = 0.08;
     const vec3 ambientVec = ambient * lightColor;
 
     const vec3 lightDirection = 
-        normalize(data.viewfragPos - data.viewlightPos);
+        normalize(viewlightPos - viewfragPos);
 
-    // const float dotProduct = dot(lightDirection, data.normals);
-    // float diffuseLight = max(dotProduct, 0.0);
+    const float dotProduct = dot(lightDirection, normals);
+    float diffuseLight = max(dotProduct, 0.0);
 
-
-
-    vec3 res = ambientVec * (diffuseTex + specularTex + emissionTex);
+    vec3 res = (ambient + diffuseLight) * (diffuseTex + specularTex + emissionTex) * lightColor;
 
     return res;
 }
@@ -56,7 +52,7 @@ vec3 CalculateLighting(VSOutput data)
 out vec4 FragColor;
 void main()
 {
-    vec3 result = CalculateLighting(fsInput);
+    vec3 result = CalculateLighting();
 
     FragColor = vec4(result, 1.0);
 }
