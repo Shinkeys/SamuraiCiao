@@ -6,6 +6,7 @@ layout (location = 2) in vec2 aTexCoord;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 normalMatrix;
 
 out vec2 TexCoord;
 struct VSInput
@@ -15,20 +16,16 @@ struct VSInput
 
 uniform VSInput vsInput;
 
-struct VSOutput
-{
-    vec3 viewfragPos;
-    vec3 viewlightPos;
-    vec3 normals;
-};
 
-out VSOutput vsOutput;
+out vec3 viewfragPos;
+out vec3 viewlightPos;
+out vec3 normals;
 
 void main()
 {
     gl_Position  = projection * view * model * vec4(aPos, 1.0);
     TexCoord = aTexCoord;
-    vsOutput.viewlightPos = vsInput.viewlightPos;
-    vsOutput.viewfragPos = vec3(view * vec4(aPos, 1.0));
-    vsOutput.normals = aNormal;
+    viewlightPos = vsInput.viewlightPos;
+    viewfragPos = vec3(view * model * vec4(aPos, 1.0));
+    normals = mat3(normalMatrix) * aNormal;
 }
