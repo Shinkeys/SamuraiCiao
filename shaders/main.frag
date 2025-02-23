@@ -24,7 +24,7 @@ vec3 CalculateLighting()
     vec3 diffuseTex = vec3(1.0, 1.0, 1.0);
     diffuseTex = texture(textures.diffuse, TexCoord).rgb;
     
-    vec3 specularTex = vec3(1.0, 1.0, 0.0);
+    vec3 specularTex = vec3(0.0, 0.0, 0.0);
     specularTex = texture(textures.specular, TexCoord).rgb;
 
     vec3 emissionTex = vec3(1.0, 1.0, 0.0);
@@ -33,17 +33,25 @@ vec3 CalculateLighting()
     // lights
     const vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
-    const float ambient = 0.08;
-    const vec3 ambientVec = ambient * lightColor;
 
-    const vec3 lightDirection = 
-        normalize(viewlightPos - viewfragPos);
+    const vec3 lightDirection = normalize(viewlightPos - viewfragPos);
 
-    const float dotProduct = dot(lightDirection, normals);
+    // diffuse
+    const float dotProduct = dot(normals, -lightDirection);
     float diffuseLight = max(dotProduct, 0.0);
+    const vec3 diffuseVec = (diffuseLight * diffuseTex) * lightColor;
 
-    vec3 res = (ambient + diffuseLight) * (diffuseTex + specularTex + emissionTex) * lightColor;
+    // specular
+    const vec3 viewDirection = normalize(-viewfragPos);
+    const vec3 reflectDirection = reflect(-lightDirection, normals);
+    const float specularLight = pow(max(dot(viewDirection, reflectDirection), 0.0), 32);
+    const vec3 specularVec = (specularLight * specularTex) * lightColor;
 
+    // ambient
+    const float ambient = 0.1;
+    const vec3 ambientVec = ambient * diffuseTex;
+
+    vec3 res = ambientVec + diffuseVec + specularVec + emissionTex;
     return res;
 }
 
