@@ -17,9 +17,13 @@ bool Core::Initialize()
     const std::string characterObjectName = "character.obj";
     _assetManager.AddEntityToLoad(characterObjectName, _mainShader);
     Matrices matrices;
+    matrices.model = glm::translate(matrices.model, glm::vec3(0.0f, 3.0f, 0.0f));
     matrices.model = glm::scale(matrices.model, glm::vec3(0.5f));
-    matrices.model = glm::translate(matrices.model, glm::vec3(0.0f, 5.0f, 10.0f));
     _assetManager.ApplyMVPMatrices(characterObjectName, matrices);
+
+    const std::string groundObjectName = "ground.gltf";
+    _assetManager.AddEntityToLoad(groundObjectName, _mainShader);
+    _assetManager.ApplyMVPMatrices(groundObjectName, matrices);
 
     Temple templeObject(_assetManager);
     templeObject.Prepare(_mainShader);

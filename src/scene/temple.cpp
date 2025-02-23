@@ -12,7 +12,7 @@ void Temple::Prepare(Shader& shader)
     
     _assetManager.AddEntityToLoad(templeObjectName, shader);
     Matrices matrices;
-    matrices.model = glm::translate(matrices.model, glm::vec3(0.0f, 0.0f, -50.0f));
+    matrices.model = glm::translate(matrices.model, glm::vec3(0.0f, 0.0f, -25.0f));
     matrices.model = glm::scale(matrices.model, glm::vec3(100.0f));
     _assetManager.ApplyMVPMatrices(templeObjectName, matrices);
 }
