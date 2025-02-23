@@ -61,8 +61,8 @@ void Skybox::Prepare()
 
     _skyboxShader.LoadShaders("skybox.vert", "skybox.frag");
     _assetManager.AddEntityToLoad(skyboxName, _skyboxShader);
-    Matrices matrices;
-    matrices.model = glm::scale(matrices.model, glm::vec3(0.1f));
-    _assetManager.ApplyMVPMatrices(skyboxName, matrices);
+    glm::mat4 model;
+    model = glm::scale(model, glm::vec3(0.1f));
+    _assetManager.ApplyTransformation(skyboxName, model);
 
 }

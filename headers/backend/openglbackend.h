@@ -11,6 +11,7 @@ namespace OpenglBackend
     void BindUnskinnedObject(std::vector<float> vertices, uint32_t& vao, uint32_t& vbo);
     void BindModelEBO(EBOSetup& setup);
     void SetupOpenglBackendData(int32_t width, int32_t height);
+    void SetViewport(uint32_t width, uint32_t height);
 }  
 
 void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei /*length*/, 

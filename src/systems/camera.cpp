@@ -34,21 +34,21 @@ void Camera::CalculateKeyboard(Window* window)
 	lastFrame = currentFrame;
 	if (window->GetKeysState().right)
 	{
-		_position += glm::normalize(_right) * deltaTime;
+		_position += glm::normalize(_right) * deltaTime * 5.0f;
 	}
 	if (window->GetKeysState().left)
 	{
-		_position -= glm::normalize(_right) * deltaTime;
+		_position -= glm::normalize(_right) * deltaTime * 5.0f;
 	}
 	if (window->GetKeysState().front)
 	{
-		_position += _forward * deltaTime;
+		_position += _forward * deltaTime * 5.0f;
 	}
 	if (window->GetKeysState().back)
 	{
-		_position -= _forward * deltaTime;
+		_position -= _forward * deltaTime * 5.0f;
 	}
-	_position.y = 5.0f;
+	_position.y = 2.5f;
 }
 void Camera::CalculateDirection(Window* window)
 {
