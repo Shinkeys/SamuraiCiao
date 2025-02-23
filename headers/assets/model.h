@@ -25,7 +25,7 @@ private:
     void ProcessNode(aiNode* node, const aiScene* scene,  CurrentModelDesc& modelDescriptor);
     void ProcessMesh(aiMesh* mesh, const aiScene* scene,  CurrentModelDesc& modelDescriptor);
     std::vector<std::filesystem::path> ProvideModelPaths();
-    uint32_t StbiLoadTexture(const char* fileName);
+    uint32_t StbiLoadTexture(const char* fileName, bool gamma = false);
     void ProcessMaterial(aiMaterial* material, 
         std::array<aiTextureType, 4> textureTypes, CurrentModelDesc& modelDescriptor);
     

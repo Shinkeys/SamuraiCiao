@@ -50,6 +50,7 @@ void OpenglBackend::BindModelEBO(EBOSetup& setup)
 void OpenglBackend::SetupOpenglBackendData(int32_t width, int32_t height)
 {
     glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_FRAMEBUFFER_SRGB); // gamma by opengl
     int32_t flags; 
     glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
     if(flags & GL_CONTEXT_FLAG_DEBUG_BIT)

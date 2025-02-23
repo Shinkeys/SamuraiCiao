@@ -46,7 +46,7 @@ void AssetManager::GlobalDraw()
             it->second.first.SetMat4x4("projection", Camera::GetMVP().projection);
         }
         lastShader = &it->second.first;
-        if(lastShader->GetShaderName() == "main.vert")
+        if(lastShader->GetShaderName() == "model.vert")
         {    
             const glm::mat4 currModelMatrix = _assetMatrices[it->first].model;
             const glm::mat4 currViewMatrix = Camera::GetMVP().view;

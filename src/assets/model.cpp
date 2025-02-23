@@ -108,7 +108,7 @@ void Model::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, CurrentModelDesc& 
 	}
 }
 
-uint32_t Model::StbiLoadTexture(const char* fileName)
+uint32_t Model::StbiLoadTexture(const char* fileName, bool gamma)
 {
 	int texWidth, texHeight, texChannels;
 
@@ -127,9 +127,17 @@ uint32_t Model::StbiLoadTexture(const char* fileName)
 			return 0;
 		}
 
-		const auto format = texChannels == 4 ? GL_RGBA : GL_RGB;
-
-		glTexImage2D(GL_TEXTURE_2D, 0, format, texWidth, texHeight, 0, format, GL_UNSIGNED_BYTE, pixels);
+		int32_t format;
+		if(gamma)
+		{
+			format = texChannels == 4 ? GL_SRGB_ALPHA : GL_SRGB;
+			glTexImage2D(GL_TEXTURE_2D, 0, format, texWidth, texHeight, 0, texChannels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, pixels);
+		}
+		else
+		{
+			format = texChannels == 4 ? GL_RGBA : GL_RGB;
+			glTexImage2D(GL_TEXTURE_2D, 0, format, texWidth, texHeight, 0, format, GL_UNSIGNED_BYTE, pixels);
+		}
 		// creating a mipmap to use downscaled texture if distance to the object is long
 		// min_filter = downscale, mag_filter = upscale
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -172,8 +180,18 @@ void Model::ProcessMaterial(aiMaterial* material,
 			material->GetTexture(textureTypes[i], j, &str);
 			
 			const std::filesystem::path pathToLoadTex = std::filesystem::absolute(texturesFolder / str.C_Str()); 
-
-			const int32_t textureId = StbiLoadTexture(pathToLoadTex.string().c_str());
+			
+			// need this for gamma correction. diffuse textures mostly in sRGB space, so in non linear space
+			// so need to translate it to linear space to not apply gamma twice
+			int32_t textureId;
+			if(textureTypes[i] == aiTextureType_DIFFUSE)
+			{
+				textureId = StbiLoadTexture(pathToLoadTex.string().c_str(), true);
+			}
+			else
+			{
+				textureId = StbiLoadTexture(pathToLoadTex.string().c_str());
+			} 
 
 			switch (textureTypes[i])
 			{

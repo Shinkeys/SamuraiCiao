@@ -11,7 +11,7 @@ bool Core::Initialize()
     OpenglBackend::SetupOpenglBackendData(_width, _height);
     SamuraiInterface::InitImgui(Window::_window);
 
-    _mainShader.LoadShaders("main.vert", "main.frag");
+    _mainShader.LoadShaders("model.vert", "model.frag");
     _mainShader.UseShader();
 
     const std::string characterObjectName = "character.obj";
