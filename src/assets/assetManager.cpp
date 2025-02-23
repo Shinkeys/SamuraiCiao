@@ -2,7 +2,7 @@
 #include "../../headers/backend/openglbackend.h"
 #include "../../headers/systems/camera.h"
 
-void AssetManager::AddEntityToLoad(std::string entityName, Shader& shader)
+void AssetManager::AddEntityToLoad(const std::string& entityName, Shader& shader)
 {
     if(_assetStorage.find(entityName) == _assetStorage.end())
     {
@@ -11,13 +11,21 @@ void AssetManager::AddEntityToLoad(std::string entityName, Shader& shader)
     if(_assetMatrices.find(entityName) == _assetMatrices.end())
     {
         Matrices matrices;
-        _assetMatrices.insert({entityName, matrices});
+        _assetMatrices.insert({entityName, matrices.model});
     }
 }
 
-void AssetManager::ApplyMVPMatrices(std::string entityName, const Matrices& matrices)
+void AssetManager::AddLightSourcePos(const std::string& entityName, glm::vec3 pos)
 {
-    _assetMatrices[entityName] = matrices;
+    if(_lightSourcesPositions.find(entityName) == _lightSourcesPositions.end())
+    {
+        _lightSourcesPositions.insert({entityName, pos});
+    }
+}
+
+void AssetManager::ApplyTransformation(const std::string& entityName, const glm::mat4& modelMat)
+{
+    _assetMatrices[entityName] = modelMat;
 }
 
 void AssetManager::BindStructures()
@@ -48,7 +56,7 @@ void AssetManager::GlobalDraw()
         lastShader = &it->second.first;
         if(lastShader->GetShaderName() == "model.vert")
         {    
-            const glm::mat4 currModelMatrix = _assetMatrices[it->first].model;
+            const glm::mat4 currModelMatrix = _assetMatrices[it->first];
             const glm::mat4 currViewMatrix = Camera::GetMVP().view;
             const glm::mat4 normalMatrix = 
             glm::transpose(glm::inverse(currViewMatrix * currModelMatrix));
@@ -57,7 +65,7 @@ void AssetManager::GlobalDraw()
         
         for(uint32_t i = 0; i < it->second.second.currMeshVertCount.size(); ++i)
         {
-            lastShader->SetMat4x4("model", _assetMatrices[it->first].model);
+            lastShader->SetMat4x4("model", _assetMatrices[it->first]);
             BindTextures(lastShader, it->second.second.textureIDs[i]);
             const uint32_t vertexCount = it->second.second.currMeshVertCount[i];
             const uint32_t offset = it->second.second.meshIndexOffset[i];
@@ -69,6 +77,27 @@ void AssetManager::GlobalDraw()
         }
         
     }
+}
+
+void AssetManager::DrawParticularModel(const std::string& entityName)
+{
+    auto model = _assetStorage.find(entityName);
+    if(model == nullptr)
+    {
+        std::cout << "Cannot draw. Model is not found\n";
+        return;
+    }
+
+    // count of parts of model
+    const uint32_t partsOfModel = model->second.second.currMeshVertCount.size();
+    for(uint32_t i = 0; i < partsOfModel; ++i)
+    {
+        const uint32_t vertexCount = model->second.second.currMeshVertCount[i];
+        const uint32_t offset = model->second.second.meshIndexOffset[i];
+        glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
+            (void*)(offset + _model.get()->GetModelsEBOData().indices.data()));
+    }
+
 }
 
 void AssetManager::BindTextures(Shader* shader, const ModelTexDesc& textureIds)

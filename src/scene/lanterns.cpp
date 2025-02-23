@@ -7,10 +7,11 @@ void Lanterns::Prepare(AssetManager& manager, Shader& shader)
     
     manager.AddEntityToLoad(lanternObjectName, shader);
     _lightSourcePosition = glm::vec3(-5.0f, 0.0f, -3.0f);
-    Matrices matrices;
-    matrices.model = glm::translate(matrices.model, _lightSourcePosition);
-    matrices.model = glm::scale(matrices.model, glm::vec3(5.0f));
-    manager.ApplyMVPMatrices(lanternObjectName, matrices);
+    glm::mat4 model;
+    model = glm::translate(model, _lightSourcePosition);
+    model = glm::scale(model, glm::vec3(5.0f));
+    manager.ApplyTransformation(lanternObjectName, model);
+    manager.AddLightSourcePos(lanternObjectName, _lightSourcePosition);
 }
 
 

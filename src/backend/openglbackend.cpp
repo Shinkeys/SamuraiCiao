@@ -50,6 +50,7 @@ void OpenglBackend::BindModelEBO(EBOSetup& setup)
 void OpenglBackend::SetupOpenglBackendData(int32_t width, int32_t height)
 {
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     // glEnable(GL_FRAMEBUFFER_SRGB); // gamma by opengl
     int32_t flags; 
     glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
@@ -61,6 +62,10 @@ void OpenglBackend::SetupOpenglBackendData(int32_t width, int32_t height)
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
     }
     // initial viewport
+    SetViewport(width, height);
+}
+void OpenglBackend::SetViewport(uint32_t width, uint32_t height)
+{
     glViewport(0,0, width, height);
 }
 

@@ -11,8 +11,8 @@ void Temple::Prepare(Shader& shader)
     const std::string templeObjectName = "scene.gltf";
     
     _assetManager.AddEntityToLoad(templeObjectName, shader);
-    Matrices matrices;
-    matrices.model = glm::translate(matrices.model, glm::vec3(0.0f, 0.0f, -25.0f));
-    matrices.model = glm::scale(matrices.model, glm::vec3(100.0f));
-    _assetManager.ApplyMVPMatrices(templeObjectName, matrices);
+    glm::mat4
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, -25.0f));
+    model = glm::scale(model, glm::vec3(100.0f));
+    _assetManager.ApplyTransformation(templeObjectName, model);
 }
