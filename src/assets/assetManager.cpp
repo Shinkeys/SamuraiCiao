@@ -2,7 +2,9 @@
 #include "../../headers/backend/openglbackend.h"
 #include "../../headers/systems/camera.h"
 
-void AssetManager::AddEntityToLoad(const std::string& entityName, Shader& shader)
+
+
+void AssetManager::AddEntityToLoad(const std::string entityName, Shader& shader)
 {
     if(_assetStorage.find(entityName) == _assetStorage.end())
     {
@@ -10,12 +12,12 @@ void AssetManager::AddEntityToLoad(const std::string& entityName, Shader& shader
     }
     if(_assetMatrices.find(entityName) == _assetMatrices.end())
     {
-        Matrices matrices;
-        _assetMatrices.insert({entityName, matrices.model});
+        glm::mat4 model = glm::mat4(1.0f);
+        _assetMatrices.insert({entityName, model});
     }
 }
 
-void AssetManager::AddLightSourcePos(const std::string& entityName, glm::vec3 pos)
+void AssetManager::AddLightSourcePos(const std::string entityName, glm::vec3 pos)
 {
     if(_lightSourcesPositions.find(entityName) == _lightSourcesPositions.end())
     {
@@ -23,7 +25,7 @@ void AssetManager::AddLightSourcePos(const std::string& entityName, glm::vec3 po
     }
 }
 
-void AssetManager::ApplyTransformation(const std::string& entityName, const glm::mat4& modelMat)
+void AssetManager::ApplyTransformation(const std::string& entityName, const glm::mat4 modelMat)
 {
     _assetMatrices[entityName] = modelMat;
 }
@@ -56,8 +58,8 @@ void AssetManager::GlobalDraw()
         lastShader = &it->second.first;
         if(lastShader->GetShaderName() == "model.vert")
         {    
-            const glm::mat4 currModelMatrix = _assetMatrices[it->first];
-            const glm::mat4 currViewMatrix = Camera::GetMVP().view;
+            const glm::mat4& currModelMatrix = _assetMatrices[it->first];
+            const glm::mat4& currViewMatrix = Camera::GetMVP().view;
             const glm::mat4 normalMatrix = 
             glm::transpose(glm::inverse(currViewMatrix * currModelMatrix));
             lastShader->SetMat4x4("normalMatrix", normalMatrix);

@@ -16,7 +16,7 @@ bool Core::Initialize()
 
     const std::string characterObjectName = "character.obj";
     _assetManager.AddEntityToLoad(characterObjectName, _mainShader);
-    glm::mat4 model;
+    glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
     model = glm::scale(model, glm::vec3(0.5f));
     _assetManager.ApplyTransformation(characterObjectName, model);
@@ -35,6 +35,8 @@ bool Core::Initialize()
     // Lantern
     _lanternsObjects.Prepare(_assetManager, _mainShader);
     
+    // shadows
+    _shadowsHelper.Prepare();
     
     _assetManager.BindStructures();
     return true;
@@ -58,6 +60,14 @@ void Core::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     
+    _shadowsHelper.DrawDepthScene(_assetManager, _mainShader);
+    
+    OpenglBackend::SetViewport(Window::_width, Window::_height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    
+
+
     _assetManager.GlobalDraw();
     
     SamuraiInterface::DebugWindow(_camera.GetPosition());

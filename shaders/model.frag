@@ -40,8 +40,9 @@ vec3 CalculateLighting()
 
     // diffuse
     const float dotProduct = dot(normals, lightDirection);
+    const float diffuseLightPower = 5.0;
     float diffuseLight = max(dotProduct, 0.0);
-    vec3 diffuseVec = (diffuseLight * diffuseTex) * lightColorDiffuse;
+    vec3 diffuseVec = (diffuseLight * diffuseLightPower * diffuseTex) * lightColorDiffuse;
 
     // specular
     const vec3 viewDirection = normalize(-viewfragPos);
