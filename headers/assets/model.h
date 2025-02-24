@@ -13,6 +13,8 @@
 
 struct CurrentModelDesc
 {
+    std::string modelName = "";
+
 	std::vector<uint32_t> meshIndexOffset;
 	std::vector<uint32_t> currMeshVertCount;
     std::vector<ModelTexDesc> textureIDs;

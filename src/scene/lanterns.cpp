@@ -1,16 +1,18 @@
 #include "../../headers/scene/lanterns.h"
+#include "../../headers/systems/renderManager.h"
 
-
-void Lanterns::Prepare(AssetManager& manager, Shader& shader)
+void Lanterns::Prepare(AssetManager& manager)
 {
     const std::string lanternObjectName = "lantern.gltf";
     
-    manager.AddEntityToLoad(lanternObjectName, shader);
+    manager.AddEntityToLoad(lanternObjectName);
     _lightSourcePosition = glm::vec3(-5.0f, 0.0f, -3.0f);
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, _lightSourcePosition);
     model = glm::scale(model, glm::vec3(5.0f));
     manager.ApplyTransformation(lanternObjectName, model);
+
+    RenderManager::DispatchMeshToDraw(lanternObjectName, manager, EntityType::TYPE_MESH);
     // manager.AddLightSourcePos(lanternObjectName, _lightSourcePosition);
 }
 
