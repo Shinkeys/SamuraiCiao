@@ -22,6 +22,7 @@ CurrentModelDesc Model::LoadModel(const std::filesystem::path& modelName)
 	CurrentModelDesc modelDescriptor;
 
 	ProcessNode(scene->mRootNode, scene, modelDescriptor);
+	modelDescriptor.modelName = modelName.string();
 
 	return modelDescriptor;
 }

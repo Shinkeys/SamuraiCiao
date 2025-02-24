@@ -8,6 +8,6 @@ private:
     uint32_t _lightSourcesCount = 0;
     glm::vec3 _lightSourcePosition;
 public:
-    void Prepare(AssetManager& manager, Shader& shader);
+    void Prepare(AssetManager& manager);
     glm::vec3 LightPositionViewSpace(const Matrices& matrices);
 };

@@ -13,5 +13,5 @@ private:
     std::pair<uint32_t, uint32_t> _shadowTexExtent;
 public:
     void Prepare();
-    void DrawDepthScene(AssetManager& manager, Shader& shader);
+    // void DrawDepthScene(AssetManager& manager, Shader& shader);
 };

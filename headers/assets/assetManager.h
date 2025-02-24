@@ -9,20 +9,22 @@ private:
     void BindTextures(Shader* shader, const ModelTexDesc& textureIds);
     void UnbindTextures();
     std::unordered_map<std::string, glm::mat4> _assetMatrices;
-    std::unordered_map<std::string, std::pair<Shader, CurrentModelDesc>> _assetStorage;
+    std::unordered_map<std::string, CurrentModelDesc> _assetStorage;
     std::unordered_map<std::string, glm::vec3> _lightSourcesPositions;
 
     // temp. to do render class
     Window* _window = nullptr;
 public:
-    void AddEntityToLoad(const std::string entityName, Shader& shader);
+    void AddEntityToLoad(const std::string entityName);
     void BindStructures();
-    void GlobalDraw();
     void AddLightSourcePos(const std::string entityName, glm::vec3 pos);
-    void DrawParticularModel(const std::string& entityName);
+    // void DrawParticularModel(const std::string& entityName);
     void ApplyTransformation(const std::string& entityName, const glm::mat4 modelMat);
     const auto& GetAssetStorage() const { return _assetStorage;}
-    const auto& GetTransformMatrix() const { return _assetMatrices;}
+    const glm::mat4* GetTransformMatrixByName(const std::string& name);
     const auto& GetLightSources() const { return _lightSourcesPositions;}
-    const auto& GetVAO() const { return _model.get()->GetModelsEBOData().VAO;}
+    const auto& GetBuffers() const { return _model.get()->GetModelsEBOData();}
+
+    // making pointer as it easier to error handle that case
+    const CurrentModelDesc* GetModelDescriptorByName(const std::string& entityName) const;
 };

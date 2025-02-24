@@ -1,5 +1,5 @@
 #include "../../headers/scene/skybox.h"
-
+#include "../../headers/systems/renderManager.h"
 #include <stb_image.h>
 
 Skybox::Skybox(AssetManager& manager) : _assetManager{manager}
@@ -59,10 +59,14 @@ void Skybox::Prepare()
 {   
     const std::string skyboxName = "skybox.gltf";
 
-    _skyboxShader.LoadShaders("skybox.vert", "skybox.frag");
-    _assetManager.AddEntityToLoad(skyboxName, _skyboxShader);
+    Shader skyboxShader;
+    skyboxShader.LoadShaders("skybox.vert", "skybox.frag");
+    _assetManager.AddEntityToLoad(skyboxName);
     glm::mat4 model = glm::mat4(1.0f);;
     model = glm::scale(model, glm::vec3(0.1f));
     _assetManager.ApplyTransformation(skyboxName, model);
 
+    
+    RenderManager::DispatchMeshToDraw(skyboxName, _assetManager, EntityType::TYPE_SKYBOX);
+    RenderManager::AddShaderByType(std::move(skyboxShader), RenderPassType::RENDER_SKYBOX);
 }

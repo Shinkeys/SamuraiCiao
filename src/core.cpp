@@ -11,34 +11,40 @@ bool Core::Initialize()
     OpenglBackend::SetupOpenglBackendData(_width, _height);
     SamuraiInterface::InitImgui(Window::_window);
 
-    _mainShader.LoadShaders("model.vert", "model.frag");
-    _mainShader.UseShader();
+    Shader mainShader;
+    mainShader.LoadShaders("model.vert", "model.frag");
+    mainShader.UseShader();
 
     const std::string characterObjectName = "character.obj";
-    _assetManager.AddEntityToLoad(characterObjectName, _mainShader);
+    _assetManager.AddEntityToLoad(characterObjectName);
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
     model = glm::scale(model, glm::vec3(0.5f));
     _assetManager.ApplyTransformation(characterObjectName, model);
 
     const std::string groundObjectName = "ground.gltf";
-    _assetManager.AddEntityToLoad(groundObjectName, _mainShader);
+    _assetManager.AddEntityToLoad(groundObjectName);
 
 
     Temple templeObject(_assetManager);
-    templeObject.Prepare(_mainShader);
+    templeObject.Prepare(mainShader);
 
     // skybox
     Skybox skyboxObject(_assetManager);
     skyboxObject.Prepare();
 
     // Lantern
-    _lanternsObjects.Prepare(_assetManager, _mainShader);
+    _lanternsObjects.Prepare(_assetManager);
     
     // shadows
     _shadowsHelper.Prepare();
+
+    RenderManager::DispatchMeshToDraw(characterObjectName, _assetManager, EntityType::TYPE_MESH);
+    RenderManager::DispatchMeshToDraw(groundObjectName, _assetManager, EntityType::TYPE_MESH);
+    RenderManager::AddShaderByType(std::move(mainShader), RenderPassType::RENDER_MAIN);
     
     _assetManager.BindStructures();
+  
     return true;
 }
 
@@ -46,12 +52,9 @@ void Core::Update()
 {
     _camera.Update(Window::GetWindowPointer());
 
-    _mainShader.SetMat4x4("view", _camera.GetMVP().view);
-    _mainShader.SetMat4x4("projection", _camera.GetMVP().projection);
-
     // passing light pos in view to the shader
-    const glm::vec3 lightPosView = _lanternsObjects.LightPositionViewSpace(_camera.GetMVP());
-    _mainShader.SetVec3("vsInput.viewlightPos", lightPosView);
+    // const glm::vec3 lightPosView = _lanternsObjects.LightPositionViewSpace(_camera.GetMVP());
+    // _mainShader.SetVec3("vsInput.viewlightPos", lightPosView);
 }
 
 void Core::Render()
@@ -60,15 +63,12 @@ void Core::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     
-    _shadowsHelper.DrawDepthScene(_assetManager, _mainShader);
+    // _shadowsHelper.DrawDepthScene(_assetManager, _mainShader);
     
     OpenglBackend::SetViewport(Window::_width, Window::_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    
-
-
-    _assetManager.GlobalDraw();
+    RenderManager::GlobalDraw(_assetManager);
     
     SamuraiInterface::DebugWindow(_camera.GetPosition());
     SamuraiInterface::RenderImgui();
