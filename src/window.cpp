@@ -106,6 +106,11 @@ void Window::ProceedKeys(int key)
 	{
 		_keys.right = true;
 	}
+
+    if(key == GLFW_KEY_1)
+    {
+        _keys.swCamOrigin = true;
+    }
 }
 void Window::ResetKey(int key)
 {
@@ -115,6 +120,9 @@ void Window::ResetKey(int key)
 	case GLFW_KEY_S: _keys.back = false; break;
 	case GLFW_KEY_A: _keys.left = false; break;
 	case GLFW_KEY_D: _keys.right = false; break;
+    case GLFW_KEY_1: _keys.swCamOrigin = false; break;
+
+    default: break;
 	}
 }
 

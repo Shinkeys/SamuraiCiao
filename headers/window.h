@@ -12,6 +12,8 @@ struct Keys
 	bool back{ false };
 	bool left{ false };
 	bool right{ false };
+    // if true switch camera look from light position
+    bool swCamOrigin{false};
 };
 
 struct Mouse

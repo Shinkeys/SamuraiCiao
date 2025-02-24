@@ -3,6 +3,8 @@
 #include "../../headers/systems/camera.h"
 
 
+
+
 void ShadowsHelper::Prepare()
 {
     // generating scene from light point of view
@@ -39,35 +41,27 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, Shader& shader)
     glClear(GL_DEPTH_BUFFER_BIT);
 
     shader.UseShader();
-    manager.BindStructures();
-
-    const Matrices* matrices = &Camera::GetMVP();
-    if(matrices != nullptr)
-    {
-        shader.SetMat4x4("view", matrices->view);
-        shader.SetMat4x4("projection", matrices->projection);
-    }
-    else
-    {
-        std::cout << "Unable to find matrices for current mesh\n";
-    }
 
     float near = 0.1f;
     float far = 100.0f;
     glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near, far);
+    const Matrices* matrices = &Camera::GetMVP();
     for(const auto& lightSrc : manager.GetLightSources())
     {
         glm::mat4 lightView = glm::lookAt(lightSrc.second, 
         glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-        glm::mat4 lightSpaceMatrix = lightProj * lightView;
-
-    }
+        if(matrices != nullptr)
+        {
+            shader.SetMat4x4("view", lightView);
+            shader.SetMat4x4("projection", lightProj);
+        }
+        else std::cout << "No matrices to bind for depth pass\n";
+    }   
 
 
     for(const auto& mesh : manager.GetAssetStorage())
     {
-        glm::mat4 modelMat = manager.GetTransformMatrix().find(mesh.first)->second;
+        const glm::mat4& modelMat = manager.GetTransformMatrix().find(mesh.first)->second;
         shader.SetMat4x4(mesh.first, modelMat);
         manager.DrawParticularModel(mesh.first);
     }

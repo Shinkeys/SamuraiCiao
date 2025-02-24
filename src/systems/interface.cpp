@@ -23,9 +23,15 @@ void SamuraiInterface::UpdateImgui()
 void SamuraiInterface::DebugWindow(glm::vec3 camPos)
 {
     ImGui::SetNextWindowPos(ImVec2{0.0f,0.0f});
+    const float windowWidth = 400.0f;
+    const float windowHeight = 150.0f;
+    ImGui::SetNextWindowSize(ImVec2{windowWidth, windowHeight});
     ImGui::Begin("Samurai debug");
 
     ImGui::Text("Camera position: %f %f %f", camPos.x, camPos.y, camPos.z);
+
+    bool temp = false;
+    ImGui::Checkbox("Shadows", &temp);
 
     ImGui::End();
 }
