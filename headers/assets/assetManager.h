@@ -12,8 +12,6 @@ private:
     std::unordered_map<std::string, CurrentModelDesc> _assetStorage;
     std::unordered_map<std::string, glm::vec3> _lightSourcesPositions;
 
-    // temp. to do render class
-    Window* _window = nullptr;
 public:
     void AddEntityToLoad(const std::string entityName);
     void BindStructures();

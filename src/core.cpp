@@ -22,6 +22,7 @@ bool Core::Initialize()
     model = glm::scale(model, glm::vec3(0.5f));
     _assetManager.ApplyTransformation(characterObjectName, model);
 
+
     const std::string groundObjectName = "ground.gltf";
     _assetManager.AddEntityToLoad(groundObjectName);
 
@@ -59,19 +60,28 @@ void Core::Update()
 
 void Core::Render()
 {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     
-    
-    // _shadowsHelper.DrawDepthScene(_assetManager, _mainShader);
+    _shadowsHelper.DrawDepthScene(_assetManager);
     
     OpenglBackend::SetViewport(Window::_width, Window::_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
     RenderManager::GlobalDraw(_assetManager);
     
-    SamuraiInterface::DebugWindow(_camera.GetPosition());
-    SamuraiInterface::RenderImgui();
+    if(Window::GetKeysState().showImgui)
+    {
+        // must be first: creating window
+        SamuraiInterface::DebugWindow(_camera.GetPosition());
+        _shadowsHelper.DebugShadows();
+        
+        // must be last: finishing frame
+        SamuraiInterface::RenderImgui();
+    }
+        
     glfwSwapBuffers(Window::_window);
     glfwPollEvents();
 }

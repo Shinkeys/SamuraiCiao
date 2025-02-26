@@ -15,8 +15,11 @@ Camera::~Camera()
 
 void Camera::Update(Window* window)
 {
-	CalculateDirection(window);
-	CalculateKeyboard(window);
+	if(!window->GetKeysState().showImgui)
+	{
+		CalculateDirection(window);
+		CalculateKeyboard(window);
+	}
 	Camera::_matrices.view = glm::lookAt(_position, _position + _direction, _up);
 }
 

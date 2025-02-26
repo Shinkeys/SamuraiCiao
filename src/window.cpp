@@ -109,7 +109,11 @@ void Window::ProceedKeys(int key)
 
     if(key == GLFW_KEY_1)
     {
-        _keys.swCamOrigin = true;
+        _keys.showImgui = !_keys.showImgui;
+        if(_keys.showImgui)
+            EnableCursor();
+        else
+            DisableCursor();
     }
 }
 void Window::ResetKey(int key)
@@ -120,8 +124,6 @@ void Window::ResetKey(int key)
 	case GLFW_KEY_S: _keys.back = false; break;
 	case GLFW_KEY_A: _keys.left = false; break;
 	case GLFW_KEY_D: _keys.right = false; break;
-    case GLFW_KEY_1: _keys.swCamOrigin = false; break;
-
     default: break;
 	}
 }
@@ -154,7 +156,8 @@ void Window::Run()
     while(!glfwWindowShouldClose(_window))
     {
         Update();
-        SamuraiInterface::UpdateImgui();
+        if(_keys.showImgui)
+            SamuraiInterface::UpdateImgui(_width, _height);
         Render();
     }
 }
@@ -169,4 +172,15 @@ void Window::Cleanup()
     }
     SamuraiInterface::DestroyImgui();
     glfwTerminate();
+}
+
+
+void Window::DisableCursor()
+{
+    glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void Window::EnableCursor()
+{
+    glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }

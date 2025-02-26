@@ -1,4 +1,5 @@
 #include "../../headers/systems/interface.h"
+#include "../../headers/window.h"
 
 void SamuraiInterface::InitImgui(GLFWwindow* window)
 {
@@ -7,37 +8,44 @@ void SamuraiInterface::InitImgui(GLFWwindow* window)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
+    io.DisplaySize = ImGui::GetMainViewport()->Size;
     // setup render backend
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init();
 }
 
-void SamuraiInterface::UpdateImgui()
+void SamuraiInterface::UpdateImgui(const uint32_t viewportWidth, const uint32_t viewportHeight)
 {
+    ImGuiIO& io = ImGui::GetIO();
+    if(io.DisplaySize.x != viewportWidth || io.DisplaySize.y != viewportHeight)
+        io.DisplaySize = ImVec2{static_cast<float>(viewportWidth), static_cast<float>(viewportHeight)};
+
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGui::Begin("Samurai debug");
+
 }
 
 void SamuraiInterface::DebugWindow(glm::vec3 camPos)
 {
+    // starting one window there, to push all data to it
     ImGui::SetNextWindowPos(ImVec2{0.0f,0.0f});
     const float windowWidth = 400.0f;
-    const float windowHeight = 150.0f;
+    const float windowHeight = 350.0f;
     ImGui::SetNextWindowSize(ImVec2{windowWidth, windowHeight});
-    ImGui::Begin("Samurai debug");
+    
 
     ImGui::Text("Camera position: %f %f %f", camPos.x, camPos.y, camPos.z);
+    // ending window name Samurai Debug
 
-    bool temp = false;
-    ImGui::Checkbox("Shadows", &temp);
-
-    ImGui::End();
 }
+
 
 void SamuraiInterface::RenderImgui()
 {
+    ImGui::End();
+    ImGui::SetNextFrameWantCaptureMouse(true);
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

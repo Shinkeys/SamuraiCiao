@@ -97,6 +97,7 @@ void Shader::LoadShaders(const std::filesystem::path& vertexPath, const std::fil
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
     }
+
 }
 
 

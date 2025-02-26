@@ -9,7 +9,7 @@
 namespace SamuraiInterface
 {
     void InitImgui(GLFWwindow* window);
-    void UpdateImgui();
+    void UpdateImgui(const uint32_t viewportWidth, const uint32_t viewportHeight);
     void RenderImgui();
     void DestroyImgui();
     void DebugWindow(glm::vec3 camPos);

@@ -13,7 +13,8 @@ void Lanterns::Prepare(AssetManager& manager)
     manager.ApplyTransformation(lanternObjectName, model);
 
     RenderManager::DispatchMeshToDraw(lanternObjectName, manager, EntityType::TYPE_MESH);
-    // manager.AddLightSourcePos(lanternObjectName, _lightSourcePosition);
+
+    manager.AddLightSourcePos(lanternObjectName, _lightSourcePosition);
 }
 
 
