@@ -8,6 +8,7 @@
 
 #include <vector>
 
+class Shader;
 
 namespace SamuraiDefines
 {
@@ -24,12 +25,6 @@ struct Vertex
     glm::vec2 texCoords;
 };
 
-// basically struct to make it more convenient to operate later
-struct Texture
-{
-    std::string name;
-    uint32_t handle;
-};
 
 struct Matrices // MVP matrices for current camera
 {

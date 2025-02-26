@@ -48,7 +48,7 @@ void ShadowsHelper::Prepare()
 
 
     // adding shader to draw in main render pass
-    RenderManager::AttachTextureToDraw("shadowsTexture", _depthTex);
+    // RenderManager::AttachTextureToDraw();
 }
 
 void ShadowsHelper::DrawDepthScene(AssetManager& manager)
