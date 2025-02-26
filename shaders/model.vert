@@ -8,6 +8,8 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 normalMatrix;
 
+uniform mat4 lightMatrix;
+
 out vec2 TexCoord;
 struct VSInput
 {
@@ -20,6 +22,7 @@ uniform VSInput vsInput;
 out vec3 viewfragPos;
 out vec3 viewlightPos;
 out vec3 normals;
+out vec3 lightViewFragPos;
 
 void main()
 {
@@ -28,4 +31,5 @@ void main()
     viewlightPos = vsInput.viewlightPos;
     viewfragPos = vec3(view * model * vec4(aPos, 1.0));
     normals = mat3(normalMatrix) * aNormal;
+    lightViewFragPos = vec3(lightMatrix * vec4(aPos, 1.0));
 }

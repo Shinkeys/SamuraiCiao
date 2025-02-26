@@ -13,7 +13,7 @@ struct Keys
 	bool left{ false };
 	bool right{ false };
     // if true switch camera look from light position
-    bool swCamOrigin{false};
+    bool showImgui{false};
 };
 
 struct Mouse
@@ -51,6 +51,8 @@ protected:
     Window* GetWindowPointer() const { return reinterpret_cast<Window*>(glfwGetWindowUserPointer(Window::_window));}
     
 public:
+    void EnableCursor();
+    void DisableCursor();
     const Mouse& GetLastMouseOffset() const { return _mouse; }
 	const Keys GetKeysState() const { return _keys; }
     void ResetMouse();

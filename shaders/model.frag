@@ -17,6 +17,22 @@ in vec3 viewfragPos;
 in vec3 viewlightPos;
 in vec3 normals;
 
+in vec3 lightViewFragPos;
+
+
+
+uniform sampler2D shadowsTexture;
+float CalculateShadows()
+{
+    vec3 ndcCoords = lightViewFragPos / 2 + 0.5;
+
+    float closestDepth = texture(shadowsTexture, ndcCoords.xy).r;
+
+    float currentDepth = ndcCoords.z;
+
+    return currentDepth > closestDepth ? 1.0 : 0.0;
+}
+
 
 vec3 CalculateLighting()
 {
@@ -63,7 +79,10 @@ vec3 CalculateLighting()
     diffuseVec *= attenuation;
     specularVec *= attenuation;
 
-    vec3 res = ambientVec + diffuseVec + specularVec + emissionTex;
+
+    const float shadow = CalculateShadows();
+
+    vec3 res = ambientVec + diffuseVec + specularVec + emissionTex * (1.0 - shadow);
     return res;
 }
 

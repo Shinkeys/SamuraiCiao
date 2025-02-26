@@ -6,6 +6,7 @@ namespace RenderManager
     std::unordered_map<std::string, const CurrentModelDesc*> _meshDispatchesHandle;
     std::unordered_map<RenderPassType, std::vector<const CurrentModelDesc*>> _renderTypes;
     std::unordered_map<RenderPassType, Shader> _shaderTypes;
+    std::unordered_map<std::string, uint32_t> _additionalTextures;
 }
 
 void RenderManager::DispatchMeshToDraw(const std::string& entityName, const AssetManager& manager, EntityType type)
@@ -49,11 +50,18 @@ void RenderManager::AddShaderByType(Shader&& shader, RenderPassType renderType)
     case RenderPassType::RENDER_SKYBOX:
         _shaderTypes.emplace(renderType, std::move(shader));
         break;
-
+    case RenderPassType::RENDER_DEPTHPASS:
+        _shaderTypes.emplace(renderType, std::move(shader));
+        break;
     default: std::cout << "No type of passed shader: " << shader.GetShaderName() << '\n';
         break;
     }
     
+}
+
+void RenderManager::AttachTextureToDraw(std::string textureShaderName, uint32_t textureId)
+{
+    _additionalTextures.insert({textureShaderName, textureId});
 }
 
 void RenderManager::GlobalDraw(AssetManager& manager)
@@ -94,6 +102,7 @@ void RenderManager::GlobalDraw(AssetManager& manager)
     if(shaderMain == _shaderTypes.end())
         std::cout << "Shader for main render pass is not found\n";
     else shaderMain->second.UseShader();
+
     for(const auto mesh : _renderTypes.find(RenderPassType::RENDER_MAIN)->second)
     {
         // finding bounded transformations to current entity
@@ -120,7 +129,7 @@ void RenderManager::GlobalDraw(AssetManager& manager)
             // binding textures
             if(shaderMain != nullptr)
                 BindTextures(shaderMain->second, mesh->textureIDs[i]);
-
+            
             const uint32_t vertexCount = mesh->currMeshVertCount[i];
             const uint32_t offset = mesh->meshIndexOffset[i];
             glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
@@ -130,6 +139,19 @@ void RenderManager::GlobalDraw(AssetManager& manager)
                 UnbindTextures();
         }
     }
+    uint32_t occupiedTextureSlots = 4;
+
+    for(const auto& texture : _additionalTextures)
+    {
+        if(shaderMain != nullptr)
+        {
+            ++occupiedTextureSlots;
+            shaderMain->second.SetUniform1i(texture.first, occupiedTextureSlots);
+            glBindTextureUnit(occupiedTextureSlots, texture.second);
+        }
+
+    }
+    
 
 }
 
@@ -141,26 +163,27 @@ void RenderManager::BindTextures(Shader& shader, const ModelTexDesc& textureIds)
     const int32_t normalPlace = 3;
     const int32_t emissionPlace = 4;
 
-    shader.SetUniform1i("textures.diffuse", 1);
+    shader.SetUniform1i("textures.diffuse", diffusePlace);
     if(textureIds.diffuseId > 0)
     {
-        glBindTextureUnit(1, textureIds.diffuseId);
+        glBindTextureUnit(diffusePlace, textureIds.diffuseId);
     }
-    shader.SetUniform1i("textures.specular", 2);
+    shader.SetUniform1i("textures.specular", specularPlace);
     if(textureIds.specularId > 0)
     {
-        glBindTextureUnit(2, textureIds.specularId);
+        glBindTextureUnit(specularPlace, textureIds.specularId);
     }
-    shader.SetUniform1i("textures.normal", 3);
+    shader.SetUniform1i("textures.normal", normalPlace);
     if(textureIds.normalId > 0)
     {
-        glBindTextureUnit(3, textureIds.normalId);
+        glBindTextureUnit(normalPlace, textureIds.normalId);
     }
-    shader.SetUniform1i("textures.emission", 4);
+    shader.SetUniform1i("textures.emission", emissionPlace);
     if(textureIds.emissionId > 0)
     {
-        glBindTextureUnit(4, textureIds.emissionId);
+        glBindTextureUnit(emissionPlace, textureIds.emissionId);
     }
+
 }
 
 void RenderManager::UnbindTextures()
