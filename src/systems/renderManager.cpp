@@ -6,7 +6,8 @@ namespace RenderManager
     std::unordered_map<std::string, const CurrentModelDesc*> _meshDispatchesHandle;
     std::unordered_map<RenderPassType, std::vector<const CurrentModelDesc*>> _renderTypes;
     std::unordered_map<RenderPassType, Shader> _shaderTypes;
-    std::unordered_map<std::string, uint32_t> _additionalTextures;
+
+    std::vector<TextureDesc> _additionalTextures;
 }
 
 void RenderManager::DispatchMeshToDraw(const std::string& entityName, const AssetManager& manager, EntityType type)
@@ -37,7 +38,8 @@ void RenderManager::DispatchMeshToDraw(const std::string& entityName, const Asse
 
 // void RenderManager::SortDataByShaders()
 // {
-    
+        // RenderManager::AttachTextureToDraw();
+
 // }
 
 void RenderManager::AddShaderByType(Shader&& shader, RenderPassType renderType)
@@ -59,9 +61,9 @@ void RenderManager::AddShaderByType(Shader&& shader, RenderPassType renderType)
     
 }
 
-void RenderManager::AttachTextureToDraw(std::string textureShaderName, uint32_t textureId)
+void RenderManager::AttachTextureToDraw(const TextureDesc& texDesc)
 {
-    _additionalTextures.insert({textureShaderName, textureId});
+    _additionalTextures.push_back(texDesc);
 }
 
 void RenderManager::GlobalDraw(AssetManager& manager)
@@ -73,8 +75,101 @@ void RenderManager::GlobalDraw(AssetManager& manager)
         return;
     }
 
-    const glm::mat4 standardModelMatrix = glm::mat4(1.0f);
+    DrawSkybox(manager);
+    DrawMainScene(manager);
 
+
+
+}
+
+
+void RenderManager::BindAdditionalTextures(const RenderPassType type, Shader* shader)
+{
+    if(_additionalTextures.size() == 0)
+    {
+        // std::cout << "No commands to bind additional textures something\n";
+        return;
+    }
+
+    if(shader == nullptr)
+    {
+        std::cout << "Cant bind additional texture. Shader is nullptr\n";
+        return;
+    }
+
+    const int32_t mainShaderTextureCount = sizeof(ModelTexDesc) / sizeof(ModelTexDesc::diffuseId);
+
+    int32_t currentTextureId = 1;
+    for(const auto& texture : _additionalTextures)
+    {
+        if(type == RenderPassType::RENDER_MAIN)
+        {
+            currentTextureId = mainShaderTextureCount + 1;    
+        }
+
+        shader->SetUniform1i(texture.name, currentTextureId); 
+        glBindTextureUnit(currentTextureId, texture.handle);
+        ++currentTextureId;
+    }
+    
+}
+
+void RenderManager::DrawMainScene(AssetManager& manager)
+{
+    const RenderPassType passType = RenderPassType::RENDER_MAIN;
+
+
+    const glm::mat4 standardModelMatrix = glm::mat4(1.0f);
+    auto shaderMainIt = _shaderTypes.find(passType);
+    if(shaderMainIt == _shaderTypes.end())
+        std::cout << "Shader for main render pass is not found\n";
+    else shaderMainIt->second.UseShader();
+
+    for(const auto mesh : _renderTypes.find(passType)->second)
+    {
+        // finding bounded transformations to current entity
+        const glm::mat4* transformation = manager.GetTransformMatrixByName(mesh->modelName);
+        if(transformation == nullptr)
+        {
+            shaderMainIt->second.SetMat4x4("model", standardModelMatrix);
+        }
+        else if(shaderMainIt != _shaderTypes.end())
+        {
+            shaderMainIt->second.SetMat4x4("view", Camera::GetMVP().view);
+            shaderMainIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
+
+            shaderMainIt->second.SetMat4x4("model", *transformation);
+            const glm::mat4& currModelMatrix = *transformation;
+            const glm::mat4& currViewMatrix = Camera::GetMVP().view;
+            const glm::mat4 normalMatrix = 
+            glm::transpose(glm::inverse(currViewMatrix * currModelMatrix));
+            shaderMainIt->second.SetMat4x4("normalMatrix", normalMatrix);
+        }
+    
+        for(uint32_t i = 0; i < mesh->currMeshVertCount.size(); ++i)
+        {
+            // binding textures
+            if(shaderMainIt != _shaderTypes.end())
+                BindTextures(shaderMainIt->second, mesh->textureIDs[i]);
+            
+            const uint32_t vertexCount = mesh->currMeshVertCount[i];
+            const uint32_t offset = mesh->meshIndexOffset[i];
+            glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
+                (void*)(offset + manager.GetBuffers().indices.data()));
+            
+            if(shaderMainIt != _shaderTypes.end())
+                UnbindTextures();
+        }
+    }
+
+    // binding additional textures
+    BindAdditionalTextures(passType, &shaderMainIt->second);
+    
+}
+
+
+void RenderManager::DrawSkybox(AssetManager& manager)
+{
     auto shaderSkybox = _shaderTypes.find(RenderPassType::RENDER_SKYBOX);
     if(shaderSkybox == _shaderTypes.end())
         std::cout << "Shader for skybox render pass is not found\n";
@@ -97,64 +192,7 @@ void RenderManager::GlobalDraw(AssetManager& manager)
             }
         }
     }
-
-    auto shaderMain = _shaderTypes.find(RenderPassType::RENDER_MAIN);
-    if(shaderMain == _shaderTypes.end())
-        std::cout << "Shader for main render pass is not found\n";
-    else shaderMain->second.UseShader();
-
-    for(const auto mesh : _renderTypes.find(RenderPassType::RENDER_MAIN)->second)
-    {
-        // finding bounded transformations to current entity
-        const glm::mat4* transformation = manager.GetTransformMatrixByName(mesh->modelName);
-        if(transformation == nullptr)
-        {
-            shaderMain->second.SetMat4x4("model", standardModelMatrix);
-        }
-        else if(shaderMain != nullptr)
-        {
-            shaderMain->second.SetMat4x4("view", Camera::GetMVP().view);
-            shaderMain->second.SetMat4x4("projection", Camera::GetMVP().projection);
-
-            shaderMain->second.SetMat4x4("model", *transformation);
-            const glm::mat4& currModelMatrix = *transformation;
-            const glm::mat4& currViewMatrix = Camera::GetMVP().view;
-            const glm::mat4 normalMatrix = 
-            glm::transpose(glm::inverse(currViewMatrix * currModelMatrix));
-            shaderMain->second.SetMat4x4("normalMatrix", normalMatrix);
-        }
-    
-        for(uint32_t i = 0; i < mesh->currMeshVertCount.size(); ++i)
-        {
-            // binding textures
-            if(shaderMain != nullptr)
-                BindTextures(shaderMain->second, mesh->textureIDs[i]);
-            
-            const uint32_t vertexCount = mesh->currMeshVertCount[i];
-            const uint32_t offset = mesh->meshIndexOffset[i];
-            glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
-                (void*)(offset + manager.GetBuffers().indices.data()));
-            
-            if(shaderMain != nullptr)
-                UnbindTextures();
-        }
-    }
-    uint32_t occupiedTextureSlots = 4;
-
-    for(const auto& texture : _additionalTextures)
-    {
-        if(shaderMain != nullptr)
-        {
-            ++occupiedTextureSlots;
-            shaderMain->second.SetUniform1i(texture.first, occupiedTextureSlots);
-            glBindTextureUnit(occupiedTextureSlots, texture.second);
-        }
-
-    }
-    
-
 }
-
 
 void RenderManager::BindTextures(Shader& shader, const ModelTexDesc& textureIds)
 {
@@ -185,6 +223,7 @@ void RenderManager::BindTextures(Shader& shader, const ModelTexDesc& textureIds)
     }
 
 }
+
 
 void RenderManager::UnbindTextures()
 {
