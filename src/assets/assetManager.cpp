@@ -52,13 +52,6 @@ void AssetManager::AddEntityToLoad(const std::string entityName)
     }
 }
 
-void AssetManager::AddLightSourcePos(const std::string entityName, glm::vec3 pos)
-{
-    if(_lightSourcesPositions.find(entityName) == _lightSourcesPositions.end())
-    {
-        _lightSourcesPositions.insert({entityName, pos});
-    }
-}
 
 void AssetManager::ApplyTransformation(const std::string& entityName, const glm::mat4 modelMat)
 {

@@ -13,8 +13,8 @@ namespace RenderManager
     extern std::unordered_map<RenderPassType, Shader> _shaderTypes;
     extern std::unordered_set<TextureDesc, TextureHashFunc> _additionalTextures;
     extern std::unordered_set<MatrixDesc, MatrixHashFunc> _additionalMatrices;
-    template <typename VecType>
-    extern std::unordered_set<VectorDesc<VecType>, VectorHashFunc<VecType>> _additionalVectors;
+
+    extern std::unordered_set<VectorDesc, VectorHashFunc> _additionalVectors;
 
 
     void DrawSkybox(AssetManager& manager);
@@ -22,7 +22,7 @@ namespace RenderManager
     // textures
     void BindTextures(const ModelTexDesc& textureIds);
     void UnbindTextures();
-    void BindAdditionalTextures(const RenderPassType type, Shader* shader);
+    void BindAdditionalTextures(const RenderPassType type);
     void AttachTextureToDraw(const TextureDesc& texDesc);
     // matrices
     void AttachMatrixToBind(const MatrixDesc& matrixDesc);
@@ -30,9 +30,11 @@ namespace RenderManager
     void DispatchMeshToDraw(const std::string& entityName, const AssetManager& manager, EntityType type);
     void AddShaderByType(Shader&& shader, RenderPassType renderType);
     void GlobalDraw(AssetManager& manager);
-    // vectors
-    template <typename VecType>
-    void BindAdditionalVectors(const RenderPassType type, Shader* shader);
-    template <typename VecType>
-    void AttachVectorToBind(const VectorDesc<VecType>& vectorDesc);
+
+
+     // vectors
+     void BindAdditionalVectors(const RenderPassType type, Shader* shader);
+     void AttachVectorToBind(const VectorDesc& vectorDesc);
 };  
+
+

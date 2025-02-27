@@ -9,8 +9,8 @@ namespace RenderManager
 
     std::unordered_set<TextureDesc, TextureHashFunc> _additionalTextures;
     std::unordered_set<MatrixDesc, MatrixHashFunc> _additionalMatrices;
-    template <typename VecType>
-    std::unordered_set<VectorDesc<VecType>, VectorHashFunc<VecType>> _additionalVectors;
+    std::unordered_set<VectorDesc, VectorHashFunc> _additionalVectors;
+
 }
 
 void RenderManager::DispatchMeshToDraw(const std::string& entityName, const AssetManager& manager, EntityType type)
@@ -38,6 +38,45 @@ void RenderManager::DispatchMeshToDraw(const std::string& entityName, const Asse
         break;
     }
 }
+
+void RenderManager::BindAdditionalVectors(const RenderPassType type, Shader* shader)
+{
+    if(_additionalVectors.size() == 0)
+    {
+        // std::cout << "No commands to bind additional vectors\n";
+        return;
+    }
+
+    if(shader == nullptr)
+    {
+        std::cout << "Cant bind additional matrix. Shader is nullptr\n";
+    }
+
+    for(const auto& vector : _additionalVectors)
+    {
+        if(vector.type == type)
+        {
+            if(auto vec2 = std::get_if<glm::vec2>(&vector.data))
+            {
+                shader->SetVec2(vector.name, *vec2);
+            }
+            else if(auto vec3 = std::get_if<glm::vec3>(&vector.data))
+            {
+                shader->SetVec3(vector.name, *vec3);
+            }
+            else if(auto vec4 = std::get_if<glm::vec4>(&vector.data))
+            {
+                shader->SetVec2(vector.name, *vec4);
+            }
+            else
+            {
+                std::cout << "Cant bind this type of vector\n";
+            }
+        }
+    }
+}
+
+
 
 // void RenderManager::SortDataByShaders()
 // {
@@ -74,12 +113,10 @@ void RenderManager::AttachMatrixToBind(const MatrixDesc& matrixDesc)
     _additionalMatrices.insert(matrixDesc);
 }
 
-template <typename VecType>
-void RenderManager::AttachVectorToBind(const VectorDesc<VecType>& vectorDesc)
+void RenderManager::AttachVectorToBind(const VectorDesc& vectorDesc)
 {
-    _additionalVectors<VecType>.insert(vectorDesc);
+    _additionalVectors.insert(vectorDesc);
 }
-
 
 void RenderManager::GlobalDraw(AssetManager& manager)
 {
@@ -95,43 +132,6 @@ void RenderManager::GlobalDraw(AssetManager& manager)
 
 
 
-}
-
-template <typename VecType>
-void RenderManager::BindAdditionalVectors(const RenderPassType type, Shader* shader)
-{
-    if(_additionalMatrices.size() == 0)
-    {
-        // std::cout << "No commands to bind additional vectors\n";
-        return;
-    }
-
-    if(shader == nullptr)
-    {
-        std::cout << "Cant bind additional matrix. Shader is nullptr\n";
-    }
-
-    for(const auto& vector : _additionalVectors<VecType>)
-    {
-        if(vector.type == type)
-        {
-            switch(vector.dimension)
-            {
-            case VectorDimension::DIM_VEC2:
-                shader->SetVec2(vector.name, vector.data);
-                break;
-            case VectorDimension::DIM_VEC3:
-                shader->SetVec3(vector.name, vector.data);
-                break;
-            case VectorDimension::DIM_VEC4:
-                shader->SetVec4(vector.name, vector.data);
-                break;
-            default: 
-                std::cout << "No such type of vector to bind to render\n";
-                break;
-            }
-        }
-    }
 }
 
 void RenderManager::BindAdditionalMatrices(const RenderPassType type, Shader* shader)
@@ -157,17 +157,11 @@ void RenderManager::BindAdditionalMatrices(const RenderPassType type, Shader* sh
 }
 
 
-void RenderManager::BindAdditionalTextures(const RenderPassType type, Shader* shader)
+void RenderManager::BindAdditionalTextures(const RenderPassType type)
 {
     if(_additionalTextures.size() == 0)
     {
         // std::cout << "No commands to bind additional textures\n";
-        return;
-    }
-
-    if(shader == nullptr)
-    {
-        std::cout << "Cant bind additional texture. Shader is nullptr\n";
         return;
     }
 
@@ -180,8 +174,6 @@ void RenderManager::BindAdditionalTextures(const RenderPassType type, Shader* sh
         {
             currentTextureId = mainShaderTextureCount + 1;    
         }
-
-        shader->SetUniform1i(texture.name, currentTextureId); 
         glBindTextureUnit(currentTextureId, texture.handle);
         ++currentTextureId;
     }
@@ -242,8 +234,9 @@ void RenderManager::DrawMainScene(AssetManager& manager)
     }
 
     // binding additional textures
-    BindAdditionalTextures(passType, &shaderMainIt->second);
+    BindAdditionalTextures(passType);
     BindAdditionalMatrices(passType, &shaderMainIt->second);
+    BindAdditionalVectors(passType,  &shaderMainIt->second);
 }
 
 
@@ -252,28 +245,30 @@ void RenderManager::DrawSkybox(AssetManager& manager)
     const RenderPassType passType = RenderPassType::RENDER_SKYBOX;
     auto shaderSkyboxIt = _shaderTypes.find(passType);
     if(shaderSkyboxIt == _shaderTypes.end())
-        std::cout << "Shader for skybox render pass is not found\n";
-    else 
     {
-        shaderSkyboxIt->second.UseShader();
-        // setting matrices
-        shaderSkyboxIt->second.SetMat4x4("view", Camera::GetMVP().view);
-        shaderSkyboxIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
-        for(const auto skybox : _renderTypes.find(passType)->second)
+        std::cout << "Shader for skybox render pass is not found\n";
+        return;
+    }
+
+    shaderSkyboxIt->second.UseShader();
+    // setting matrices
+    shaderSkyboxIt->second.SetMat4x4("view", Camera::GetMVP().view);
+    shaderSkyboxIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
+    for(const auto skybox : _renderTypes.find(passType)->second)
+    {
+        for(uint32_t i = 0; i < skybox->currMeshVertCount.size(); ++i)
         {
-            for(uint32_t i = 0; i < skybox->currMeshVertCount.size(); ++i)
-            {
-                BindTextures(skybox->textureIDs[i]);
-                const uint32_t vertexCount = skybox->currMeshVertCount[i];
-                const uint32_t offset = skybox->meshIndexOffset[i];
-                glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
-                    (void*)(offset + manager.GetBuffers().indices.data()));
-                UnbindTextures();
-            }
+            BindTextures(skybox->textureIDs[i]);
+            const uint32_t vertexCount = skybox->currMeshVertCount[i];
+            const uint32_t offset = skybox->meshIndexOffset[i];
+            glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
+                (void*)(offset + manager.GetBuffers().indices.data()));
+            UnbindTextures();
         }
     }
+    
     // binding additional textures
-    BindAdditionalTextures(passType, &shaderSkyboxIt->second);
+    BindAdditionalTextures(passType);
     BindAdditionalMatrices(passType, &shaderSkyboxIt->second);
 }
 
@@ -302,7 +297,6 @@ void RenderManager::BindTextures(const ModelTexDesc& textureIds)
     }
 
 }
-
 
 void RenderManager::UnbindTextures()
 {

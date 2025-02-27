@@ -26,6 +26,11 @@ struct Vertex
     glm::vec2 texCoords;
 };
 
+enum class LightType
+{
+    LIGHT_DIRECTIONAL,
+    LIGHT_POINT,
+};
 
 struct Matrices // MVP matrices for current camera
 {
