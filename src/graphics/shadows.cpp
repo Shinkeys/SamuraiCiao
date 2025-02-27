@@ -48,11 +48,27 @@ void ShadowsHelper::Prepare()
 
 
     // adding shader to draw in main render pass
-    // RenderManager::AttachTextureToDraw();
+    TextureDesc depthTexDesc;
+    depthTexDesc.name = "shadowsTexture";
+    depthTexDesc.type = RenderPassType::RENDER_MAIN;
+    depthTexDesc.handle = _depthTex;
+
+    const auto shaderIt = RenderManager::_shaderTypes.find(RenderPassType::RENDER_MAIN);
+    if(shaderIt != RenderManager::_shaderTypes.end())
+    {
+        depthTexDesc.shader = &shaderIt->second;
+    }
+    else
+    {
+        std::cout << "Shader for shadows not found\n";
+    }
+    RenderManager::AttachTextureToDraw(depthTexDesc);
+
 }
 
 void ShadowsHelper::DrawDepthScene(AssetManager& manager)
 {
+    glDisable(GL_CULL_FACE);
     glBindFramebuffer(GL_FRAMEBUFFER, _depthFBO);
     OpenglBackend::SetViewport(_shadowTexExtent.first, _shadowTexExtent.second);
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -75,15 +91,25 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
     float near = 0.01f;
     float far = 20.0f;
     glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near, far);
+    glm::mat4 lightMatrix = glm::mat4(1.0f);
+    const std::string lightMatrixName = "lightMatrix";
     for(const auto& lightSrc : manager.GetLightSources())
     {
         glm::mat4 lightView = glm::lookAt(lightSrc.second, 
         glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-         const glm::mat4 lightMatrix = lightProj * lightView;
+        lightMatrix = lightProj * lightView;
 
-        shader->second.SetMat4x4("lightMatrix", lightMatrix);        
+        shader->second.SetMat4x4(lightMatrixName, lightMatrix);        
     }   
-    
+    // adding this matrix to draw in main pass too
+    MatrixDesc matrixDesc;
+    matrixDesc.data = std::move(lightMatrix);
+    matrixDesc.name = lightMatrixName;
+    matrixDesc.shader = &shader->second;
+    matrixDesc.type = RenderPassType::RENDER_MAIN;
+    RenderManager::AttachMatrixToBind(matrixDesc);
+
+
     for(const auto& mesh : manager.GetAssetStorage())
     {
         const glm::mat4* modelMat = manager.GetTransformMatrixByName(mesh.second.modelName);
@@ -103,6 +129,7 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glEnable(GL_CULL_FACE);
 }
 
 

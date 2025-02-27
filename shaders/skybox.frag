@@ -1,10 +1,7 @@
 #version 460 core
 
-struct Textures
-{
-    sampler2D emission;
-};
-uniform Textures textures;
+
+layout(binding = 4) uniform sampler2D emission;
 
 
 in vec2 TexCoord;
@@ -12,5 +9,5 @@ in vec2 TexCoord;
 out vec4 FragColor;
 void main()
 {
-    FragColor = vec4(texture(textures.emission, TexCoord).rgb, 1.0);
+    FragColor = vec4(texture(emission, TexCoord).rgb, 1.0);
 }

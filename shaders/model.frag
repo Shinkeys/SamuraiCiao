@@ -1,20 +1,14 @@
 #version 460 core
 
-struct Textures
-{
-    sampler2D diffuse;
-    sampler2D specular;
-    sampler2D normal;
-    sampler2D emission;
-};
-uniform Textures textures;
-
 in vec2 TexCoord;
 
-
+layout(binding = 1) uniform sampler2D diffuse;
+layout(binding = 2) uniform sampler2D specular;
+layout(binding = 3) uniform sampler2D normal;
+layout(binding = 4) uniform sampler2D emission;
 
 in vec3 viewfragPos;
-in vec3 viewlightPos;
+in vec3 viewlightDir;
 in vec3 normals;
 
 in vec3 lightViewFragPos;
@@ -38,13 +32,13 @@ vec3 CalculateLighting()
 {
     // textures
     vec3 diffuseTex = vec3(1.0, 1.0, 1.0);
-    diffuseTex = texture(textures.diffuse, TexCoord).rgb;
+    diffuseTex = texture(diffuse, TexCoord).rgb;
     
     vec3 specularTex = vec3(0.0, 0.0, 0.0);
-    specularTex = texture(textures.specular, TexCoord).rgb;
+    specularTex = texture(specular, TexCoord).rgb;
 
     vec3 emissionTex = vec3(1.0, 1.0, 0.0);
-    emissionTex = texture(textures.emission, TexCoord).rgb;
+    emissionTex = texture(emission, TexCoord).rgb;
 
     // lights
     const float lightColorAmbient = 0.25;
@@ -52,7 +46,7 @@ vec3 CalculateLighting()
     const vec3 lightColorSpecular = vec3(1.0, 1.0, 1.0);
 
 
-    const vec3 lightDirection = normalize(viewlightPos - viewfragPos);
+    const vec3 lightDirection = normalize(-viewlightDir);
 
     // diffuse
     const float dotProduct = dot(normals, lightDirection);
@@ -73,16 +67,16 @@ vec3 CalculateLighting()
     const vec3 ambientVec = lightColorAmbient * diffuseTex;
 
     // attenuation means that light attenuate depends on distance
-    const float distance = length(viewlightPos - viewfragPos);
-    const float attenuation = 1.0 / (distance);
+    // const float distance = length(viewlightPos - viewfragPos);
+    // const float attenuation = 1.0 / (distance);
 
-    diffuseVec *= attenuation;
-    specularVec *= attenuation;
+    // diffuseVec *= attenuation;
+    // specularVec *= attenuation;
 
 
     const float shadow = CalculateShadows();
 
-    vec3 res = ambientVec + diffuseVec + specularVec + emissionTex * (1.0 - shadow);
+    vec3 res = (ambientVec + diffuseVec + specularVec + emissionTex) * (1.0 - shadow);
     return res;
 }
 

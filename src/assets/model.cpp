@@ -119,8 +119,7 @@ uint32_t Model::StbiLoadTexture(const char* fileName, bool gamma)
 	
 	if(pixels)
 	{
-		glGenTextures(1, &textureID);
-		glBindTexture(GL_TEXTURE_2D, textureID);
+		glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
 
 		if(texChannels > 4 || texChannels < 1)
 		{
@@ -129,27 +128,28 @@ uint32_t Model::StbiLoadTexture(const char* fileName, bool gamma)
 		}
 
 		int32_t format;
+		glTextureStorage2D(textureID, 1, GL_RGBA8, texWidth, texHeight);
 		if(gamma)
 		{
 			format = texChannels == 4 ? GL_SRGB_ALPHA : GL_SRGB;
-			glTexImage2D(GL_TEXTURE_2D, 0, format, texWidth, texHeight, 0, texChannels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, pixels);
+			glTextureSubImage2D(textureID, 0, 0, 0, texWidth, texHeight, texChannels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, pixels);
 		}
 		else
 		{
 			format = texChannels == 4 ? GL_RGBA : GL_RGB;
-			glTexImage2D(GL_TEXTURE_2D, 0, format, texWidth, texHeight, 0, format, GL_UNSIGNED_BYTE, pixels);
+			glTextureSubImage2D(textureID, 0, 0, 0, texWidth, texHeight, format, GL_UNSIGNED_BYTE, pixels);
 		}
 		// creating a mipmap to use downscaled texture if distance to the object is long
 		// min_filter = downscale, mag_filter = upscale
-		glGenerateMipmap(GL_TEXTURE_2D);
+		glGenerateTextureMipmap(textureID);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 		// setting min and mag for mip mapping
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		// doesnt need for mag, because mipmapping are used for downscale(not upscale)
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		std::cout << "Loaded texture: " << fileName << "\n";
 	}

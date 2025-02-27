@@ -20,9 +20,8 @@ uint32_t Skybox::StbiLoadCubeTexture(std::vector<std::string> entityNames)
     int32_t texChannels;
 
     uint32_t textureID = 0;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
+    glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
+    glTextureStorage2D(textureID, 1, GL_RGBA8, width, height);
     for(uint32_t i = 0; i < entityNames.size(); ++i)
     {
         const std::string loadPath = "objects/skybox/" + entityNames[i];
@@ -31,9 +30,7 @@ uint32_t Skybox::StbiLoadCubeTexture(std::vector<std::string> entityNames)
         if(pixels)
         {
             int32_t format = texChannels == 4 ? GL_RGBA : GL_RGB;
-
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 
-                format, width, height, 0, format, GL_UNSIGNED_BYTE, pixels);
+            glTextureSubImage3D(textureID, 0, 0, 0, 0, width, height, format, 1, GL_UNSIGNED_BYTE, pixels);
         }
         else
 	    {
@@ -44,11 +41,11 @@ uint32_t Skybox::StbiLoadCubeTexture(std::vector<std::string> entityNames)
         stbi_image_free(pixels);
     }
     // setting wrap modes and mipmaps
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); 
+    glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+    glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); 
 
 
     return textureID;
