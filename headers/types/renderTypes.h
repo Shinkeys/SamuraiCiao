@@ -1,5 +1,5 @@
 #include "../types/types.h"
-
+#include <variant>
 // for RENDERING CLASS
 enum class EntityType
 {
@@ -38,20 +38,12 @@ struct MatrixDesc
 };
 
 
-enum class VectorDimension
-{
-    DIM_VEC2,
-    DIM_VEC3,
-    DIM_VEC4
-};
 
-template <typename VecType>
 struct VectorDesc
 {  
     RenderPassType type;
-    VectorDimension dimension;
     std::string name;
-    VecType data;
+    std::variant<glm::vec2, glm::vec3, glm::vec4> data;
 
     Shader* shader = nullptr;
     bool operator==(const VectorDesc& other) const { return name == other.name;}
@@ -66,8 +58,9 @@ struct MatrixHashFunc
 {
     size_t operator()(const MatrixDesc& type) const { return std::hash<std::string>()(type.name);}
 };
-template <typename VecType>
+
+
 struct VectorHashFunc
 {
-    size_t operator()(const VectorDesc<VecType>& type) const { return std::hash<std::string>()(type.name);}
+    size_t operator()(const VectorDesc& type) const { return std::hash<std::string>()(type.name);}
 };

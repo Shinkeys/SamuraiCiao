@@ -1,8 +1,12 @@
 #include "../../headers/graphics/shadows.h"
 #include "../../headers/backend/openglbackend.h"
-#include "../../headers/systems/camera.h"
 #include "../../headers/systems/renderManager.h"
 #include "../../headers/systems/interface.h"
+
+void ShadowsHelper::PassLanterns(Lanterns* lant)
+{
+    _lanterns = lant;
+}
 
 
 void ShadowsHelper::Prepare()
@@ -66,7 +70,7 @@ void ShadowsHelper::Prepare()
 
 }
 
-void ShadowsHelper::DrawDepthScene(AssetManager& manager)
+void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
 {
     glDisable(GL_CULL_FACE);
     glBindFramebuffer(GL_FRAMEBUFFER, _depthFBO);
@@ -87,27 +91,42 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
     const Matrices* matrices = &Camera::GetMVP();
 
 
-    // to rework
-    float near = 0.01f;
-    float far = 20.0f;
-    glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near, far);
-    glm::mat4 lightMatrix = glm::mat4(1.0f);
-    const std::string lightMatrixName = "lightMatrix";
-    for(const auto& lightSrc : manager.GetLightSources())
-    {
-        glm::mat4 lightView = glm::lookAt(lightSrc.second, 
-        glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        lightMatrix = lightProj * lightView;
 
-        shader->second.SetMat4x4(lightMatrixName, lightMatrix);        
-    }   
-    // adding this matrix to draw in main pass too
-    MatrixDesc matrixDesc;
-    matrixDesc.data = std::move(lightMatrix);
-    matrixDesc.name = lightMatrixName;
-    matrixDesc.shader = &shader->second;
-    matrixDesc.type = RenderPassType::RENDER_MAIN;
-    RenderManager::AttachMatrixToBind(matrixDesc);
+    if(_lanterns != nullptr)
+    {
+        const glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, _nearPlane, _farPlane);
+        
+        for(const auto& light : _lanterns->GetLightSourcesData())
+        {
+            // making different calculations for different lights, now assume that there is only 1 light on scene; TO DO
+
+            // base identity matrix. if no light sources would bind that
+            glm::mat4 lightMatrix = glm::mat4(1.0f);
+            const std::string lightMatrixName = "lightMatrix";
+
+            if(light.second.first == LightType::LIGHT_DIRECTIONAL)
+            {
+                // arbitrary point somewhere on light direction ray
+                const float t = -0.7f;
+                const glm::vec3 lightViewPoint = camera.GetOrigin() + light.second.second * t;
+                const glm::mat4 lightView = glm::lookAt(lightViewPoint, camera.GetPosition(), glm::vec3(0.0f, 1.0f, 0.0f));
+                lightMatrix = lightProj * lightView;
+
+                // setting matrix for depth pass shader
+                shader->second.SetMat4x4(lightMatrixName, lightMatrix);
+            }
+            // adding this matrix to draw in main pass too
+            MatrixDesc matrixDesc;
+            matrixDesc.data = std::move(lightMatrix);
+            matrixDesc.name = lightMatrixName;
+            matrixDesc.shader = &shader->second;
+            matrixDesc.type = RenderPassType::RENDER_MAIN;
+            RenderManager::AttachMatrixToBind(matrixDesc);
+        }
+
+    }
+    else std::cout << "Lanterns object is nullptr\n";
+
 
 
     for(const auto& mesh : manager.GetAssetStorage())
@@ -140,6 +159,6 @@ void ShadowsHelper::DebugShadows()
     if(shadows)
     {  
        ImGui::Text("Depth texture:");
-       ImGui::Image(_depthTex, ImVec2{256.0f, 256.0f}); 
+       ImGui::Image(_depthTex, ImVec2{512.0f, 512.0f}); 
     }
 }

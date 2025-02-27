@@ -1,5 +1,6 @@
 #version 460 core
 
+
 in vec2 TexCoord;
 
 layout(binding = 1) uniform sampler2D diffuse;
@@ -18,7 +19,9 @@ in vec3 lightViewFragPos;
 uniform sampler2D shadowsTexture;
 float CalculateShadows()
 {
-    vec3 ndcCoords = lightViewFragPos / 2 + 0.5;
+    vec3 perspDivide = lightViewFragPos.xyz / lightViewFragPos.z;
+
+    vec3 ndcCoords = perspDivide / 2 + 0.5;
 
     float closestDepth = texture(shadowsTexture, ndcCoords.xy).r;
 
