@@ -62,6 +62,10 @@ void AssetManager::AddLightSourcePos(const std::string entityName, glm::vec3 pos
 
 void AssetManager::ApplyTransformation(const std::string& entityName, const glm::mat4 modelMat)
 {
+    if(_assetMatrices.find(entityName) == _assetMatrices.end())
+    {
+        std::cout << "Unable to apply transformation to: " << entityName << " it doesn't exist\n";
+    }
     _assetMatrices[entityName] = modelMat;
 }
 

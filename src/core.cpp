@@ -34,16 +34,16 @@ bool Core::Initialize()
     Skybox skyboxObject(_assetManager);
     skyboxObject.Prepare();
 
-    // Lantern
+    // Lantern to do
     _lanternsObjects.Prepare(_assetManager);
+    mainShader.SetVec3("vsInput.viewlightDir", _lanternsObjects.LightPositionViewSpace(Camera::GetMVP()));
     
-    // shadows
-    _shadowsHelper.Prepare();
-
     RenderManager::DispatchMeshToDraw(characterObjectName, _assetManager, EntityType::TYPE_MESH);
     RenderManager::DispatchMeshToDraw(groundObjectName, _assetManager, EntityType::TYPE_MESH);
     RenderManager::AddShaderByType(std::move(mainShader), RenderPassType::RENDER_MAIN);
     
+    // shadows
+    _shadowsHelper.Prepare();
     _assetManager.BindStructures();
   
     return true;
