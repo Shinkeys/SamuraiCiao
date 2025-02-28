@@ -26,10 +26,12 @@ void ShadowsHelper::Prepare()
         _shadowTexExtent.second, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
     
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    const std::array<float, 4> clampColor = {1.0f, 1.0f, 1.0f, 1.0f}; 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, clampColor.data());
     
     // attaching texture to depth framebuffer
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
@@ -94,8 +96,7 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
 
     if(_lanterns != nullptr)
     {
-        const glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, _nearPlane, _farPlane);
-        
+        const glm::mat4 lightProj = glm::ortho(-15.0f, 15.0f, -15.0f, 15.0f, _nearPlane, _farPlane);
         for(const auto& light : _lanterns->GetLightSourcesData())
         {
             // making different calculations for different lights, now assume that there is only 1 light on scene; TO DO
@@ -107,9 +108,9 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
             if(light.second.first == LightType::LIGHT_DIRECTIONAL)
             {
                 // arbitrary point somewhere on light direction ray
-                const float t = -0.7f;
-                const glm::vec3 lightViewPoint = camera.GetOrigin() + light.second.second * t;
-                const glm::mat4 lightView = glm::lookAt(lightViewPoint, camera.GetPosition(), glm::vec3(0.0f, 1.0f, 0.0f));
+                const float t = 0.2f;
+                const glm::vec3 lightViewPoint = glm::vec3(0.0f, 3.0f, 35.0f);
+                const glm::mat4 lightView = glm::lookAt(lightViewPoint, glm::vec3(0.0f, 3.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
                 lightMatrix = lightProj * lightView;
 
                 // setting matrix for depth pass shader
@@ -137,13 +138,16 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
         else std::cout << "Model matrix for shadows not found\n";
         
 
-        // actually drawing
-        for(uint32_t i = 0; i < mesh.second.currMeshVertCount.size(); ++i)
+        if(mesh.second.modelName != "ground.gltf")
         {
-            const uint32_t vertexCount = mesh.second.currMeshVertCount[i];
-            const uint32_t offset = mesh.second.meshIndexOffset[i];
-            glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
-                (void*)(offset + manager.GetBuffers().indices.data()));
+            // actually drawing
+            for(uint32_t i = 0; i < mesh.second.currMeshVertCount.size(); ++i)
+            {
+                const uint32_t vertexCount = mesh.second.currMeshVertCount[i];
+                const uint32_t offset = mesh.second.meshIndexOffset[i];
+                glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
+                    (void*)(offset + manager.GetBuffers().indices.data()));
+            }
         }
     }
 

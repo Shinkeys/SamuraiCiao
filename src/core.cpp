@@ -25,6 +25,10 @@ bool Core::Initialize()
 
     const std::string groundObjectName = "ground.gltf";
     _assetManager.AddEntityToLoad(groundObjectName);
+    glm::mat4 groundModel = glm::mat4(1.0f);
+    groundModel = glm::scale(groundModel, glm::vec3(5.0f));
+    _assetManager.ApplyTransformation(groundObjectName, groundModel);
+
 
 
     Temple templeObject(_assetManager);
