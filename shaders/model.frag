@@ -19,7 +19,7 @@ in vec3 lightViewFragPos;
 uniform sampler2D shadowsTexture;
 float CalculateShadows()
 {
-    vec3 perspDivide = lightViewFragPos.xyz / lightViewFragPos.z;
+    vec3 perspDivide = lightViewFragPos.xyz;
 
     vec3 ndcCoords = perspDivide * 0.5 + 0.5;
 
@@ -28,9 +28,11 @@ float CalculateShadows()
     float currentDepth = ndcCoords.z;
 
 
-    float bias = max(0.05 * (1.0 - dot(normals, viewlightDir)), 0.005);
+    float bias = max(0.05 * (1.0 - dot(normalize(normals), viewlightDir)), 0.005);
+    if(ndcCoords.z > 1.0)
+        return 0.0;
 
-    return currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    return currentDepth  > closestDepth ? 1.0 : 0.0;
 }
 
 
@@ -52,13 +54,14 @@ vec3 CalculateLighting()
     const vec3 lightColorSpecular = vec3(1.0, 1.0, 1.0);
 
 
-    const vec3 lightDirection = normalize(viewlightDir);
+    const vec3 lightDirection = normalize(-viewlightDir);
 
+    const vec3 normalized = normalize(normals);
     // diffuse
-    const float dotProduct = dot(normals, lightDirection);
+    const float dotProduct = dot(normalized, lightDirection);
     const float diffuseLightPower = 5.0;
     float diffuseLight = max(dotProduct, 0.0);
-    vec3 diffuseVec = (diffuseLight * diffuseTex) * lightColorDiffuse;
+    vec3 diffuseVec = (diffuseLight * diffuseTex * diffuseLightPower) * lightColorDiffuse;
 
     // specular
     const vec3 viewDirection = normalize(-viewfragPos);
@@ -82,7 +85,7 @@ vec3 CalculateLighting()
 
     const float shadow = CalculateShadows();
 
-    vec3 res = (ambientVec + ((diffuseVec + specularVec) * (1.0 - shadow)) + emissionTex);
+    vec3 res = ((ambientVec * (1.0 - shadow)) + ((diffuseVec + specularVec)) + emissionTex);
     return res;
 }
 

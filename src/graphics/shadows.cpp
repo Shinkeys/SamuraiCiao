@@ -27,12 +27,12 @@ void ShadowsHelper::Prepare()
 
     
     const std::array<float, 4> clampColor = {1.0f, 1.0f, 1.0f, 1.0f}; 
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, clampColor.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, clampColor.data());
-    
+
     // attaching texture to depth framebuffer
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
     _depthTex, 0);
@@ -74,11 +74,6 @@ void ShadowsHelper::Prepare()
 
 void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
 {
-    glDisable(GL_CULL_FACE);
-    glBindFramebuffer(GL_FRAMEBUFFER, _depthFBO);
-    OpenglBackend::SetViewport(_shadowTexExtent.first, _shadowTexExtent.second);
-    glClear(GL_DEPTH_BUFFER_BIT);
-
 
     // getting shader where shadows are calculated
     auto shader = RenderManager::_shaderTypes.find(RenderPassType::RENDER_DEPTHPASS);
@@ -92,16 +87,13 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
     shader->second.UseShader();
     const Matrices* matrices = &Camera::GetMVP();
 
-
-
     if(_lanterns != nullptr)
     {
-        const glm::mat4 lightProj = glm::ortho(-15.0f, 15.0f, -15.0f, 15.0f, _nearPlane, _farPlane);
+        const glm::mat4 lightProj = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, _nearPlane, _farPlane);
         for(const auto& light : _lanterns->GetLightSourcesData())
         {
             // making different calculations for different lights, now assume that there is only 1 light on scene; TO DO
 
-            // base identity matrix. if no light sources would bind that
             glm::mat4 lightMatrix = glm::mat4(1.0f);
             const std::string lightMatrixName = "lightMatrix";
 
@@ -109,8 +101,8 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
             {
                 // arbitrary point somewhere on light direction ray
                 const float t = 0.2f;
-                const glm::vec3 lightViewPoint = glm::vec3(0.0f, 3.0f, 35.0f);
-                const glm::mat4 lightView = glm::lookAt(lightViewPoint, glm::vec3(0.0f, 3.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+                const glm::vec3 lightViewPoint = glm::vec3(0.0f, 200.0f, 420.0f);
+                const glm::mat4 lightView = glm::lookAt(lightViewPoint, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
                 lightMatrix = lightProj * lightView;
 
                 // setting matrix for depth pass shader
@@ -129,17 +121,20 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
     else std::cout << "Lanterns object is nullptr\n";
 
 
+    glCullFace(GL_FRONT);
+    glBindFramebuffer(GL_FRAMEBUFFER, _depthFBO);
+    OpenglBackend::SetViewport(_shadowTexExtent.first, _shadowTexExtent.second);
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     for(const auto& mesh : manager.GetAssetStorage())
     {
-        const glm::mat4* modelMat = manager.GetTransformMatrixByName(mesh.second.modelName);
-        if(modelMat != nullptr)
-            shader->second.SetMat4x4("model", *modelMat);
-        else std::cout << "Model matrix for shadows not found\n";
         
-
-        if(mesh.second.modelName != "ground.gltf")
+        if(mesh.second.modelName != "ground.gltf" && mesh.second.modelName != "skybox.gltf")
         {
+            const glm::mat4* modelMat = manager.GetTransformMatrixByName(mesh.second.modelName);
+            if(modelMat != nullptr)
+            shader->second.SetMat4x4("model", *modelMat);
+            else std::cout << "Model matrix for shadows not found\n";
             // actually drawing
             for(uint32_t i = 0; i < mesh.second.currMeshVertCount.size(); ++i)
             {
@@ -152,7 +147,7 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 }
 
 
@@ -165,4 +160,9 @@ void ShadowsHelper::DebugShadows()
        ImGui::Text("Depth texture:");
        ImGui::Image(_depthTex, ImVec2{512.0f, 512.0f}); 
     }
+}
+
+void ShadowsHelper::MakeDynamicArea(float zNear, float zFar)
+{
+
 }

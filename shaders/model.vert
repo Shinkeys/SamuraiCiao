@@ -28,8 +28,8 @@ void main()
 {
     gl_Position  = projection * view * model * vec4(aPos, 1.0);
     TexCoord = aTexCoord;
-    viewlightDir = vec3(lightMatrix * vec4(vsInput.viewlightDir, 1.0));
+    viewlightDir = vec3(mat3(view) * vsInput.viewlightDir);
     viewfragPos = vec3(view * model * vec4(aPos, 1.0));
     normals = mat3(normalMatrix) * aNormal;
-    lightViewFragPos = vec3(lightMatrix * vec4(aPos, 1.0));
+    lightViewFragPos = vec3(lightMatrix * model * vec4(aPos, 1.0));
 }

@@ -6,13 +6,13 @@ void Lanterns::Prepare(AssetManager& manager)
 {
     const std::string lanternObjectName = "Sun.glb";
         
-    manager.AddEntityToLoad(lanternObjectName);
+    // manager.AddEntityToLoad(lanternObjectName);
     glm::mat4 model = glm::mat4(1.0f);
 
-    const glm::vec3 imaginarySunPosition = glm::vec3(0.0f, 25.0f, 55.0f);
-    model = glm::translate(model, imaginarySunPosition);
-    model = glm::scale(model, glm::vec3(15.0f));
-    manager.ApplyTransformation(lanternObjectName, model);
+    const glm::vec3 imaginarySunPosition = glm::vec3(0.0f, 3.0f, 155.0f);
+    // model = glm::translate(model, imaginarySunPosition);
+    // model = glm::scale(model, glm::vec3(15.0f));
+    // manager.ApplyTransformation(lanternObjectName, model);
         
     RenderManager::DispatchMeshToDraw(lanternObjectName, manager, EntityType::TYPE_MESH);
 
