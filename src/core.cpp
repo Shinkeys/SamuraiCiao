@@ -18,7 +18,7 @@ bool Core::Initialize()
     const std::string characterObjectName = "character.obj";
     _assetManager.AddEntityToLoad(characterObjectName);
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 10.0f));
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 25.0f));
     model = glm::scale(model, glm::vec3(0.5f));
     _assetManager.ApplyTransformation(characterObjectName, model);
 

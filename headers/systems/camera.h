@@ -7,7 +7,7 @@
 class Camera
 {
 private:
-    glm::vec3 _position{ 0.0f, 2.5f, 5.0f };
+    glm::vec3 _position{ 0.0f, 2.5f, 25.0f };
     const glm::vec3 _origin{_position};
     glm::vec3 _direction{ glm::normalize(-_position) };
     glm::vec3 _forward{glm::vec3(0.0f, 0.0f, -1.0f)};

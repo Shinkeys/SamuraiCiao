@@ -18,17 +18,19 @@ struct VSInput
 
 uniform VSInput vsInput;
 
-
 out vec3 viewfragPos;
 out vec3 viewlightDir;
 out vec3 normals;
 out vec3 lightViewFragPos;
 
+out vec3 lightViewLightDir;
 void main()
 {
     gl_Position  = projection * view * model * vec4(aPos, 1.0);
     TexCoord = aTexCoord;
     viewlightDir = vec3(mat3(view) * vsInput.viewlightDir);
+    // to check
+    lightViewLightDir = vec3(mat3(lightMatrix) * vsInput.viewlightDir);
     viewfragPos = vec3(view * model * vec4(aPos, 1.0));
     normals = mat3(normalMatrix) * aNormal;
     lightViewFragPos = vec3(lightMatrix * model * vec4(aPos, 1.0));

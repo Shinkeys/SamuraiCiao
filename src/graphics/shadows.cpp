@@ -89,7 +89,7 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
 
     if(_lanterns != nullptr)
     {
-        const glm::mat4 lightProj = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, _nearPlane, _farPlane);
+        const glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, _nearPlane, _farPlane);
         for(const auto& light : _lanterns->GetLightSourcesData())
         {
             // making different calculations for different lights, now assume that there is only 1 light on scene; TO DO
@@ -101,8 +101,8 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
             {
                 // arbitrary point somewhere on light direction ray
                 const float t = 0.2f;
-                const glm::vec3 lightViewPoint = glm::vec3(0.0f, 200.0f, 420.0f);
-                const glm::mat4 lightView = glm::lookAt(lightViewPoint, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+                const glm::vec3 lightViewPoint = glm::vec3(0.0f, 200.0f, 400.0f);
+                const glm::mat4 lightView = glm::lookAt(lightViewPoint, glm::vec3(0.0f, 0.0f, -20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
                 lightMatrix = lightProj * lightView;
 
                 // setting matrix for depth pass shader
@@ -121,7 +121,7 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
     else std::cout << "Lanterns object is nullptr\n";
 
 
-    glCullFace(GL_FRONT);
+    // glCullFace(GL_FRONT);
     glBindFramebuffer(GL_FRAMEBUFFER, _depthFBO);
     OpenglBackend::SetViewport(_shadowTexExtent.first, _shadowTexExtent.second);
     glClear(GL_DEPTH_BUFFER_BIT);
