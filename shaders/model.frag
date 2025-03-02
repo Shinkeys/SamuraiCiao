@@ -11,6 +11,8 @@ layout(binding = 4) uniform sampler2D emission;
 in vec3 viewfragPos;
 in vec3 viewlightDir;
 in vec3 normals;
+// to check
+in vec3 lightViewLightDir;
 
 in vec3 lightViewFragPos;
 
@@ -27,12 +29,34 @@ float CalculateShadows()
 
     float currentDepth = ndcCoords.z;
 
-
-    float bias = max(0.05 * (1.0 - dot(normalize(normals), viewlightDir)), 0.005);
     if(ndcCoords.z > 1.0)
         return 0.0;
 
-    return currentDepth  > closestDepth ? 1.0 : 0.0;
+    float bias = max(0.05 * (1.0 - dot(normalize(normals), -lightViewLightDir)), 0.005);
+
+
+
+    // pcf. getting size of each pixel(texel) and then sampling values
+    // from 9 surrounding texels. dividing it only by 9 to average result
+    const vec2 texelSize = 1.0 / textureSize(shadowsTexture, 0);
+
+    const float xOffset = texelSize.x;
+    const float yOffset = texelSize.y;
+
+    float shadow = 0.0;
+    for(int y = -1; y <= 1; ++y)
+    {
+        for(int x = -1; x <= 1; ++x)
+        {
+            vec2 offsets = vec2(x * xOffset, y * yOffset);
+            float pcf = texture(shadowsTexture, (ndcCoords.xy + offsets)).r;
+            shadow += currentDepth > pcf ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+
+    return shadow;
 }
 
 
@@ -59,7 +83,7 @@ vec3 CalculateLighting()
     const vec3 normalized = normalize(normals);
     // diffuse
     const float dotProduct = dot(normalized, lightDirection);
-    const float diffuseLightPower = 5.0;
+    const float diffuseLightPower = 2.5;
     float diffuseLight = max(dotProduct, 0.0);
     vec3 diffuseVec = (diffuseLight * diffuseTex * diffuseLightPower) * lightColorDiffuse;
 
@@ -85,7 +109,7 @@ vec3 CalculateLighting()
 
     const float shadow = CalculateShadows();
 
-    vec3 res = ((ambientVec * (1.0 - shadow)) + ((diffuseVec + specularVec)) + emissionTex);
+    vec3 res = ((ambientVec) * (1.0 - shadow)) + (diffuseVec + specularVec + emissionTex);
     return res;
 }
 
