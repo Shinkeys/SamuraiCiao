@@ -49,6 +49,8 @@ bool Core::Initialize()
     _shadowsHelper.PassLanterns(&_lanternsObjects);
     _shadowsHelper.Prepare();
     _assetManager.BindStructures();
+
+    _particles.GenerateParticles();
   
     return true;
 }
@@ -75,13 +77,15 @@ void Core::Render()
 
 
     RenderManager::GlobalDraw(_assetManager);
+
+    _particles.DrawParticles();
     
     if(Window::GetKeysState().showImgui)
     {
         // must be first: creating window
         SamuraiInterface::DebugWindow(_camera.GetPosition());
         _shadowsHelper.DebugShadows();
-        
+
         // must be last: finishing frame
         SamuraiInterface::RenderImgui();
     }

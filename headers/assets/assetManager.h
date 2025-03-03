@@ -11,6 +11,7 @@ private:
     std::unordered_map<std::string, glm::mat4> _assetMatrices;
     std::unordered_map<std::string, CurrentModelDesc> _assetStorage;
 public:
+    const uint32_t GetAssetsVAO() const { return _model->GetModelsEBOData().VAO;}
     void AddEntityToLoad(const std::string entityName);
     void BindStructures();
     // void DrawParticularModel(const std::string& entityName);

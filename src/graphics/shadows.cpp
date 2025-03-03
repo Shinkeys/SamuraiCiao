@@ -74,7 +74,7 @@ void ShadowsHelper::Prepare()
 
 void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
 {
-
+    glBindVertexArray(manager.GetAssetsVAO());
     // getting shader where shadows are calculated
     auto shader = RenderManager::_shaderTypes.find(RenderPassType::RENDER_DEPTHPASS);
 
@@ -99,10 +99,9 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
 
             if(light.second.first == LightType::LIGHT_DIRECTIONAL)
             {
-                // arbitrary point somewhere on light direction ray
-                const float t = 0.2f;
                 const glm::vec3 lightViewPoint = glm::vec3(0.0f, 200.0f, 400.0f);
-                const glm::mat4 lightView = glm::lookAt(lightViewPoint, glm::vec3(0.0f, 0.0f, -20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+                const glm::vec3 centerPointTemporary = glm::vec3(0.0f, 0.0f, -20.0f);
+                const glm::mat4 lightView = glm::lookAt(lightViewPoint, centerPointTemporary, glm::vec3(0.0f, 1.0f, 0.0f));
                 lightMatrix = lightProj * lightView;
 
                 // setting matrix for depth pass shader
