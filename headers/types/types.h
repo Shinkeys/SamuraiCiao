@@ -57,3 +57,48 @@ struct EBOSetup
     uint32_t VBO{0};
     uint32_t EBO{0};
 };
+
+struct EBOSetupUnskinned
+{
+    std::vector<glm::vec3> vertices;
+    std::vector<uint32_t> indices;
+    uint32_t VAO{0};
+    uint32_t VBO{0};
+    uint32_t EBO{0};
+};
+
+struct VBOSetupUnskinned
+{
+    std::vector<glm::vec3> vertices;
+    uint32_t VAO{0};
+    uint32_t VBO{0};
+    uint32_t EBO{0};
+};  
+
+
+struct VBOSetupUnskinnedVec4
+{
+    std::vector<glm::vec4> vertices;
+    uint32_t VAO{0};
+    uint32_t VBO{0};
+    uint32_t EBO{0};
+};  
+
+
+struct SSBOBind
+{
+    const uint32_t*  binding = nullptr;
+
+
+    std::vector<glm::vec3>* data;
+    uint32_t* ssboId = nullptr;
+};
+
+struct SSBOBindVec4
+{
+    const uint32_t*  binding = nullptr;
+
+    int32_t size = 0;
+    glm::vec4* data;
+    uint32_t* ssboId = nullptr;
+};

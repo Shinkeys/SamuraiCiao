@@ -42,6 +42,8 @@ bool Window::Initialize()
         return false;
     }
 
+    //MSAA
+    glfwWindowHint(GLFW_SAMPLES, 8);
 
     glfwMakeContextCurrent(_window);
     // initialize GLAD
@@ -51,7 +53,7 @@ bool Window::Initialize()
         glfwTerminate();
         return false;
     }
-
+    
     glfwSetWindowUserPointer(_window, this);
     glfwSetFramebufferSizeCallback(_window, FramebufferSizeCallback);
     glfwSetCursorPosCallback(_window, CursorPosCallback);

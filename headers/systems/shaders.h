@@ -35,5 +35,6 @@ public:
     void SetMat4x4(const std::string& name, const glm::mat4& value);
     void SetUniform1i(const std::string& name, int value);
     void LoadShaders(const std::filesystem::path& vertexPath, const std::filesystem::path& fragmentPath);
+    void LoadComputeShader(const std::filesystem::path& computePath);
     const std::string& GetShaderName() const { return _shaderName;}
 };

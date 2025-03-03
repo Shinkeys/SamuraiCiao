@@ -83,7 +83,7 @@ vec3 CalculateLighting()
     const vec3 normalized = normalize(normals);
     // diffuse
     const float dotProduct = dot(normalized, lightDirection);
-    const float diffuseLightPower = 2.5;
+    const float diffuseLightPower = 5.0;
     float diffuseLight = max(dotProduct, 0.0);
     vec3 diffuseVec = (diffuseLight * diffuseTex * diffuseLightPower) * lightColorDiffuse;
 
@@ -100,11 +100,12 @@ vec3 CalculateLighting()
     const vec3 ambientVec = lightColorAmbient * diffuseTex;
 
     // attenuation means that light attenuate depends on distance
-    // const float distance = length(viewlightPos - viewfragPos);
-    // const float attenuation = 1.0 / (distance);
+    const vec3 imaginarySunPos = viewfragPos - vec3(0.0f, 2.5f, -2.0f);
+    const float distance = length(imaginarySunPos - viewfragPos);
+    const float attenuation = 1.0 / (distance);
 
-    // diffuseVec *= attenuation;
-    // specularVec *= attenuation;
+    diffuseVec *= attenuation;
+    specularVec *= attenuation;
 
 
     const float shadow = CalculateShadows();

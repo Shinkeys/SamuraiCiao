@@ -9,6 +9,8 @@
 #include "systems/camera.h"
 #include "assets/assetManager.h"
 
+#include "graphics/particles.h"
+
 class Core : public Window
 {
 private:
@@ -18,6 +20,9 @@ private:
     Lanterns _lanternsObjects;
     AssetManager _assetManager;
     ShadowsHelper _shadowsHelper;
+
+    // to remove
+    Particles _particles;
 public:
     bool Initialize() override;
 };

@@ -97,6 +97,12 @@ void RenderManager::AddShaderByType(Shader&& shader, RenderPassType renderType)
     case RenderPassType::RENDER_DEPTHPASS:
         _shaderTypes.emplace(renderType, std::move(shader));
         break;
+    case RenderPassType::RENDER_PARTICLES:
+        _shaderTypes.emplace(renderType, std::move(shader));
+        break;
+    case RenderPassType::RENDER_PARTICLES_COMP:
+        _shaderTypes.emplace(renderType, std::move(shader));
+        break;
     default: std::cout << "No type of passed shader: " << shader.GetShaderName() << '\n';
         break;
     }
@@ -127,6 +133,7 @@ void RenderManager::GlobalDraw(AssetManager& manager)
         return;
     }
 
+    glBindVertexArray(manager.GetAssetsVAO());
     DrawSkybox(manager);
     DrawMainScene(manager);
 

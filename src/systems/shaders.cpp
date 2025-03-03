@@ -97,7 +97,41 @@ void Shader::LoadShaders(const std::filesystem::path& vertexPath, const std::fil
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
     }
+}
 
+void Shader::LoadComputeShader(const std::filesystem::path& computePath)
+{
+    // storing shader name for later checks
+    _shaderName = computePath.string();
+
+    std::filesystem::path computeModifiedPath = "shaders/" / computePath;
+
+    std::string computeDataStr = ReadFromFile(computeModifiedPath);
+    const char* computeData = computeDataStr.c_str();
+        
+    int32_t errorsCode = 1;
+    
+    GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
+    // setting glsl source code to shader
+    glShaderSource(computeShader, 1, &computeData, nullptr);
+    glCompileShader(computeShader);
+    errorsCode = CheckForErrors(computeShader, OperationType::SHADER_CREATE);
+
+    _programID = glCreateProgram();
+    glAttachShader(_programID, computeShader);
+    glLinkProgram(_programID);
+    errorsCode = CheckForErrors(_programID, OperationType::SHADER_LINK);
+
+    if(errorsCode == -1)
+    {
+        if(_programID != -1)
+        {
+            glDeleteProgram(_programID);
+            _programID = -1;
+        }
+
+        glDeleteShader(computeShader);
+    }
 }
 
 

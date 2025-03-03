@@ -2,24 +2,6 @@
 #include "../../headers/types/types.h"
 
 
-void OpenglBackend::BindUnskinnedObject(std::vector<float> vertices, uint32_t& vao, uint32_t& vbo)
-{
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
-    // to do tangent some day
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 
 void OpenglBackend::BindModelEBO(EBOSetup& setup)
 {
@@ -46,11 +28,34 @@ void OpenglBackend::BindModelEBO(EBOSetup& setup)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+void OpenglBackend::BindModelEBO(EBOSetupUnskinned& setup)
+{
+    glGenVertexArrays(1, &setup.VAO);
+    glBindVertexArray(setup.VAO);
+    glGenBuffers(1, &setup.VBO);
+    glGenBuffers(1, &setup.EBO);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, setup.EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, setup.indices.size() * sizeof(uint32_t), setup.indices.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, setup.VBO);
+    glBufferData(GL_ARRAY_BUFFER, setup.vertices.size() * sizeof(glm::vec3), setup.vertices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+    glEnableVertexAttribArray(1);
+
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 
 void OpenglBackend::SetupOpenglBackendData(int32_t width, int32_t height)
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_MULTISAMPLE);
     // glEnable(GL_FRAMEBUFFER_SRGB); // gamma by opengl
     int32_t flags; 
     glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
