@@ -82,9 +82,10 @@ void Core::Render()
     
     if(Window::GetKeysState().showImgui)
     {
-        // must be first: creating window
         SamuraiInterface::DebugWindow(_camera.GetPosition());
+        // must be first: creating window
         _shadowsHelper.DebugShadows();
+        _particles.EnableParticles();
 
         // must be last: finishing frame
         SamuraiInterface::RenderImgui();

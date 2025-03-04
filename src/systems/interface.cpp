@@ -31,9 +31,7 @@ void SamuraiInterface::DebugWindow(glm::vec3 camPos)
 {
     // starting one window there, to push all data to it
     ImGui::SetNextWindowPos(ImVec2{0.0f,0.0f});
-    const float windowWidth = 400.0f;
-    const float windowHeight = 350.0f;
-    ImGui::SetNextWindowSize(ImVec2{windowWidth, windowHeight});
+    ImGui::SetNextWindowSize(ImVec2{g_windowWidth, g_windowHeight});
     
 
     ImGui::Text("Camera position: %f %f %f", camPos.x, camPos.y, camPos.z);

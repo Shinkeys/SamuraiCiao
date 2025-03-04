@@ -3,6 +3,9 @@
 #include "../../headers/backend/openglbackend.h"
 #include "../../headers/systems/camera.h"
 #include "../../headers/systems/renderManager.h"
+#include "../../headers/types/random.h"
+#include "../../headers/systems/interface.h"
+
 
 bool Particles::GenerateParticles()
 {
@@ -45,15 +48,31 @@ bool Particles::GenerateParticles()
     
     
     glm::mat4 model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(-35.0f, 5.0f, 35.0f));
+    // model = glm::translate(model, glm::vec3(-50.0f, 5.0f, -100.0f));
     // model = glm::scale(model, glm::vec3(50.0f));
     mainShader.SetMat4x4("model", model);
 
     RenderManager::AddShaderByType(std::move(computeShader), RenderPassType::RENDER_PARTICLES_COMP);
     RenderManager::AddShaderByType(std::move(mainShader), RenderPassType::RENDER_PARTICLES);
 
-
     return true;
+}
+
+// Idea: change positions of particles randomly
+void Particles::RandomDistribution()
+{
+    glm::vec3 particlesDisplacement;
+    particlesDisplacement.x = Random::RandomFloat(-0.010f, 0.010f);
+    particlesDisplacement.y = Random::RandomFloat(-0.009f, 0.0f);
+    particlesDisplacement.z = Random::RandomFloat(-0.008f, 0.015f);
+
+    auto shaderIt = RenderManager::_shaderTypes.find(RenderPassType::RENDER_PARTICLES_COMP);
+    if(shaderIt != RenderManager::_shaderTypes.end())
+    {
+        shaderIt->second.SetVec3("displacement", particlesDisplacement);
+    }
+    else
+        std::cout << "Can't update particles position, shader not  found\n";
 }
 
 void Particles::FillParticlesPoints()
@@ -61,18 +80,25 @@ void Particles::FillParticlesPoints()
     // setup vertices is basically POINTS(their placement)
     _setup.vertices.reserve(_numberOfParticles);
 
-    // offset of positions
-    float offsetX = 0.0f;
-    float offsetZ = 0.0f;
+
+    float offsetX = -250.0f;
+    float offsetZ = -150.0f;
     for(uint32_t i = 0; i < _numberOfParticles; ++i)
     {   
-        offsetX += 3.5f;
+        float bias = Random::RandomFloat(-15.0f, 15.0f);
+        offsetX += 25.5f + bias;
         if(i % 25 == 0)
         {
-            offsetX = 0.0f;
-            offsetZ += static_cast<float>(i) * 0.05f;
+            offsetX = -250.0f;
+            offsetZ += static_cast<float>(i);
         }
-        _setup.vertices.push_back(glm::vec4(offsetX, 0.0f, offsetZ, 1.0f));
+        
+        const float xPos = offsetX;
+        const float yPos = 75.0f * std::clamp(std::abs(bias), 0.9f, 2.0f);
+        const float zPos = offsetZ * (bias / 15.0f);
+
+
+        _setup.vertices.push_back(glm::vec4(xPos, yPos, zPos, 1.0f));
     }
 
 }
@@ -90,9 +116,45 @@ void Particles::Prepare()
 
 void Particles::RenderParticles()
 {
-    ExecuteCompShader();
+    if(_particlesEnabled)
+    {
+        ExecuteCompShader();
+        // important: to be here as in previous function used needed comp. shader
+        RandomDistribution();
 
-    DrawParticles();
+        DrawParticles();
+
+    }
+}
+
+void Particles::EnableParticles()
+{
+    ImGui::Checkbox("Particles", &_particlesEnabled);
+
+    
+    static int32_t selected = 0;
+    
+    float posOffset = SamuraiInterface::g_windowWidth / 1.75f;
+    ImGui::SameLine(posOffset);
+    if(ImGui::RadioButton("256", selected == 0))
+    {
+        selected = 0;
+        _numberOfParticles = 256;
+    }
+    posOffset += posOffset / 3.0f;
+    ImGui::SameLine(posOffset);
+    if(ImGui::RadioButton("512", selected == 1))
+    {
+        selected = 1;
+        _numberOfParticles = 512;
+    }
+    posOffset += posOffset / 3.0f;
+    ImGui::SameLine(posOffset);
+    if(ImGui::RadioButton("1024", selected == 2))
+    {
+        selected = 2;
+        _numberOfParticles = 1024;
+    }
 }
 
 void Particles::DrawParticles()
@@ -105,7 +167,7 @@ void Particles::DrawParticles()
         shaderIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
     }
     glBindVertexArray(_setup.VAO);
-    glDrawArrays(GL_POINTS, 0, _setup.vertices.size());
+    glDrawArrays(GL_POINTS, 0, _numberOfParticles);
     glBindVertexArray(0);
 }
 
@@ -116,11 +178,14 @@ void Particles::ExecuteCompShader()
     {
         shaderIt->second.UseShader();
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, _ssboId);
+
+        // work group size
         glDispatchCompute(_numberOfParticles, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
+        
+        const int32_t totalDataSize = sizeof(glm::vec4) * _numberOfParticles;
         // passing data to the vbo
-        glCopyNamedBufferSubData(_ssboId, _setup.VBO, 0, 0, _numberOfParticles);
+        glCopyNamedBufferSubData(_ssboId, _setup.VBO, 0, 0, totalDataSize);
     }
 
 }
