@@ -73,6 +73,8 @@ struct VBOSetupUnskinned
     uint32_t VAO{0};
     uint32_t VBO{0};
     uint32_t EBO{0};
+
+    int32_t type = 0x00;
 };  
 
 
@@ -82,6 +84,8 @@ struct VBOSetupUnskinnedVec4
     uint32_t VAO{0};
     uint32_t VBO{0};
     uint32_t EBO{0};
+
+    int32_t type = 0x00;
 };  
 
 
@@ -90,7 +94,9 @@ struct SSBOBind
     const uint32_t*  binding = nullptr;
 
 
-    std::vector<glm::vec3>* data;
+    int32_t type = 0x00;
+    int32_t size = 0;
+    glm::vec3* data;
     uint32_t* ssboId = nullptr;
 };
 
@@ -98,6 +104,7 @@ struct SSBOBindVec4
 {
     const uint32_t*  binding = nullptr;
 
+    int32_t type = 0x00;
     int32_t size = 0;
     glm::vec4* data;
     uint32_t* ssboId = nullptr;

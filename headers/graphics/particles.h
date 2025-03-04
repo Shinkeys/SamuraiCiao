@@ -9,7 +9,10 @@ private:
     VBOSetupUnskinnedVec4 _setup;
     void ExecuteCompShader();
     void FillParticlesPoints();
-public:
-    void GenerateParticles();
+    bool GenerateParticles();
     void DrawParticles();
+public:
+    void RenderParticles();
+    void Prepare();
+
 };

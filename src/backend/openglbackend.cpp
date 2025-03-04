@@ -1,10 +1,102 @@
 #include "../../headers/backend/openglbackend.h"
 #include "../../headers/types/types.h"
 
-
-
-void OpenglBackend::BindModelEBO(EBOSetup& setup)
+ErrorCodes_Backend OpenglBackend::CreateSSBO(SSBOBind& bindData)
 {
+    if(bindData.data == nullptr || bindData.size == 0)
+    {
+        std::cout << "Unable to create SSBO, bind data is empty!\n";
+        return ErrorCodes_Backend::ERROR_SSBO_CREATION;
+    }
+    glCreateBuffers(1, bindData.ssboId);
+    // basically binding ssbo to write data there
+    if(bindData.type == 0x00)
+        glNamedBufferData(*bindData.ssboId, bindData.size, bindData.data, GL_DYNAMIC_DRAW);
+    else 
+        glNamedBufferData(*bindData.ssboId, bindData.size, bindData.data, bindData.type);
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, *bindData.binding, *bindData.ssboId);
+
+
+    return ErrorCodes_Backend::NO_ERROR;
+}
+
+ErrorCodes_Backend OpenglBackend::CreateSSBO(SSBOBindVec4& bindData)
+{
+    if(bindData.data == nullptr || bindData.size == 0)
+    {
+        std::cout << "Unable to create SSBO, bind data is empty!\n";
+        return ErrorCodes_Backend::ERROR_SSBO_CREATION;
+    }
+    glCreateBuffers(1, bindData.ssboId);
+    
+    // basically binding ssbo to write data there
+    if(bindData.type == 0x00)
+        glNamedBufferData(*bindData.ssboId, bindData.size, bindData.data, GL_DYNAMIC_DRAW);
+    else 
+        glNamedBufferData(*bindData.ssboId, bindData.size, bindData.data, bindData.type);
+    
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, *bindData.binding, *bindData.ssboId);
+
+    return ErrorCodes_Backend::NO_ERROR;
+}
+
+ErrorCodes_Backend OpenglBackend::BindModelVBO(VBOSetupUnskinned& setup)
+{
+    if(setup.vertices.size() == 0)
+    {
+        std::cout << "Unable to bind VBO, bind data is empty!\n";
+        return ErrorCodes_Backend::ERROR_SSBO_CREATION;
+    }
+    glGenVertexArrays(1, &setup.VAO);
+    glBindVertexArray(setup.VAO);
+    glGenBuffers(1, &setup.VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, setup.VBO);
+    if(setup.type == 0x00)
+        glBufferData(GL_ARRAY_BUFFER, setup.vertices.size() * sizeof(glm::vec3), setup.vertices.data(), GL_STATIC_DRAW);
+    else
+        glBufferData(GL_ARRAY_BUFFER, setup.vertices.size() * sizeof(glm::vec3), setup.vertices.data(), setup.type);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+    // to do tangent some day
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    return ErrorCodes_Backend::NO_ERROR;
+}
+
+ErrorCodes_Backend OpenglBackend::BindModelVBO(VBOSetupUnskinnedVec4& setup)
+{
+    if(setup.vertices.size() == 0)
+    {
+        std::cout << "Unable to bind VBO, bind data is empty!\n";
+        return ErrorCodes_Backend::ERROR_SSBO_CREATION;
+    }
+    glCreateVertexArrays(1, &setup.VAO);
+    glBindVertexArray(setup.VAO);
+    
+    glGenBuffers(1, &setup.VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, setup.VBO);
+    if(setup.type == 0x00)
+        glBufferData(GL_ARRAY_BUFFER, setup.vertices.size() * sizeof(glm::vec4), setup.vertices.data(), GL_STATIC_DRAW);
+    else
+        glBufferData(GL_ARRAY_BUFFER, setup.vertices.size() * sizeof(glm::vec4), setup.vertices.data(), setup.type);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+    // to do tangent some day
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    return ErrorCodes_Backend::NO_ERROR;
+}
+
+ErrorCodes_Backend OpenglBackend::BindModelEBO(EBOSetup& setup)
+{
+    if(setup.vertices.size() == 0)
+    {
+        std::cout << "Unable to bind EBO, bind data is empty!\n";
+        return ErrorCodes_Backend::ERROR_SSBO_CREATION;
+    }
     glGenVertexArrays(1, &setup.VAO);
     glBindVertexArray(setup.VAO);
     glGenBuffers(1, &setup.VBO);
@@ -26,10 +118,17 @@ void OpenglBackend::BindModelEBO(EBOSetup& setup)
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    return ErrorCodes_Backend::NO_ERROR;
 }
 
-void OpenglBackend::BindModelEBO(EBOSetupUnskinned& setup)
+ErrorCodes_Backend OpenglBackend::BindModelEBO(EBOSetupUnskinned& setup)
 {
+    if(setup.vertices.size() == 0)
+    {
+        std::cout << "Unable to bind EBO, bind data is empty!\n";
+        return ErrorCodes_Backend::ERROR_SSBO_CREATION;
+    }
     glGenVertexArrays(1, &setup.VAO);
     glBindVertexArray(setup.VAO);
     glGenBuffers(1, &setup.VBO);
@@ -48,6 +147,9 @@ void OpenglBackend::BindModelEBO(EBOSetupUnskinned& setup)
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    return ErrorCodes_Backend::NO_ERROR;
+
 }
 
 

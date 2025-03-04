@@ -50,7 +50,7 @@ bool Core::Initialize()
     _shadowsHelper.Prepare();
     _assetManager.BindStructures();
 
-    _particles.GenerateParticles();
+    _particles.Prepare();
   
     return true;
 }
@@ -78,7 +78,7 @@ void Core::Render()
 
     RenderManager::GlobalDraw(_assetManager);
 
-    _particles.DrawParticles();
+    _particles.RenderParticles();
     
     if(Window::GetKeysState().showImgui)
     {
