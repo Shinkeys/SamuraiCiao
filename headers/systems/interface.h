@@ -8,6 +8,8 @@
 
 namespace SamuraiInterface
 {
+    const float g_windowWidth = 400.0f;
+    const float g_windowHeight = 350.0f;
     void InitImgui(GLFWwindow* window);
     void UpdateImgui(const uint32_t viewportWidth, const uint32_t viewportHeight);
     void RenderImgui();
