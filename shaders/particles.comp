@@ -14,8 +14,12 @@ void main()
 {
     uint idx = gl_GlobalInvocationID.x;
     
-    float randomnessToSpeed = float(idx * 0.0055);
+    float randomnessToSpeed = float(idx * 0.005);
 
-    
+
+    // placing back unvisible anymore particles
+    if(positions[idx].y < 0.0)
+        positions[idx].y = 75.0;
+
     positions[idx].xyz += displacement * randomnessToSpeed;
 }

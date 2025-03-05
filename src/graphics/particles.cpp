@@ -10,7 +10,7 @@
 bool Particles::GenerateParticles()
 {
     glEnable(GL_PROGRAM_POINT_SIZE);
-
+    
     // filling path with current positions of particles
     FillParticlesPoints();
     
@@ -58,7 +58,7 @@ bool Particles::GenerateParticles()
     return true;
 }
 
-// Idea: change positions of particles randomly
+// Purpose: change positions of particles randomly
 void Particles::RandomDistribution()
 {
     glm::vec3 particlesDisplacement;
@@ -102,6 +102,7 @@ void Particles::FillParticlesPoints()
     }
 
 }
+
 
 void Particles::Prepare()
 {
@@ -165,6 +166,10 @@ void Particles::DrawParticles()
         shaderIt->second.UseShader();
         shaderIt->second.SetMat4x4("view", Camera::GetMVP().view);
         shaderIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
+
+        // variable with random number to shuffle colors
+        const float randomValue = Random::RandomFloat(-2.0f, 2.0f);
+        shaderIt->second.SetFloat("random", randomValue);
     }
     glBindVertexArray(_setup.VAO);
     glDrawArrays(GL_POINTS, 0, _numberOfParticles);
