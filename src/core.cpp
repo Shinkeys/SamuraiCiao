@@ -31,6 +31,16 @@ bool Core::Initialize()
 
 
 
+    // testing normal mapping
+    const std::string normalObjectName = "testnormalmapping.gltf";
+    _assetManager.AddEntityToLoad(normalObjectName);
+    glm::mat4 normalModel = glm::mat4(1.0);
+    normalModel = glm::translate(normalModel, glm::vec3(0.0f, -5.0f, 40.0f));
+    normalModel = glm::scale(normalModel, glm::vec3(5.5f));
+    _assetManager.ApplyTransformation(normalObjectName, normalModel);
+
+
+
     Temple templeObject(_assetManager);
     templeObject.Prepare(mainShader);
 
@@ -41,6 +51,7 @@ bool Core::Initialize()
     // Lantern to do
     _lanternsObjects.Prepare(_assetManager);
     
+    RenderManager::DispatchMeshToDraw(normalObjectName, _assetManager, EntityType::TYPE_MESH);
     RenderManager::DispatchMeshToDraw(characterObjectName, _assetManager, EntityType::TYPE_MESH);
     RenderManager::DispatchMeshToDraw(groundObjectName, _assetManager, EntityType::TYPE_MESH);
     RenderManager::AddShaderByType(std::move(mainShader), RenderPassType::RENDER_MAIN);

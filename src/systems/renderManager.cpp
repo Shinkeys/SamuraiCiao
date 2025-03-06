@@ -228,7 +228,7 @@ void RenderManager::DrawMainScene(AssetManager& manager)
         {
             // binding textures
             if(shaderMainIt != _shaderTypes.end())
-                BindTextures(mesh->textureIDs[i]);
+                BindTextures(mesh->textureIDs[i], shaderMainIt->second);
             
             const uint32_t vertexCount = mesh->currMeshVertCount[i];
             const uint32_t offset = mesh->meshIndexOffset[i];
@@ -265,7 +265,7 @@ void RenderManager::DrawSkybox(AssetManager& manager)
     {
         for(uint32_t i = 0; i < skybox->currMeshVertCount.size(); ++i)
         {
-            BindTextures(skybox->textureIDs[i]);
+            BindTextures(skybox->textureIDs[i], shaderSkyboxIt->second);
             const uint32_t vertexCount = skybox->currMeshVertCount[i];
             const uint32_t offset = skybox->meshIndexOffset[i];
             glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
@@ -279,7 +279,7 @@ void RenderManager::DrawSkybox(AssetManager& manager)
     BindAdditionalMatrices(passType, &shaderSkyboxIt->second);
 }
 
-void RenderManager::BindTextures(const ModelTexDesc& textureIds)
+void RenderManager::BindTextures(const ModelTexDesc& textureIds, Shader& shader)
 {
     const int32_t diffusePlace = 1;
     const int32_t specularPlace = 2;
@@ -297,7 +297,10 @@ void RenderManager::BindTextures(const ModelTexDesc& textureIds)
     if(textureIds.normalId > 0)
     {
         glBindTextureUnit(normalPlace, textureIds.normalId);
+        shader.SetBool("normalMapping", true);
     }
+    else shader.SetBool("normalMapping", false);
+
     if(textureIds.emissionId > 0)
     {
         glBindTextureUnit(emissionPlace, textureIds.emissionId);
