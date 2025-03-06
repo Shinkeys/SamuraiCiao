@@ -62,9 +62,9 @@ bool Particles::GenerateParticles()
 void Particles::RandomDistribution()
 {
     glm::vec3 particlesDisplacement;
-    particlesDisplacement.x = Random::RandomFloat(-0.010f, 0.010f);
+    particlesDisplacement.x = Random::RandomFloat(-0.015f, 0.015f);
     particlesDisplacement.y = Random::RandomFloat(-0.009f, 0.0f);
-    particlesDisplacement.z = Random::RandomFloat(-0.008f, 0.015f);
+    particlesDisplacement.z = Random::RandomFloat(-0.007f, 0.017f);
 
     auto shaderIt = RenderManager::_shaderTypes.find(RenderPassType::RENDER_PARTICLES_COMP);
     if(shaderIt != RenderManager::_shaderTypes.end())
@@ -133,7 +133,7 @@ void Particles::EnableParticles()
     ImGui::Checkbox("Particles", &_particlesEnabled);
 
     
-    static int32_t selected = 0;
+    static int32_t selected = 2;
     
     float posOffset = SamuraiInterface::g_windowWidth / 1.75f;
     ImGui::SameLine(posOffset);
@@ -142,14 +142,14 @@ void Particles::EnableParticles()
         selected = 0;
         _numberOfParticles = 256;
     }
-    posOffset += posOffset / 3.0f;
+    posOffset += 50.0f;
     ImGui::SameLine(posOffset);
     if(ImGui::RadioButton("512", selected == 1))
     {
         selected = 1;
         _numberOfParticles = 512;
     }
-    posOffset += posOffset / 3.0f;
+    posOffset += 50.0f;
     ImGui::SameLine(posOffset);
     if(ImGui::RadioButton("1024", selected == 2))
     {

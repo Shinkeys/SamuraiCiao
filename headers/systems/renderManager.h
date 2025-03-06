@@ -20,7 +20,7 @@ namespace RenderManager
     void DrawSkybox(AssetManager& manager);
     void DrawMainScene(AssetManager& manager);
     // textures
-    void BindTextures(const ModelTexDesc& textureIds);
+    void BindTextures(const ModelTexDesc& textureIds, Shader& shader);
     void UnbindTextures();
     void BindAdditionalTextures(const RenderPassType type);
     void AttachTextureToDraw(const TextureDesc& texDesc);

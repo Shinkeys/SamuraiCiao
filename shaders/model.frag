@@ -7,16 +7,16 @@ layout(binding = 1) uniform sampler2D diffuse;
 layout(binding = 2) uniform sampler2D specular;
 layout(binding = 3) uniform sampler2D normal;
 layout(binding = 4) uniform sampler2D emission;
+uniform bool normalMapping;
 
 in vec3 viewfragPos;
 in vec3 viewlightDir;
-in vec3 normals;
-// to check
 in vec3 lightViewLightDir;
 
 in vec3 lightViewFragPos;
 
 
+in vec3 normals;
 
 uniform sampler2D shadowsTexture;
 float CalculateShadows()
@@ -32,7 +32,7 @@ float CalculateShadows()
     if(ndcCoords.z > 1.0)
         return 0.0;
 
-    float bias = max(0.05 * (1.0 - dot(normalize(normals), -lightViewLightDir)), 0.005);
+    float bias = max(0.05 * (1.0 - dot(normalize(normals), lightViewLightDir)), 0.005);
 
 
 
@@ -72,6 +72,14 @@ vec3 CalculateLighting()
     vec3 emissionTex = vec3(1.0, 1.0, 0.0);
     emissionTex = texture(emission, TexCoord).rgb;
 
+    vec3 normalMap = normals;
+    if(normalMapping == true)
+    {
+        normalMap = texture(normal, TexCoord).rgb;
+        // converting from [0,1] range to [-1,1], otherwise normals would look only 1 side
+        normalMap = normalMap * 2.0 - 1.0;
+    }
+
     // lights
     const float lightColorAmbient = 0.25;
     const vec3 lightColorDiffuse = vec3(0.5, 0.5, 0.5);
@@ -80,9 +88,8 @@ vec3 CalculateLighting()
 
     const vec3 lightDirection = normalize(-viewlightDir);
 
-    const vec3 normalized = normalize(normals);
     // diffuse
-    const float dotProduct = dot(normalized, lightDirection);
+    const float dotProduct = dot(normalMap, lightDirection);
     const float diffuseLightPower = 5.0;
     float diffuseLight = max(dotProduct, 0.0);
     vec3 diffuseVec = (diffuseLight * diffuseTex * diffuseLightPower) * lightColorDiffuse;

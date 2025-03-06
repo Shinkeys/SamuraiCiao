@@ -69,6 +69,12 @@ void Model::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, CurrentModelDesc& 
 			vertices.normal.y = aiMesh->mNormals[i].y;
 			vertices.normal.z = aiMesh->mNormals[i].z;
 		}
+		if(aiMesh->HasTangentsAndBitangents())
+		{
+			vertices.tangents.x = aiMesh->mTangents[i].x;
+			vertices.tangents.y = aiMesh->mTangents[i].y;
+			vertices.tangents.z = aiMesh->mTangents[i].z;
+		}
 		sortedVertices.push_back(vertices);
 	}
 
@@ -102,7 +108,7 @@ void Model::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, CurrentModelDesc& 
 			aiTextureType_DIFFUSE,
 			aiTextureType_SPECULAR,
 			aiTextureType_EMISSIVE,
-			aiTextureType_HEIGHT
+			aiTextureType_NORMALS
 		};
 
 		ProcessMaterial(material, textureTypes, modelDescriptor);
@@ -198,7 +204,7 @@ void Model::ProcessMaterial(aiMaterial* material,
 			{
 			case aiTextureType_DIFFUSE: textureDescriptor.diffuseId = textureId; break;
 			case aiTextureType_SPECULAR: textureDescriptor.specularId = textureId; break;
-			case aiTextureType_HEIGHT: textureDescriptor.normalId = textureId; break;
+			case aiTextureType_NORMALS: textureDescriptor.normalId = textureId; break;
 			case aiTextureType_EMISSIVE: textureDescriptor.emissionId = textureId; break;
 			}
 		}
