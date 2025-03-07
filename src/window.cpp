@@ -58,6 +58,7 @@ bool Window::Initialize()
     glfwSetFramebufferSizeCallback(_window, FramebufferSizeCallback);
     glfwSetCursorPosCallback(_window, CursorPosCallback);
     glfwSetKeyCallback(_window, KeyCallback);
+    glfwSetMouseButtonCallback(_window, MouseClickCallback);
     glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     return true;
@@ -67,6 +68,31 @@ void Window::ResetMouse()
 {
 	_mouse.x = 0.0f;
 	_mouse.y = 0.0f;
+}
+
+void Window::MouseClickCallback(GLFWwindow* window, int button, int action, int mods)
+{
+    Window* app = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+    if(button == GLFW_MOUSE_BUTTON_LEFT)
+    {
+        app->ProceedMousePress(action);
+    }
+}
+
+void Window::ProceedMousePress(int action)
+{
+    switch(action)
+    {
+    case GLFW_PRESS:
+        _mouse.clicked = true;
+        break;
+    case GLFW_RELEASE:
+        _mouse.clicked = false;
+        break;
+    default:
+        std::cout << "Unknown action on mouse click\n";
+        break;
+    }
 }
 
 void Window::ProceedMouseMovement(double xPos, double yPos)
