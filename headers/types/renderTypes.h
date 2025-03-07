@@ -14,7 +14,8 @@ enum class RenderPassType
     RENDER_SKYBOX,
     RENDER_DEPTHPASS,
     RENDER_PARTICLES,
-    RENDER_PARTICLES_COMP
+    RENDER_PARTICLES_COMP,
+    RENDER_SCENE_EDITOR
 };
 // basically struct to make it more convenient to operate later
 struct TextureDesc

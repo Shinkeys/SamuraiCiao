@@ -63,8 +63,8 @@ void Camera::CalculateDirection(Window* window)
 
 	const float sensitivity = 0.05f;
 
-	float rotateX = window->GetLastMouseOffset().x;
-	float rotateY = window->GetLastMouseOffset().y;
+	float rotateX = window->GetMousePositions().x;
+	float rotateY = window->GetMousePositions().y;
 
 	static float yaw = -90.0f; // camera initially looks in x direction, but character position forward(z)
 	static float pitch = 0.0f;

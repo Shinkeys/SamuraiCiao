@@ -45,7 +45,7 @@ void ShadowsHelper::Prepare()
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);   
-
+    
 
     // Creating shader for depth passes
     Shader depthShader;
