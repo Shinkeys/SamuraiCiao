@@ -86,27 +86,7 @@ void RenderManager::BindAdditionalVectors(const RenderPassType type, Shader* sha
 
 void RenderManager::AddShaderByType(Shader&& shader, RenderPassType renderType)
 {
-    switch(renderType)
-    {
-    case RenderPassType::RENDER_MAIN:
-        _shaderTypes.emplace(renderType, std::move(shader));
-        break;
-    case RenderPassType::RENDER_SKYBOX:
-        _shaderTypes.emplace(renderType, std::move(shader));
-        break;
-    case RenderPassType::RENDER_DEPTHPASS:
-        _shaderTypes.emplace(renderType, std::move(shader));
-        break;
-    case RenderPassType::RENDER_PARTICLES:
-        _shaderTypes.emplace(renderType, std::move(shader));
-        break;
-    case RenderPassType::RENDER_PARTICLES_COMP:
-        _shaderTypes.emplace(renderType, std::move(shader));
-        break;
-    default: std::cout << "No type of passed shader: " << shader.GetShaderName() << '\n';
-        break;
-    }
-    
+    _shaderTypes.emplace(renderType, std::move(shader));
 }
 
 void RenderManager::AttachTextureToDraw(const TextureDesc& texDesc)

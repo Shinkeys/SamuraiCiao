@@ -9,7 +9,7 @@ bool Core::Initialize()
         return false;
     }
     OpenglBackend::SetupOpenglBackendData(_width, _height);
-    SamuraiInterface::InitImgui(Window::_window);
+    SamuraiInterface::InitImgui(_window);
 
     Shader mainShader;
     mainShader.LoadShaders("model.vert", "model.frag");
@@ -61,6 +61,10 @@ bool Core::Initialize()
     _shadowsHelper.Prepare();
     _assetManager.BindStructures();
 
+    // collision
+    _collision.PassAssetManager(_assetManager);
+    _collision.Prepare();
+    // particles
     _particles.Prepare();
   
     return true;
@@ -86,9 +90,9 @@ void Core::Render()
     OpenglBackend::SetViewport(Window::_width, Window::_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
+    
     RenderManager::GlobalDraw(_assetManager);
-
+    _collision.VisualizeAABB(_camera.GetMVP().view, _camera.GetMVP().projection);
     _particles.RenderParticles();
     
     if(Window::GetKeysState().showImgui)

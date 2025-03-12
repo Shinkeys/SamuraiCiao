@@ -17,7 +17,7 @@ public:
     // void DrawParticularModel(const std::string& entityName);
     void ApplyTransformation(const std::string& entityName, const glm::mat4 modelMat);
     const auto& GetAssetStorage() const { return _assetStorage;}
-    const glm::mat4* GetTransformMatrixByName(const std::string& name);
+    const glm::mat4* GetTransformMatrixByName(const std::string& name) const;
     const auto& GetBuffers() const { return _model.get()->GetModelsEBOData();}
 
     // making pointer as it easier to error handle that case

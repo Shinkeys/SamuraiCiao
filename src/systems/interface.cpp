@@ -12,6 +12,7 @@ void SamuraiInterface::InitImgui(GLFWwindow* window)
     // setup render backend
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init();
+
 }
 
 void SamuraiInterface::UpdateImgui(const uint32_t viewportWidth, const uint32_t viewportHeight)
@@ -25,6 +26,7 @@ void SamuraiInterface::UpdateImgui(const uint32_t viewportWidth, const uint32_t 
     ImGui::NewFrame();
     ImGui::Begin("Samurai debug");
 
+
 }
 
 void SamuraiInterface::DebugWindow(glm::vec3 camPos)
@@ -32,7 +34,6 @@ void SamuraiInterface::DebugWindow(glm::vec3 camPos)
     // starting one window there, to push all data to it
     ImGui::SetNextWindowPos(ImVec2{0.0f,0.0f});
     ImGui::SetNextWindowSize(ImVec2{g_windowWidth, g_windowHeight});
-    
 
     ImGui::Text("Camera position: %f %f %f", camPos.x, camPos.y, camPos.z);
     // ending window name Samurai Debug

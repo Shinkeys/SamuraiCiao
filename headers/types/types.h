@@ -73,7 +73,6 @@ struct VBOSetupUnskinned
     std::vector<glm::vec3> vertices;
     uint32_t VAO{0};
     uint32_t VBO{0};
-    uint32_t EBO{0};
 
     int32_t type = 0x00;
 };  
@@ -84,7 +83,6 @@ struct VBOSetupUnskinnedVec4
     std::vector<glm::vec4> vertices;
     uint32_t VAO{0};
     uint32_t VBO{0};
-    uint32_t EBO{0};
 
     int32_t type = 0x00;
 };  

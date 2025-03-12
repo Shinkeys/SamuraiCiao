@@ -5,7 +5,9 @@
 #include "scene/lanterns.h"
 #include "graphics/shadows.h"
 #include "systems/renderManager.h"
+#include "systems/sceneEditor.h"
 #include "systems/shaders.h"
+#include "systems/collision.h"
 #include "systems/camera.h"
 #include "assets/assetManager.h"
 
@@ -20,7 +22,9 @@ private:
     Lanterns _lanternsObjects;
     AssetManager _assetManager;
     ShadowsHelper _shadowsHelper;
-
+    
+    Collision _collision;
+    SceneEditor _sceneEditor;
     // to remove
     Particles _particles;
 public:

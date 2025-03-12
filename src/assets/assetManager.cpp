@@ -21,7 +21,7 @@ const CurrentModelDesc* AssetManager::GetModelDescriptorByName(const std::string
 
 }
 
-const glm::mat4* AssetManager::GetTransformMatrixByName(const std::string& entityName)
+const glm::mat4* AssetManager::GetTransformMatrixByName(const std::string& entityName) const
 {
     const auto search = _assetMatrices.find(entityName);
 
@@ -37,6 +37,8 @@ const glm::mat4* AssetManager::GetTransformMatrixByName(const std::string& entit
     
     return nullptr;
 }
+
+
 
 
 void AssetManager::AddEntityToLoad(const std::string entityName)

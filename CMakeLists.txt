@@ -18,7 +18,7 @@ add_executable(SamuraiCiao ${CPP_SOURCE_FILES}
 ${GLSL_SOURCE_FILES} ${HEADER_FILES} vendor/glad/src/glad.c)
 target_include_directories(SamuraiCiao PRIVATE vendor/glad/include)
 
-set_target_properties(SamuraiCiao PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS YES)
+set_target_properties(SamuraiCiao PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS YES)
 
 # ASAN, UBSAN
 

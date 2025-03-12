@@ -2,13 +2,17 @@
 #include "../../headers/backend/openglbackend.h"
 #include "../../headers/systems/renderManager.h"
 
-void SceneEditor::Prepare(uint32_t width, uint32_t height)
+void SceneEditor::PrepareObjectSelection(uint32_t width, uint32_t height)
 {
     if(width <= 0 || height <= 0)
     {
         std::cout << "Width or height is 0\n";
         return;
     }
+
+    _viewportExtent.first = width;
+    _viewportExtent.second  = height;
+
     // texture which store meshes data to pick
     glGenFramebuffers(1, &_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
@@ -16,7 +20,7 @@ void SceneEditor::Prepare(uint32_t width, uint32_t height)
     glGenTextures(1, &_colorTex);
     glBindTexture(GL_TEXTURE_2D, _colorTex);
     
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8UI, width, 
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, width, 
         height, 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, nullptr);
 
     
@@ -58,8 +62,14 @@ void SceneEditor::Prepare(uint32_t width, uint32_t height)
     RenderManager::AddShaderByType(std::move(sceneEditorShader), RenderPassType::RENDER_SCENE_EDITOR);
 }
 
-void SceneEditor::DrawScene(AssetManager& manager)
+void SceneEditor::DrawScene(const AssetManager& manager)
 {
+    if(_viewportExtent.first <= 0 || _viewportExtent.second <= 0)
+    {
+        std::cout << "Can't draw scene for scene editor, viewport extent is 0 or less\n";
+        return;
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
     OpenglBackend::SetViewport(_viewportExtent.first, _viewportExtent.second);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -70,6 +80,8 @@ void SceneEditor::DrawScene(AssetManager& manager)
         std::cout << "Can't draw scene for scene editor, shader is not found\n";
         return;
     }
+
+    shaderIt->second.UseShader();
     for(const auto& mesh : manager.GetAssetStorage())
     {
         const glm::mat4* modelMat = manager.GetTransformMatrixByName(mesh.second.modelName);
@@ -89,6 +101,14 @@ void SceneEditor::DrawScene(AssetManager& manager)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void SceneEditor::HandleObjectSelection(const Window& window, const Matrices& matrices, const AssetManager& manager)
+{
+    //  drawing scene with id to pick later with mouse
+    DrawScene(manager);
+
+    // handle picking by itself
+    SelectObject(window, matrices);
+}
 
 void SceneEditor::SelectObject(const Window& window, const Matrices& matrices)
 {
