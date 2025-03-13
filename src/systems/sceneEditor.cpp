@@ -89,10 +89,11 @@ void SceneEditor::DrawScene(const AssetManager& manager)
             shaderIt->second.SetMat4x4("model", *modelMat);
         else std::cout << "Model matrix for shadows not found\n";
 
-        for(uint32_t i = 0; i < mesh.second.currMeshVertCount.size(); ++i)
+
+        for(auto it = mesh.second.indOffsetVertCount.begin(); it != mesh.second.indOffsetVertCount.end(); ++it)
         {
-            const uint32_t vertexCount = mesh.second.currMeshVertCount[i];
-            const uint32_t offset = mesh.second.meshIndexOffset[i];
+            const uint32_t vertexCount = it->second;
+            const uint32_t offset = it->first;
             glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
                 (void*)(offset + manager.GetBuffers().indices.data()));
         }

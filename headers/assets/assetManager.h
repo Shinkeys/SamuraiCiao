@@ -2,6 +2,7 @@
 #include "model.h"
 
 #include <memory>
+#include <optional>
 class AssetManager
 {
 private:
@@ -19,6 +20,7 @@ public:
     const auto& GetAssetStorage() const { return _assetStorage;}
     const glm::mat4* GetTransformMatrixByName(const std::string& name) const;
     const auto& GetBuffers() const { return _model.get()->GetModelsEBOData();}
+    std::optional<std::vector<Vertex>> GetMeshVerticesByName(const std::string& entityName) const;
 
     // making pointer as it easier to error handle that case
     const CurrentModelDesc* GetModelDescriptorByName(const std::string& entityName) const;

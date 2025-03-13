@@ -203,20 +203,23 @@ void RenderManager::DrawMainScene(AssetManager& manager)
             shaderMainIt->second.SetMat4x4("normalMatrix", normalMatrix);
 
         }
-    
-        for(uint32_t i = 0; i < mesh->currMeshVertCount.size(); ++i)
+        
+        int32_t textureId = 0;
+        for(auto it = mesh->indOffsetVertCount.begin(); it != mesh->indOffsetVertCount.end(); ++it)
         {
             // binding textures
             if(shaderMainIt != _shaderTypes.end())
-                BindTextures(mesh->textureIDs[i], shaderMainIt->second);
+                BindTextures(mesh->textureIDs[textureId], shaderMainIt->second);
             
-            const uint32_t vertexCount = mesh->currMeshVertCount[i];
-            const uint32_t offset = mesh->meshIndexOffset[i];
+            const uint32_t vertexCount = it->second;
+            const uint32_t offset = it->first;
             glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
                 (void*)(offset + manager.GetBuffers().indices.data()));
             
             if(shaderMainIt != _shaderTypes.end())
                 UnbindTextures();
+
+            ++textureId;
         }
     }
 
@@ -243,14 +246,17 @@ void RenderManager::DrawSkybox(AssetManager& manager)
     shaderSkyboxIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
     for(const auto skybox : _renderTypes.find(passType)->second)
     {
-        for(uint32_t i = 0; i < skybox->currMeshVertCount.size(); ++i)
+        int32_t textureId = 0;
+        for(auto it = skybox->indOffsetVertCount.begin(); it != skybox->indOffsetVertCount.end(); ++it)
         {
-            BindTextures(skybox->textureIDs[i], shaderSkyboxIt->second);
-            const uint32_t vertexCount = skybox->currMeshVertCount[i];
-            const uint32_t offset = skybox->meshIndexOffset[i];
+            BindTextures(skybox->textureIDs[textureId], shaderSkyboxIt->second);
+            const uint32_t vertexCount = it->second;
+            const uint32_t offset = it->first;
             glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
                 (void*)(offset + manager.GetBuffers().indices.data()));
             UnbindTextures();
+
+            ++textureId;
         }
     }
     

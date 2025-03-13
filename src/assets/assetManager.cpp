@@ -39,6 +39,32 @@ const glm::mat4* AssetManager::GetTransformMatrixByName(const std::string& entit
 }
 
 
+// Purpose: to find needed vertices from large buffer by mesh name, pack as a vector
+// Output: vector containing vertices if found mesh by name, std::nullopt otherwise
+std::optional<std::vector<Vertex>> AssetManager::GetMeshVerticesByName(const std::string& entityName) const
+{
+    std::vector<Vertex>& allVertices = _model.get()->GetModelsEBOData().vertices;
+
+    const CurrentModelDesc* lookingForModel = GetModelDescriptorByName(entityName);
+    if(lookingForModel == nullptr)
+    {
+        std::cout << "Can't find model by name " << entityName << '\n';
+        return std::nullopt;
+    }
+
+    std::vector<Vertex> result;
+    for(auto it = lookingForModel->indOffsetVertCount.begin(); it != lookingForModel->indOffsetVertCount.end(); ++it)
+    {
+        result.reserve(it->second);
+
+        for(int32_t i = 0; i < it->second; ++i)
+        {
+            result.push_back(allVertices[i + it->first]);
+        }
+    }   
+
+    return result;
+}
 
 
 void AssetManager::AddEntityToLoad(const std::string entityName)

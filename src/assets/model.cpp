@@ -79,8 +79,9 @@ void Model::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, CurrentModelDesc& 
 	}
 
     static uint32_t meshStartIndexInVAO = 0;
-	modelDescriptor.meshIndexOffset.push_back(meshStartIndexInVAO);
+	modelDescriptor.indOffsetVertCount.insert({meshStartIndexInVAO, 0});
 
+	const uint32_t currentMeshStartIndex = meshStartIndexInVAO;
 	uint32_t currentMeshSize = 0;
 	for (uint32_t i = 0; i < aiMesh->mNumFaces; ++i)
 	{
@@ -98,7 +99,7 @@ void Model::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, CurrentModelDesc& 
 		}
 	}
     // storing amount of vertices of current mesh
-    modelDescriptor.currMeshVertCount.push_back(currentMeshSize);
+    modelDescriptor.indOffsetVertCount[currentMeshStartIndex] = currentMeshSize;
 
     if (aiMesh->mMaterialIndex >= 0)
 	{

@@ -9,14 +9,13 @@
 
 #include "../types/types.h"
 #include "../systems/shaders.h"
-
+#include <map>
 
 struct CurrentModelDesc
 {
     std::string modelName = "";
 
-	std::vector<uint32_t> meshIndexOffset;
-	std::vector<uint32_t> currMeshVertCount;
+    std::map<uint32_t, uint32_t> indOffsetVertCount;
     std::vector<ModelTexDesc> textureIDs;
 };
 
