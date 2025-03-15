@@ -22,6 +22,7 @@ namespace OpenglBackend
     ErrorCodes_Backend BindModelVBO(VBOSetupUnskinnedVec4& setup);
     ErrorCodes_Backend BindModelEBO(EBOSetup& setup);
     ErrorCodes_Backend BindModelEBO(EBOSetupUnskinned& setup);
+    ErrorCodes_Backend BindModelEBO(EBOSetupBuffers& buffers, std::vector<uint32_t>& indices, std::vector<glm::vec3>& vertices);
     ErrorCodes_Backend CreateSSBO(SSBOBind& bindData);
     ErrorCodes_Backend CreateSSBO(SSBOBindVec4& bindData);
     void SetupOpenglBackendData(int32_t width, int32_t height);

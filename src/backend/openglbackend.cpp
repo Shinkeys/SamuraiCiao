@@ -92,7 +92,7 @@ ErrorCodes_Backend OpenglBackend::BindModelVBO(VBOSetupUnskinnedVec4& setup)
 
 ErrorCodes_Backend OpenglBackend::BindModelEBO(EBOSetup& setup)
 {
-    if(setup.vertices.size() == 0)
+    if(setup.vertices.size() == 0 || setup.indices.size() == 0)
     {
         std::cout << "Unable to bind EBO, bind data is empty!\n";
         return ErrorCodes_Backend::ERROR_SSBO_CREATION;
@@ -126,10 +126,10 @@ ErrorCodes_Backend OpenglBackend::BindModelEBO(EBOSetup& setup)
 
 ErrorCodes_Backend OpenglBackend::BindModelEBO(EBOSetupUnskinned& setup)
 {
-    if(setup.vertices.size() == 0)
+    if(setup.vertices.size() == 0 || setup.indices.size() == 0)
     {
         std::cout << "Unable to bind EBO, bind data is empty!\n";
-        return ErrorCodes_Backend::ERROR_SSBO_CREATION;
+        return ErrorCodes_Backend::ERROR_EBO_BINDING;
     }
     glGenVertexArrays(1, &setup.VAO);
     glBindVertexArray(setup.VAO);
@@ -150,7 +150,6 @@ ErrorCodes_Backend OpenglBackend::BindModelEBO(EBOSetupUnskinned& setup)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     return ErrorCodes_Backend::NO_ERROR;
-
 }
 
 

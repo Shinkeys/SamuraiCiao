@@ -68,6 +68,13 @@ struct EBOSetupUnskinned
     uint32_t EBO{0};
 };
 
+struct EBOSetupBuffers
+{
+    uint32_t VAO{0};
+    uint32_t VBO{0};
+    uint32_t EBO{0};
+};
+
 struct VBOSetupUnskinned
 {
     std::vector<glm::vec3> vertices;

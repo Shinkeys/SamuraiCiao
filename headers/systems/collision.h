@@ -3,8 +3,15 @@
 
 struct AABB
 {
-    glm::vec3 min{glm::vec3(0.0f)};
-    glm::vec3 max{glm::vec3(0.0f)};
+    std::string entityName = "";
+    glm::vec3 min{glm::vec3(std::numeric_limits<float>::max())};
+    glm::vec3 max{glm::vec3(std::numeric_limits<float>::lowest())};
+};
+
+struct CollisionData
+{
+    std::vector<glm::vec3> vertices;
+    uint32_t offset = 0;
 };
 
 class Collision
@@ -12,9 +19,10 @@ class Collision
 private:
     Shader _debugShader;
 
+    const uint32_t _vectorDim = 3;
     AssetManager* _manager = nullptr;
-    AABB _collisionBox; 
-    EBOSetupUnskinned _setup;
+    VBOSetupUnskinned _setup;
+    std::unordered_map<std::string, CollisionData> _collisionStorage;
     void CheckForCollision(glm::vec3 meshPos);
     void AddAABBForModel(const AABB& aabb);
 public:
