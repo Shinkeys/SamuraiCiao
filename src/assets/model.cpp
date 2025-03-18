@@ -3,7 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-CurrentModelDesc Model::LoadModel(const std::filesystem::path& modelName)
+CurrentModelDesc Model::LoadModel(const std::filesystem::path& modelName, EntityType type)
 {
     Assimp::Importer importer;
 
@@ -20,9 +20,10 @@ CurrentModelDesc Model::LoadModel(const std::filesystem::path& modelName)
 
 	// to pass to asset manager
 	CurrentModelDesc modelDescriptor;
+	modelDescriptor.objDesc.type = type;
 
 	ProcessNode(scene->mRootNode, scene, modelDescriptor);
-	modelDescriptor.modelName = modelName.string();
+	modelDescriptor.objDesc.name = modelName.string();
 
 	return modelDescriptor;
 }

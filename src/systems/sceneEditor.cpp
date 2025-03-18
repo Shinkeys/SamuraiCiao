@@ -84,7 +84,7 @@ void SceneEditor::DrawScene(const AssetManager& manager)
     shaderIt->second.UseShader();
     for(const auto& mesh : manager.GetAssetStorage())
     {
-        const glm::mat4* modelMat = manager.GetTransformMatrixByName(mesh.second.modelName);
+        const glm::mat4* modelMat = manager.GetTransformMatrixByName(mesh.second.objDesc.name);
         if(modelMat != nullptr)
             shaderIt->second.SetMat4x4("model", *modelMat);
         else std::cout << "Model matrix for shadows not found\n";

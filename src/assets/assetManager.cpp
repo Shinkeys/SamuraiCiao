@@ -67,16 +67,16 @@ std::optional<std::vector<Vertex>> AssetManager::GetMeshVerticesByName(const std
 }
 
 
-void AssetManager::AddEntityToLoad(const std::string entityName)
+void AssetManager::AddEntityToLoad(ObjectDescriptor objectDesc)
 {
-    if(_assetStorage.find(entityName) == _assetStorage.end())
+    if(_assetStorage.find(objectDesc.name) == _assetStorage.end())
     {
-        _assetStorage.insert({entityName, {_model.get()->LoadModel(entityName)}});
+        _assetStorage.insert({objectDesc.name, {_model.get()->LoadModel(objectDesc.name, objectDesc.type)}});
     }
-    if(_assetMatrices.find(entityName) == _assetMatrices.end())
+    if(_assetMatrices.find(objectDesc.name) == _assetMatrices.end())
     {
         glm::mat4 model = glm::mat4(1.0f);
-        _assetMatrices.insert({entityName, model});
+        _assetMatrices.insert({objectDesc.name, model});
     }
 }
 

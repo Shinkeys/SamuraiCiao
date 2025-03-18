@@ -11,13 +11,29 @@
 
 class Shader;
 
+
+// for RENDERING CLASS
+enum class EntityType
+{
+    TYPE_NONE,
+    TYPE_MESH,
+    TYPE_SKYBOX
+};  
+
 namespace SamuraiDefines
 {
     inline float g_fov = 45.0f;
     inline float g_nearPlane = 0.002f;
     inline float g_farPlane = 500.0f;
+    inline double g_Pi = 3.141592653589793;
 };
 
+
+struct ObjectDescriptor
+{
+    std::string name = "";
+    EntityType type = EntityType::TYPE_NONE;
+};
 
 struct Vertex
 {

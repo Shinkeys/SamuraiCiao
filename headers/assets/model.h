@@ -13,8 +13,8 @@
 
 struct CurrentModelDesc
 {
-    std::string modelName = "";
-
+    ObjectDescriptor objDesc;
+    
     std::map<uint32_t, uint32_t> indOffsetVertCount;
     std::vector<ModelTexDesc> textureIDs;
 };
@@ -31,7 +31,7 @@ private:
         std::array<aiTextureType, 4> textureTypes, CurrentModelDesc& modelDescriptor);
     
 public:
-    CurrentModelDesc LoadModel(const std::filesystem::path& modelName);
+    CurrentModelDesc LoadModel(const std::filesystem::path& modelName, EntityType type);
     EBOSetup& GetModelsEBOData()  { return _allModelsData;}
 };
 

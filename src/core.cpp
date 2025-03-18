@@ -15,29 +15,35 @@ bool Core::Initialize()
     mainShader.LoadShaders("model.vert", "model.frag");
     mainShader.UseShader();
 
-    const std::string characterObjectName = "character.obj";
-    _assetManager.AddEntityToLoad(characterObjectName);
+    ObjectDescriptor characterObject;
+    characterObject.name = "character.obj";
+    characterObject.type = EntityType::TYPE_MESH;
+    _assetManager.AddEntityToLoad(characterObject);
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 25.0f));
     model = glm::scale(model, glm::vec3(0.5f));
-    _assetManager.ApplyTransformation(characterObjectName, model);
+    _assetManager.ApplyTransformation(characterObject.name, model);
 
 
-    const std::string groundObjectName = "ground.gltf";
-    _assetManager.AddEntityToLoad(groundObjectName);
-    glm::mat4 groundModel = glm::mat4(1.0f);
-    groundModel = glm::scale(groundModel, glm::vec3(5.0f));
-    _assetManager.ApplyTransformation(groundObjectName, groundModel);
+    // ObjectDescriptor groundObject;
+    // groundObject.name = "ground.gltf";
+    // groundObject.type = EntityType::TYPE_MESH;
+    // _assetManager.AddEntityToLoad(groundObject);
+    // glm::mat4 groundModel = glm::mat4(1.0f);
+    // groundModel = glm::scale(groundModel, glm::vec3(5.0f));
+    // _assetManager.ApplyTransformation(groundObject.name, groundModel);
 
 
 
     // testing normal mapping
-    const std::string normalObjectName = "testnormalmapping.gltf";
-    _assetManager.AddEntityToLoad(normalObjectName);
+    ObjectDescriptor normalObject;
+    normalObject.name = "testnormalmapping.gltf";
+    normalObject.type = EntityType::TYPE_MESH;
+    _assetManager.AddEntityToLoad(normalObject);
     glm::mat4 normalModel = glm::mat4(1.0);
     normalModel = glm::translate(normalModel, glm::vec3(0.0f, -5.0f, 40.0f));
     normalModel = glm::scale(normalModel, glm::vec3(5.5f));
-    _assetManager.ApplyTransformation(normalObjectName, normalModel);
+    _assetManager.ApplyTransformation(normalObject.name, normalModel);
 
 
 
@@ -51,9 +57,9 @@ bool Core::Initialize()
     // Lantern to do
     _lanternsObjects.Prepare(_assetManager);
     
-    RenderManager::DispatchMeshToDraw(normalObjectName, _assetManager, EntityType::TYPE_MESH);
-    RenderManager::DispatchMeshToDraw(characterObjectName, _assetManager, EntityType::TYPE_MESH);
-    RenderManager::DispatchMeshToDraw(groundObjectName, _assetManager, EntityType::TYPE_MESH);
+    RenderManager::DispatchMeshToDraw(normalObject, _assetManager);
+    RenderManager::DispatchMeshToDraw(characterObject, _assetManager);
+    // RenderManager::DispatchMeshToDraw(groundObject, _assetManager);
     RenderManager::AddShaderByType(std::move(mainShader), RenderPassType::RENDER_MAIN);
     
     // shadows
@@ -93,6 +99,7 @@ void Core::Render()
     
     RenderManager::GlobalDraw(_assetManager);
     _collision.VisualizeAABB(_camera.GetMVP().view, _camera.GetMVP().projection);
+    _collision.CheckCameraForCollision(_camera);
     _particles.RenderParticles();
     
     if(Window::GetKeysState().showImgui)
@@ -101,6 +108,7 @@ void Core::Render()
         // must be first: creating window
         _shadowsHelper.DebugShadows();
         _particles.EnableParticles();
+        _collision.EnableCollisionDisplay();
 
         // must be last: finishing frame
         SamuraiInterface::RenderImgui();

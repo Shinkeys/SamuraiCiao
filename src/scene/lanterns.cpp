@@ -4,8 +4,9 @@
 
 void Lanterns::Prepare(AssetManager& manager)
 {
-    const std::string lanternObjectName = "Sun.glb";
-        
+    ObjectDescriptor lanterObject;
+    lanterObject.name = "Sun.glb";
+    lanterObject.type = EntityType::TYPE_MESH;
     // manager.AddEntityToLoad(lanternObjectName);
     glm::mat4 model = glm::mat4(1.0f);
 
@@ -14,7 +15,7 @@ void Lanterns::Prepare(AssetManager& manager)
     // model = glm::scale(model, glm::vec3(15.0f));
     // manager.ApplyTransformation(lanternObjectName, model);
         
-    RenderManager::DispatchMeshToDraw(lanternObjectName, manager, EntityType::TYPE_MESH);
+    RenderManager::DispatchMeshToDraw(lanterObject, manager);
 
     // attaching vector to the shader
     const std::string lightDirShaderName = "vsInput.viewlightDir";
@@ -27,7 +28,7 @@ void Lanterns::Prepare(AssetManager& manager)
         
     RenderManager::AttachVectorToBind(vectorDesc);
 
-    AddLightSourcePos(lanternObjectName, {LightType::LIGHT_DIRECTIONAL, _directionalLightDir});
+    AddLightSourcePos(lanterObject.name, {LightType::LIGHT_DIRECTIONAL, _directionalLightDir});
 }
 
 void Lanterns::AddLightSourcePos(const std::string entityName, std::pair<LightType, glm::vec3> data)

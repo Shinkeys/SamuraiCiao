@@ -13,7 +13,7 @@ private:
     std::unordered_map<std::string, CurrentModelDesc> _assetStorage;
 public:
     const uint32_t GetAssetsVAO() const { return _model->GetModelsEBOData().VAO;}
-    void AddEntityToLoad(const std::string entityName);
+    void AddEntityToLoad(ObjectDescriptor objectDesc);
     void BindStructures();
     // void DrawParticularModel(const std::string& entityName);
     void ApplyTransformation(const std::string& entityName, const glm::mat4 modelMat);

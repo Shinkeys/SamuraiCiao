@@ -1,11 +1,8 @@
+#pragma once
+
 #include "../types/types.h"
 #include <variant>
-// for RENDERING CLASS
-enum class EntityType
-{
-    TYPE_MESH,
-    TYPE_SKYBOX
-};  
+
 
 
 enum class RenderPassType

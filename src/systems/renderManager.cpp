@@ -13,21 +13,24 @@ namespace RenderManager
 
 }
 
-void RenderManager::DispatchMeshToDraw(const std::string& entityName, const AssetManager& manager, EntityType type)
+void RenderManager::DispatchMeshToDraw(const ObjectDescriptor& objDesc, const AssetManager& manager)
 {
-    const CurrentModelDesc* modelDescriptor = manager.GetModelDescriptorByName(entityName);
+    const CurrentModelDesc* modelDescriptor = manager.GetModelDescriptorByName(objDesc.name);
 
     if(modelDescriptor == nullptr)
     {
-        std::cout << "Model descriptor is nullptr, that means model is not found by name: " << entityName << '\n';
+        std::cout << "Model descriptor is nullptr, that means model is not found by name: " << objDesc.name << '\n';
         return;
     }
 
-    std::string meshName = entityName;
+    std::string meshName = objDesc.name;
     _meshDispatchesHandle.insert({meshName, modelDescriptor});
 
-    switch(type)
+    switch(objDesc.type)
     {
+    case EntityType::TYPE_NONE:
+        std::cout << "Object type is not specified, unable to dispatch for draw\n";
+        break;
     case EntityType::TYPE_MESH:
         _renderTypes[RenderPassType::RENDER_MAIN].push_back(modelDescriptor);
         break;
@@ -185,7 +188,7 @@ void RenderManager::DrawMainScene(AssetManager& manager)
     for(const auto mesh : _renderTypes.find(passType)->second)
     {
         // finding bounded transformations to current entity
-        const glm::mat4* transformation = manager.GetTransformMatrixByName(mesh->modelName);
+        const glm::mat4* transformation = manager.GetTransformMatrixByName(mesh->objDesc.name);
         if(transformation == nullptr)
         {
             shaderMainIt->second.SetMat4x4("model", standardModelMatrix);

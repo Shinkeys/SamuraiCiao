@@ -27,7 +27,8 @@ namespace RenderManager
     // matrices
     void AttachMatrixToBind(const MatrixDesc& matrixDesc);
     void BindAdditionalMatrices(const RenderPassType type, Shader* shader);
-    void DispatchMeshToDraw(const std::string& entityName, const AssetManager& manager, EntityType type);
+    // state change
+    void DispatchMeshToDraw(const ObjectDescriptor& objDesc, const AssetManager& manager);
     void AddShaderByType(Shader&& shader, RenderPassType renderType);
     void GlobalDraw(AssetManager& manager);
 

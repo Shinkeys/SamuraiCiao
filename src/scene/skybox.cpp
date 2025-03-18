@@ -54,16 +54,18 @@ uint32_t Skybox::StbiLoadCubeTexture(std::vector<std::string> entityNames)
 
 void Skybox::Prepare()
 {   
-    const std::string skyboxName = "skybox.gltf";
+    ObjectDescriptor skyboxObject;
+    skyboxObject.name = "skybox.gltf";
+    skyboxObject.type = EntityType::TYPE_SKYBOX;
 
     Shader skyboxShader;
     skyboxShader.LoadShaders("skybox.vert", "skybox.frag");
-    _assetManager.AddEntityToLoad(skyboxName);
+    _assetManager.AddEntityToLoad(skyboxObject);
     glm::mat4 model = glm::mat4(1.0f);;
     model = glm::scale(model, glm::vec3(0.1f));
-    _assetManager.ApplyTransformation(skyboxName, model);
+    _assetManager.ApplyTransformation(skyboxObject.name, model);
 
     
-    RenderManager::DispatchMeshToDraw(skyboxName, _assetManager, EntityType::TYPE_SKYBOX);
+    RenderManager::DispatchMeshToDraw(skyboxObject, _assetManager);
     RenderManager::AddShaderByType(std::move(skyboxShader), RenderPassType::RENDER_SKYBOX);
 }
