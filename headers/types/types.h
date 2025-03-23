@@ -16,8 +16,9 @@ class Shader;
 enum class EntityType
 {
     TYPE_NONE,
-    TYPE_MESH,
-    TYPE_SKYBOX
+    TYPE_BOX_MESH,
+    TYPE_COMPOUND_MESH,
+    TYPE_SKYBOX,
 };  
 
 namespace SamuraiDefines

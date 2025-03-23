@@ -17,7 +17,7 @@ bool Core::Initialize()
 
     ObjectDescriptor characterObject;
     characterObject.name = "character.obj";
-    characterObject.type = EntityType::TYPE_MESH;
+    characterObject.type = EntityType::TYPE_COMPOUND_MESH;
     _assetManager.AddEntityToLoad(characterObject);
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 25.0f));
@@ -25,20 +25,20 @@ bool Core::Initialize()
     _assetManager.ApplyTransformation(characterObject.name, model);
 
 
-    // ObjectDescriptor groundObject;
-    // groundObject.name = "ground.gltf";
-    // groundObject.type = EntityType::TYPE_MESH;
-    // _assetManager.AddEntityToLoad(groundObject);
-    // glm::mat4 groundModel = glm::mat4(1.0f);
-    // groundModel = glm::scale(groundModel, glm::vec3(5.0f));
-    // _assetManager.ApplyTransformation(groundObject.name, groundModel);
+    ObjectDescriptor groundObject;
+    groundObject.name = "ground.gltf";
+    groundObject.type = EntityType::TYPE_BOX_MESH;
+    _assetManager.AddEntityToLoad(groundObject);
+    glm::mat4 groundModel = glm::mat4(1.0f);
+    groundModel = glm::scale(groundModel, glm::vec3(5.0f));
+    _assetManager.ApplyTransformation(groundObject.name, groundModel);
 
 
 
     // testing normal mapping
     ObjectDescriptor normalObject;
     normalObject.name = "testnormalmapping.gltf";
-    normalObject.type = EntityType::TYPE_MESH;
+    normalObject.type = EntityType::TYPE_COMPOUND_MESH;
     _assetManager.AddEntityToLoad(normalObject);
     glm::mat4 normalModel = glm::mat4(1.0);
     normalModel = glm::translate(normalModel, glm::vec3(0.0f, -5.0f, 40.0f));
@@ -59,7 +59,7 @@ bool Core::Initialize()
     
     RenderManager::DispatchMeshToDraw(normalObject, _assetManager);
     RenderManager::DispatchMeshToDraw(characterObject, _assetManager);
-    // RenderManager::DispatchMeshToDraw(groundObject, _assetManager);
+    RenderManager::DispatchMeshToDraw(groundObject, _assetManager);
     RenderManager::AddShaderByType(std::move(mainShader), RenderPassType::RENDER_MAIN);
     
     // shadows
@@ -67,8 +67,10 @@ bool Core::Initialize()
     _shadowsHelper.Prepare();
     _assetManager.BindStructures();
 
+
     // collision
-    _collision.PassAssetManager(_assetManager);
+    _collision.PassAssetManager(&_assetManager);
+    _collision.PassCamera(&_camera);
     _collision.Prepare();
     // particles
     _particles.Prepare();
@@ -79,6 +81,7 @@ bool Core::Initialize()
 void Core::Update()
 {
     _camera.Update(Window::GetWindowPointer());
+    _collision.Update();
 
     // passing light pos in view to the shader
     // const glm::vec3 lightPosView = _lanternsObjects.LightPositionViewSpace(_camera.GetMVP());
@@ -98,8 +101,6 @@ void Core::Render()
 
     
     RenderManager::GlobalDraw(_assetManager);
-    _collision.VisualizeAABB(_camera.GetMVP().view, _camera.GetMVP().projection);
-    _collision.CheckCameraForCollision(_camera);
     _particles.RenderParticles();
     
     if(Window::GetKeysState().showImgui)
@@ -108,7 +109,6 @@ void Core::Render()
         // must be first: creating window
         _shadowsHelper.DebugShadows();
         _particles.EnableParticles();
-        _collision.EnableCollisionDisplay();
 
         // must be last: finishing frame
         SamuraiInterface::RenderImgui();

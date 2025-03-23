@@ -2,289 +2,377 @@
 #include "../../headers/systems/interface.h"
 #include "../../headers/backend/openglbackend.h"
 
+using namespace JPH;
 
-void Collision::PassAssetManager(AssetManager& manager)
+// Purpose: callback for traces. Should be in CPP file
+// Type: Jolt Standard
+static void TraceImpl(const char *inFMT, ...)
 {
-    _manager = &manager;
+	// Format the message
+	va_list list;
+	va_start(list, inFMT);
+	char buffer[1024];
+	vsnprintf(buffer, sizeof(buffer), inFMT, list);
+	va_end(list);
+
+	// Print to the TTY
+	std::cout << buffer << std::endl;
 }
 
 
-void Collision::AddCollisionTypeToObject(std::string entityName, CollisionType type)
+
+// Purpose: To make notifications on collision
+// Type: Own implementation of Jolt class
+class MyContactListener : public ContactListener
 {
-    if(type == CollisionType::COLLISION_AABB)
-    {
-        _collisionTypesStorage[entityName] = type;
-    }
-    else if(type == CollisionType::COLLISION_SPHERE)
-    {
-        _collisionTypesStorage[entityName] = type;
-    }
-}   
+public:
+	// See: ContactListener
+	virtual ValidateResult	OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) override
+	{
+		std::cout << "Contact validate callback" << std::endl;
 
-void Collision::CalculateModelSphere(const std::vector<Vertex>& vertices, const std::string& entityName, float radius)
+		// Allows you to ignore a contact before it is created (using layers to not make objects collide is cheaper!)
+		return ValidateResult::AcceptAllContactsForThisBodyPair;
+	}
+
+	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+	{
+		std::cout << "A contact was added" << std::endl;
+	}
+
+	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+	{
+		std::cout << "A contact was persisted" << std::endl;
+	}
+
+	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair) override
+	{
+		std::cout << "A contact was removed" << std::endl;
+	}
+};
+// Purpose: To make notifications on body activation
+// Type: Own implementation of Jolt class
+class MyBodyActivationListener : public BodyActivationListener
 {
-    Sphere modelSphere;
-    modelSphere.entityName = entityName;
+public:
+	virtual void		OnBodyActivated(const BodyID &inBodyID, uint64 inBodyUserData) override
+	{
+		std::cout << "A body got activated" << std::endl;
+	}
 
-    glm::vec3 minPoint{glm::vec3(std::numeric_limits<float>::max())};
-    glm::vec3 maxPoint{glm::vec3(std::numeric_limits<float>::lowest())};
-    for(int32_t i = 0; i < vertices.size(); ++i)
+	virtual void		OnBodyDeactivated(const BodyID &inBodyID, uint64 inBodyUserData) override
+	{
+		std::cout << "A body went to sleep" << std::endl;
+	}
+};
+
+
+void Collision::PassAssetManager(AssetManager* manager)
+{
+    if(manager == nullptr)
     {
-        // calculating min points of mesh
-        minPoint.x = std::min(minPoint.x, vertices[i].position.x);
-        minPoint.y = std::min(minPoint.y, vertices[i].position.y);
-        minPoint.z = std::min(minPoint.z, vertices[i].position.z);
-            
-        // calculating max points of mesh
-        maxPoint.x = std::max(maxPoint.x, vertices[i].position.x);
-        maxPoint.y = std::max(maxPoint.y, vertices[i].position.y);
-        maxPoint.z = std::max(maxPoint.z, vertices[i].position.z);
+        std::cout << "Passed manager to the collision class is null\n";
+        return;
     }
-
-    modelSphere.center = (minPoint + maxPoint) / 2.0f;
-    modelSphere.radius = radius;
-
-    
-
+    _manager = manager;
 }
 
-void Collision::CalculateModelAABB(const std::vector<Vertex>& vertices, const std::string& entityName)
+void Collision::PassCamera(Camera* camera)
 {
-    AABB modelAABB;
-    modelAABB.entityName = entityName;
-    
-    for(int32_t i = 0; i < vertices.size(); ++i)
+    if(camera == nullptr)
     {
-        // calculating min points of mesh
-
-        modelAABB.min.x = std::min(modelAABB.min.x, vertices[i].position.x);
-        modelAABB.min.y = std::min(modelAABB.min.y, vertices[i].position.y);
-        modelAABB.min.z = std::min(modelAABB.min.z, vertices[i].position.z);
-            
-
-        // calculating max points of mesh
-        modelAABB.max.x = std::max(modelAABB.max.x, vertices[i].position.x);
-        modelAABB.max.y = std::max(modelAABB.max.y, vertices[i].position.y);
-        modelAABB.max.z = std::max(modelAABB.max.z, vertices[i].position.z);
-
+        std::cout << "Passed camera to the collision class is null\n";
+        return;
     }
-    AddAABBForModel(modelAABB);
+    _camera = camera;
 }
 
-void Collision::AddAABBForModel(const AABB& aabb)
-{
-    const glm::vec3& min = aabb.min;
-    const glm::vec3& max = aabb.max;
 
-    AABBData collisionData;
-
-    collisionData.vertices = 
-    {
-        {min.x, min.y, max.z}, {min.x, min.y, min.z}, {max.x, min.y, max.z}, {max.x, min.y, min.z},
-        {min.x, max.y, max.z}, {min.x, max.y, min.z}, {max.x, max.y, max.z}, {max.x, max.y, min.z},
-        {min.x, min.y, max.z}, {min.x, max.y, max.z}, {min.x, min.y, max.z}, {max.x, min.y, max.z},
-        {max.x, min.y, max.z}, {max.x, max.y, max.z}, {max.x, max.y, max.z}, {min.x, max.y, max.z},
-        {min.x, min.y, min.z}, {min.x, max.y, min.z}, {min.x, min.y, min.z}, {max.x, min.y, min.z},
-        {max.x, min.y, min.z}, {max.x, max.y, min.z}, {max.x, max.y, min.z}, {min.x, max.y, min.z}
-    };
-
-    static uint32_t vertexOffset = 0;
-    collisionData.offset = vertexOffset;
-    vertexOffset += static_cast<uint32_t>(collisionData.vertices.size());
-
-    // storing max and min points of AABB box
-    collisionData.aabbPoints = aabb;
-
-    _collisionAABBStorage.emplace(aabb.entityName, std::move(collisionData));
-}
-
+// Purpose: Simplify readability a bit
+// Type: Collision class method impl
 void Collision::Prepare()
 {
-    _debugShader.LoadShaders("collisionDebug.vert", "collisionDebug.frag");
+    Setup();
+    CreateCameraCollider();
+    CreateCollidersForScene();
+    _physSystem.OptimizeBroadPhase();
+}
 
-
-    // calculating minimal and maximal points of model to make AABB
-
-    for(auto it = _manager->GetAssetStorage().begin(); it != _manager->GetAssetStorage().end(); ++it)
+// Purpose: Initialize all jolt stuff
+// Type: Collision class method impl
+void Collision::Setup()
+{
+    if(_manager == nullptr)
     {
-        // skipping object if object type is not a mesh
-        if(it->second.objDesc.type != EntityType::TYPE_MESH) continue;
-
-        auto meshVertices = _manager->GetMeshVerticesByName(it->first);
-        if(meshVertices == std::nullopt)
-        {
-            std::cout << "Cannot load collision for model " << it->first << '\n';
-            break;
-        }
-        
-        const std::string& entityName = it->first;
-
-        // looking for type of collision for object, if not found then AABB default
-        auto meshType = _collisionTypesStorage.find(entityName);
-        if(meshType == _collisionTypesStorage.end())
-        {
-            CalculateModelAABB(meshVertices.value(), entityName);
-            continue;
-        }
-
-
-        switch(meshType->second)
-        {
-        case CollisionType::COLLISION_AABB:
-            CalculateModelAABB(meshVertices.value(), entityName);
-            break;
-
-        case CollisionType::COLLISION_SPHERE:
-            CalculateModelSphere(meshVertices.value(), entityName, 1.0f);
-            break;
-
-        default: 
-            std::cout << "Error in calculating collision for object, called default statement in prepare\n";
-            break;
-        }
-
+        std::cout << "Forgot to pass asset manager to the collision class\n";
+        return;
     }
+
+    RegisterDefaultAllocator();
+
+    // installing callbacks
+    Trace = TraceImpl;
+    JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
+
+    Factory::sInstance = new Factory();
+
+    // register all default physics types
+    RegisterTypes();
+
+
+    // need to initialize it later, so use unique_ptr as it wouldn't see implementation in other case
+    _tempAllocator = std::make_unique<JPH::TempAllocatorImpl>(10 * 1024 * 1024);
+
+    _jobSystem.Init(cMaxPhysicsJobs, cMaxPhysicsBarriers, thread::hardware_concurrency() - 1);
+    // rigidbodies amount
+    const uint cMaxBodies = 65536;
+
+    // how many mutexes to allocate to protect rigib bodies from concurrency. 0 - def
+    const uint cNumBodyMutexes = 0;
+
+    // max amount of body pairs that can be queued at any time
+    const uint cMaxBodyPair = 65536;
+
+    // max size of contact buffer if more collision detected, rest would be ignored
+    const uint cMaxContactConstraints = 10240;
+    // initializing physics system
+    _physSystem.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPair, cMaxContactConstraints,
+        _broadPhaseLayerInterface, _objectVsBroadphaseLayerFilter, _objectVsObjectLayerFilter);
     
-    // important: doing traversal like this because if would traverse through collision storage
-    // order of data would be messed and would give wrong output
-    // placing collision data in buffer to send it to the GPU
-    for(auto it = _manager->GetAssetStorage().begin(); it != _manager->GetAssetStorage().end(); ++it)
+    
+
+    // unique_ptr doesn't work because of static assertions
+    _bodyActivationListener = new MyBodyActivationListener;
+    _physSystem.SetBodyActivationListener(_bodyActivationListener);
+    _contactListener = new MyContactListener;
+    _physSystem.SetContactListener(_contactListener);
+    
+    _bodyManager->Init(cMaxBodies, cNumBodyMutexes, _broadPhaseLayerInterface);
+    _bodyInterface = &_physSystem.GetBodyInterface();
+}
+
+void Collision::CreateCollidersForScene()
+{
+    if(_bodyInterface == nullptr)
     {
-        CollisionType objectType = CollisionType::COLLISION_AABB;
-        const std::string& entityName = it->first;
-
-        auto findObjectType = _collisionTypesStorage.find(entityName);
-        if(findObjectType != _collisionTypesStorage.end())
-            objectType = findObjectType->second;
-
-
-        switch(objectType)
+        std::cout << "Error, can't create colliders as body interface is nullptr\n";
+        return;
+    }
+    for(auto it = _manager->GetAssetStorage().begin(); it  != _manager->GetAssetStorage().end(); ++it)
+    {
+        switch(it->second.objDesc.type)
         {
-        case CollisionType::COLLISION_AABB:
+        case EntityType::TYPE_BOX_MESH:
             {
-                auto collisionModel = _collisionAABBStorage.find(entityName);
-            
-                if(collisionModel != _collisionAABBStorage.end())
-                {
-                    _setup.vertices.insert(_setup.vertices.end(), 
-                    collisionModel->second.vertices.begin(), collisionModel->second.vertices.end());
-                }
-                break;
-            }
-        
-        // case CollisionType::COLLISION_SPHERE:
-        //     {
-        //         auto collisionModel = _collisionSphereStorage.find(entityName);
-        
-        //         if(collisionModel != _collisionSphereStorage.end())
-        //         {
-        //             _setup.vertices.insert(_setup.vertices.end(), 
-        //                 collisionModel->second.vertices.begin(), collisionModel->second.vertices.end());
-        //         }
-        //         break;
-        //     }
+                auto boxVertices = SimplifyBoxShapes(it->first);
+                if(boxVertices == std::nullopt) 
+                    continue;
 
-        default: 
-            std::cout << "Unable to add vertices for object collision, not found by type\n";
+                BoxShapeSettings boxShapeSettings(Vec3(boxVertices.value())); 
+                boxShapeSettings.SetEmbedded();
+
+                ShapeSettings::ShapeResult boxShapeRes = boxShapeSettings.Create();
+                if(boxShapeRes.HasError())
+                {
+                    std::cout << "Jolt: "  << boxShapeRes.GetError() << "\n";
+                    continue;
+                }
+                ShapeRefC boxShape = boxShapeRes.Get();
+                
+                const glm::mat4* objectTransformMatrix = _manager->GetTransformMatrixByName(it->first);
+                if(objectTransformMatrix == nullptr)
+                {
+                    std::cout << "Transform matrix of object " << it->first << " is empty\n";
+                    continue;
+                }
+                
+                const glm::vec3 worldPos = glm::vec3((*objectTransformMatrix)[3]);
+
+                BodyCreationSettings boxSettings(boxShape, RVec3(worldPos.x, worldPos.y, worldPos.z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+
+
+                // creating rigidbody
+                Body* body = _bodyInterface->CreateBody(boxSettings);
+
+                if(body == nullptr)
+                {
+                    std::cout << "Reached limit of body count, can't create rigidbodies\n";
+                    continue;
+                }
+                _rigidbodyStorage.emplace(it->first, body);
+                
+                // adding to the world
+                _bodyInterface->AddBody(body->GetID(), EActivation::DontActivate);
+            
+
+            }
             break;
         }
+    }
+}
 
-        // _setup.indices.insert(_setup.indices.end(), it->second.indices.begin(), it->second.indices.end());
+std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName)
+{
+    auto meshVertices = _manager->GetMeshVerticesByName(entityName);
+    if(meshVertices == std::nullopt)
+    {
+        std::cout << "Cannot load collision for model " << entityName << '\n';
+        return std::nullopt;
+    }
+
+    AABB modelAABB;
+
+    for(int32_t i = 0; i < meshVertices.value().size(); ++i)
+    {
+        modelAABB.min.x = std::min(modelAABB.min.x, meshVertices.value()[i].position.x);
+        modelAABB.min.y = std::min(modelAABB.min.y, meshVertices.value()[i].position.y);
+        modelAABB.min.z = std::min(modelAABB.min.z, meshVertices.value()[i].position.z);
+
+    }
+
+    // Transforming to world coords
+    const glm::mat4* mat = _manager->GetTransformMatrixByName(entityName);
+    if(mat == nullptr)
+    {
+        std::cout << "Unable to find matrix by name for simplifying mesh for collision\n";
+        return std::nullopt;
+    }
+
+    glm::vec3 halfExtent = (modelAABB.max - modelAABB.min) / 2.0f;
+
+    // Jolt doesn't support 0 convex radius
+
+    // IMPORTANT: IT SHOULD BE MINIMUM!!! 0.05F !!!MINIMUM
+    halfExtent.x = std::max(halfExtent.x, 0.05f);
+    halfExtent.y = std::max(halfExtent.y, 0.05f);
+    halfExtent.z = std::max(halfExtent.z, 0.05f);
+
+    Vec3 halfExtentVec = Vec3(halfExtent.x, halfExtent.y, halfExtent.z);
+
+    return halfExtentVec;
+}
+
+
+void Collision::CreateCameraCollider()
+{
+    const glm::vec3& camPos = _camera->GetPosition();
+
+    const float camHalfHeight = camPos.y / 2.0f;
+    
+
+    CapsuleShapeSettings cameraCapsuleSettings(camHalfHeight, _camCylinderRadius);
+    cameraCapsuleSettings.SetEmbedded();
+    
+    ShapeSettings::ShapeResult cameraShapeRes = cameraCapsuleSettings.Create();
+    if(cameraShapeRes.HasError())
+    {
+        std::cout << "Jolt: "  << cameraShapeRes.GetError() << "\n";
+        return;
+    }
+    ShapeRefC cameraShape = cameraShapeRes.Get();
+
+    BodyCreationSettings cameraSettings(cameraShape, RVec3(camPos.x, camPos.y, camPos.z), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING);
+
+    // creating rigidbody
+    Body* body = _bodyInterface->CreateBody(cameraSettings);
+
+    if(body == nullptr)
+    {
+        std::cout << "Reached limit of body count, can't create rigidbodies\n";
+    }
+    const std::string cameraObjName = "camera";
+    _rigidbodyStorage.emplace(cameraObjName, body);
+                
+    // adding to the world
+    _bodyInterface->AddBody(body->GetID(), EActivation::Activate);
+
+}
+
+void Collision::PrePhysicsCamUpdate()
+{
+    if(_camera == nullptr)
+    {
+        std::cout << "Camera object is nullptr\n";
+        return;
+    }
+    auto camPos = _camera->GetPosition();
+    auto camDir = _camera->GetDirection();
+
+    const float camHalfHeight = camPos.y / 2.0f;
+    
+    // TO REPLACE TO REPLACE TO REPLACE TO REPLACE TO REPLACE TO REPLACE TO REPLACE 
+
+    CapsuleShapeSettings cameraCapsuleSettings(camHalfHeight, _camCylinderRadius);
+    cameraCapsuleSettings.SetEmbedded();
+    
+    ShapeSettings::ShapeResult cameraShapeRes = cameraCapsuleSettings.Create();
+    if(cameraShapeRes.HasError())
+    {
+        std::cout << "Jolt: "  << cameraShapeRes.GetError() << "\n";
+        return;
     }
 
 
 
+    RShapeCast shapeCast(cameraShapeRes.Get(), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Vec3(camDir.x, camDir.y, camDir.z));
+    ClosestHitCollisionCollector<CastShapeCollector> collector;
+    ShapeCastSettings settings;
+    _physSystem.GetNarrowPhaseQuery().CastShape(shapeCast, settings, Vec3(0.0f, 0.0f, 0.0f), collector);
 
-    // sending AABB data to the GPU to make surrouznding box around every model later
-    OpenglBackend::BindModelVBO(_setup);
+    if(collector.HadHit())
+    {
+        std::cout << "HIT\n";
+    }
+
+    ///////////////////////////////////////////////////////////////////
+
+    Quat newRotation = Quat::sIdentity();
+
+    auto cameraObj = _rigidbodyStorage.find("camera");
+    if(cameraObj == _rigidbodyStorage.end())
+    {
+        std::cout << "Camera object is not stored in the storage\n";
+        return;
+    }
+
+
+    const Vec3 cameraNewPos = Vec3(camPos.x, camPos.y, camPos.z);
+    _bodyInterface->MoveKinematic(cameraObj->second->GetID(), cameraNewPos, newRotation, CollisionDefines::g_DeltaTime);
+}
+
+
+void Collision::Update()
+{
+    PrePhysicsCamUpdate();
+    _physSystem.Update(CollisionDefines::g_DeltaTime, CollisionDefines::g_CollisionSteps, _tempAllocator.get(), &_jobSystem);
+}
+
+Collision::~Collision()
+{
+    for(const auto& body : _rigidbodyStorage)
+    {
+        _bodyInterface->RemoveBody(body.second->GetID());
+        _bodyInterface->DestroyBody(body.second->GetID());
+    }
+
+
+    delete _bodyActivationListener;
+    delete _contactListener;
+
+    UnregisterTypes();
+    delete Factory::sInstance;
+    Factory::sInstance = nullptr;
+}
+
+void Collision::WorkWithCollisionDebug()
+{
+    if(!_debugCollision) return;
+
+
 
 }
 
 void Collision::EnableCollisionDisplay()
 {
-    ImGui::Checkbox("Show collision AABB", &_visualizeAABB);
-}
-
-void Collision::UpdateAABB()
-{
-    // traverse mesh vertices find low left corner, top right corner
-}
-
-// passing as parameters because would refactor matrices system later
-void Collision::VisualizeAABB(const glm::mat4& view, const glm::mat4& projection)
-{
-    if(_visualizeAABB)
-    {
-        glBindVertexArray(_setup.VAO);
-        _debugShader.UseShader();
-        
-        for(auto currentMeshIt = _collisionAABBStorage.begin(); currentMeshIt != _collisionAABBStorage.end(); ++currentMeshIt)
-        {
-            const std::string& meshName = currentMeshIt->first;
-            
-            const glm::mat4* modelMatrix = _manager->GetTransformMatrixByName(meshName);
-            if(modelMatrix != nullptr)
-                _debugShader.SetMat4x4("model", *modelMatrix);
-            else _debugShader.SetMat4x4("model", glm::mat4(1.0f));
-
-            _debugShader.SetMat4x4("view", view);
-            _debugShader.SetMat4x4("projection", projection);
-            
-
-            const size_t verticesCount = static_cast<size_t>(currentMeshIt->second.vertices.size());
-            glDrawArrays(GL_LINES, currentMeshIt->second.offset, verticesCount);
-        }
-    }
-}
-
-void Collision::CheckCameraForCollision(Camera& camera)
-{
-    for(auto currentMeshIt = _collisionAABBStorage.begin(); currentMeshIt != _collisionAABBStorage.end(); ++currentMeshIt)
-    {
-        const std::string& meshName = currentMeshIt->first;
-        
-        const glm::mat4* modelMatrix = _manager->GetTransformMatrixByName(meshName);
-        if(modelMatrix == nullptr)
-        {
-            std::cout << "Can't calculate collision with the camera, model matrix" << meshName << "is nullptr\n";
-            continue;
-        }
-        glm::vec4 transformWorldSpaceCam = glm::mat4(1.0f) * glm::vec4(camera.GetPosition(), 1.0f);
-        const glm::vec3 cameraWorldPos = static_cast<glm::vec3>(transformWorldSpaceCam);
-        
-        glm::vec4 transformWorldSpaceAABBMin = *modelMatrix * glm::vec4(currentMeshIt->second.aabbPoints.min, 1.0f);
-        const glm::vec3 aabbMinWorldPos = static_cast<glm::vec3>(transformWorldSpaceAABBMin) / transformWorldSpaceAABBMin.w;
-        glm::vec4 transformWorldSpaceAABBMax = *modelMatrix * glm::vec4(currentMeshIt->second.aabbPoints.max, 1.0f);
-        const glm::vec3 aabbMaxWorldPos = static_cast<glm::vec3>(transformWorldSpaceAABBMax) / transformWorldSpaceAABBMax.w;
-
-
-        const glm::vec3 aabbWorldCenter = (aabbMaxWorldPos + aabbMinWorldPos) / 2.0f;
-        // specifying size of mesh
-        const glm::vec3 objectWorldExtent = aabbMaxWorldPos - aabbMinWorldPos;
-
-        static int coll = 0;
-        if(CalculateCameraCollision(camera, aabbWorldCenter, objectWorldExtent))
-        {
-            std::cout << coll++ << "Collision\n";
-        }
-        
-    }
-}
-
-// Purpose: camera collision would be represented via sphere type, so would calculate collision with the others
-// according to this fact
-// Idea: finding closest point on the OBJECT and checking if some parts inside of the camera sphere. If so - collision detected
-bool Collision::CalculateCameraCollision(Camera& camera, const glm::vec3& objectCenter, const glm::vec3& objectExtent)
-{  
-    const glm::vec3& camPos = camera.GetPosition();
-    // distance from sphere center(camera) to the object
-    const glm::vec3 distance = camPos - objectCenter;
-
-    const glm::vec3 halfExtent = objectExtent / 2.0f;
-
-    const glm::vec3 nearestPoint = objectCenter + glm::clamp(distance, -halfExtent, halfExtent);
-
-    const glm::vec3 difference = camPos - nearestPoint;
-
-    return glm::length(difference) < _cameraSphereRadius;
+    ImGui::Checkbox("Debug collision", &_debugCollision);
 }

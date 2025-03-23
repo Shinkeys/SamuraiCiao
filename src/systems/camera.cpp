@@ -37,19 +37,19 @@ void Camera::CalculateKeyboard(Window* window)
 	lastFrame = currentFrame;
 	if (window->GetKeysState().right)
 	{
-		_position += glm::normalize(_right) * deltaTime * 5.0f;
+		_position += glm::normalize(_right) * deltaTime * _velocity;
 	}
 	if (window->GetKeysState().left)
 	{
-		_position -= glm::normalize(_right) * deltaTime * 5.0f;
+		_position -= glm::normalize(_right) * deltaTime * _velocity;
 	}
 	if (window->GetKeysState().front)
 	{
-		_position += _forward * deltaTime * 5.0f;
+		_position += _forward * deltaTime * _velocity;
 	}
 	if (window->GetKeysState().back)
 	{
-		_position -= _forward * deltaTime * 5.0f;
+		_position -= _forward * deltaTime * _velocity;
 	}
 	_position.y = 2.5f;
 }

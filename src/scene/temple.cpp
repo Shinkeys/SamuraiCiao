@@ -10,7 +10,7 @@ void Temple::Prepare(Shader& shader)
 {
     ObjectDescriptor templeObject;
     templeObject.name = "scene.gltf";
-    templeObject.type = EntityType::TYPE_MESH;
+    templeObject.type = EntityType::TYPE_BOX_MESH;
     _assetManager.AddEntityToLoad(templeObject);
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));

@@ -13,6 +13,9 @@ private:
     glm::vec3 _forward{glm::vec3(0.0f, 0.0f, -1.0f)};
     glm::vec3 _up{ 0.0f, 1.0f, 0.0f };
     glm::vec3 _right{ glm::normalize(glm::cross(_up, _direction)) };
+
+    float _velocity = 5.0f;
+
     void CalculateDirection(Window* window);
     void CalculateKeyboard(Window* window);
 
@@ -23,10 +26,13 @@ public:
     Camera();
     ~Camera();
     void Update(Window* window);
+    float GetVelocity() const { return _velocity;}
+    void SetVelocity(float velocity) { _velocity = velocity;}
     const glm::vec3 GetOrigin() const       { return _origin;} 
     static const Matrices& GetMVP()         { return _matrices;}
     void SetMatrices(Matrices& matr)        { _matrices = matr;}
 	const glm::vec3 GetPosition() const     { return _position; }
+    const glm::vec3 GetDirection() const    { return _direction;}
     void SetPosition(glm::vec3 newPos)      { _position = newPos;}
 
 };

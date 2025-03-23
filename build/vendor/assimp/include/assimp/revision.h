@@ -23,7 +23,7 @@
 #ifdef  NDEBUG
 #define VER_ORIGINAL_FILENAME_STR   "libassimp.dll"
 #else
-#define VER_ORIGINAL_FILENAME_STR   "libassimp.dll"
+#define VER_ORIGINAL_FILENAME_STR   "libassimpd.dll"
 #endif //  NDEBUG
 
 #endif // ASSIMP_REVISION_H_INC

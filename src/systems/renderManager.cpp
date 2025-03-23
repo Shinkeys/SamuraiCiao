@@ -31,11 +31,14 @@ void RenderManager::DispatchMeshToDraw(const ObjectDescriptor& objDesc, const As
     case EntityType::TYPE_NONE:
         std::cout << "Object type is not specified, unable to dispatch for draw\n";
         break;
-    case EntityType::TYPE_MESH:
+    case EntityType::TYPE_COMPOUND_MESH:
         _renderTypes[RenderPassType::RENDER_MAIN].push_back(modelDescriptor);
         break;
     case EntityType::TYPE_SKYBOX:
         _renderTypes[RenderPassType::RENDER_SKYBOX].push_back(modelDescriptor);
+        break;
+    case EntityType::TYPE_BOX_MESH:
+        _renderTypes[RenderPassType::RENDER_MAIN].push_back(modelDescriptor);
         break;
     default: std::cout << "No type of model dispatch\n";
         break;

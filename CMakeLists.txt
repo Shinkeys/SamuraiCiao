@@ -38,6 +38,9 @@ target_include_directories(SamuraiCiao PRIVATE vendor/stb)
 target_include_directories(SamuraiCiao PRIVATE vendor/glm)
 target_include_directories(SamuraiCiao PRIVATE vendor/assimp/include)
 target_include_directories(SamuraiCiao PRIVATE vendor/imgui vendor/imgui/backends)
+# defines for jolt to compile
+add_definitions(-DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER -DJPH_OBJECT_STREAM)
+target_include_directories(SamuraiCiao PRIVATE vendor/imgui ${JoltPhysics_SOURCE_DIR}/..)
 add_library(imgui STATIC 
     vendor/imgui/imgui.cpp
     vendor/imgui/imgui_draw.cpp
@@ -53,7 +56,7 @@ target_include_directories(imgui PRIVATE
     vendor/imgui/backends)
 target_link_directories(SamuraiCiao PRIVATE vendor/glfw/lib)
 target_link_directories(SamuraiCiao PRIVATE vendor/assimp/lib)
-target_link_libraries(SamuraiCiao glfw OpenGL::GL imgui assimp)
+target_link_libraries(SamuraiCiao glfw OpenGL::GL imgui assimp Jolt)
 #  -fsanitize=address -fsanitize=undefined remove that to make it possible to work with renderdoc, otherwise place in target libs
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
