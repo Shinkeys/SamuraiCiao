@@ -102,13 +102,16 @@ void Core::Render()
     
     RenderManager::GlobalDraw(_assetManager);
     _particles.RenderParticles();
-    
+
+
+    _collision.WorkWithCollisionDebug();
     if(Window::GetKeysState().showImgui)
     {
         SamuraiInterface::DebugWindow(_camera.GetPosition());
         // must be first: creating window
         _shadowsHelper.DebugShadows();
         _particles.EnableParticles();
+        _collision.EnableCollisionDisplay();
 
         // must be last: finishing frame
         SamuraiInterface::RenderImgui();

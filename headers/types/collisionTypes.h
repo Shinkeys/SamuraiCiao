@@ -21,7 +21,6 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
-#include <Jolt/Renderer/DebugRenderer.h>
 
 
 namespace CollisionDefines
@@ -61,7 +60,7 @@ namespace Layers
 
 // Purpose: class to check which object could collide
 // Type: Jolt Standard
-class ObjectLayerPairFilterImpl : public ObjectLayerPairFilter
+class ObjectLayerPairFilterImpl : public JPH::ObjectLayerPairFilter
 {
 public:
 	virtual bool					ShouldCollide(JPH::ObjectLayer inObject1, JPH::ObjectLayer inObject2) const override
@@ -84,14 +83,14 @@ public:
 // Type: Jolt Standard
 namespace BroadPhaseLayers
 {
-	static constexpr BroadPhaseLayer NON_MOVING(0);
-	static constexpr BroadPhaseLayer MOVING(1);
+	static constexpr JPH::BroadPhaseLayer NON_MOVING(0);
+	static constexpr JPH::BroadPhaseLayer MOVING(1);
 	static constexpr uint32_t NUM_LAYERS(2);
 };
 
 // Purpose: This defines a mapping between object and broadphase layers.
 // Type: Jolt Standard
-class BPLayerInterfaceImpl final : public BroadPhaseLayerInterface
+class BPLayerInterfaceImpl final : public JPH::BroadPhaseLayerInterface
 {
 public:
 									BPLayerInterfaceImpl()
@@ -106,34 +105,34 @@ public:
 		return BroadPhaseLayers::NUM_LAYERS;
 	}
 
-	virtual BroadPhaseLayer			GetBroadPhaseLayer(ObjectLayer inLayer) const override
+	virtual JPH::BroadPhaseLayer			GetBroadPhaseLayer(JPH::ObjectLayer inLayer) const override
 	{
 		JPH_ASSERT(inLayer < Layers::NUM_LAYERS);
 		return mObjectToBroadPhase[inLayer];
 	}
 
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
-	virtual const char *			GetBroadPhaseLayerName(BroadPhaseLayer inLayer) const override
+	virtual const char *			GetBroadPhaseLayerName(JPH::BroadPhaseLayer inLayer) const override
 	{
-		switch ((BroadPhaseLayer::Type)inLayer)
+		switch ((JPH::BroadPhaseLayer::Type)inLayer)
 		{
-		case (BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
-		case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
 		default:													JPH_ASSERT(false); return "INVALID";
 		}
 	}
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 private:
-	BroadPhaseLayer					mObjectToBroadPhase[Layers::NUM_LAYERS];
+	JPH::BroadPhaseLayer					mObjectToBroadPhase[Layers::NUM_LAYERS];
 };
 
 // Purpose: class that determines if an object layer can collide with a broadphase layer
 // Type: Jolt Standard
-class ObjectVsBroadPhaseLayerFilterImpl : public ObjectVsBroadPhaseLayerFilter
+class ObjectVsBroadPhaseLayerFilterImpl : public JPH::ObjectVsBroadPhaseLayerFilter
 {
 public:
-	virtual bool				ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const override
+	virtual bool				ShouldCollide(JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2) const override
 	{
 		switch (inLayer1)
 		{
@@ -147,3 +146,23 @@ public:
 		}
 	}
 };
+
+
+
+// Purpose: convert Jolt matrix to GLM matrix
+inline glm::mat4 ConvertJoltMat4ToGlm(JPH::RMat44Arg inModelMatrix)
+{
+	glm::mat4 result;
+
+	JPH::Vec4 axisX = inModelMatrix.GetColumn4(0);
+	JPH::Vec4 axisY = inModelMatrix.GetColumn4(1);
+	JPH::Vec4 axisZ = inModelMatrix.GetColumn4(2);
+	JPH::Vec4 translationPart = inModelMatrix.GetColumn4(3);
+
+	result[0] = glm::vec4(axisX.GetX(), axisX.GetY(), axisX.GetZ(), axisX.GetW());
+	result[1] = glm::vec4(axisY.GetX(), axisY.GetY(), axisY.GetZ(), axisY.GetW());
+	result[2] = glm::vec4(axisZ.GetX(), axisZ.GetY(), axisZ.GetZ(), axisZ.GetW());
+	result[3] = glm::vec4(translationPart.GetX(), translationPart.GetY(), translationPart.GetZ(), translationPart.GetW());
+
+	return result;
+}

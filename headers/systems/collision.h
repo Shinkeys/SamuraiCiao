@@ -16,18 +16,17 @@ struct AABB
 
 class MyBodyActivationListener; 
 class MyContactListener;
-class MyDebugRenderer;
 
 class Collision
 {
 private:
-    JobSystemThreadPool _jobSystem;
-    std::unique_ptr<TempAllocatorImpl> _tempAllocator;
-    BodyInterface* _bodyInterface = nullptr;
-    BodyManager* _bodyManager = nullptr;
-    PhysicsSystem _physSystem;
+    JPH::JobSystemThreadPool _jobSystem;
+    std::unique_ptr<JPH::TempAllocatorImpl> _tempAllocator;
+    JPH::BodyInterface* _bodyInterface = nullptr;
+    JPH::BodyManager* _bodyManager = nullptr;
+    JPH::PhysicsSystem _physSystem;
     BPLayerInterfaceImpl _broadPhaseLayerInterface;
-    ObjectVsBroadPhaseLayerFilter _objectVsBroadphaseLayerFilter;
+    JPH::ObjectVsBroadPhaseLayerFilter _objectVsBroadphaseLayerFilter;
     ObjectLayerPairFilterImpl _objectVsObjectLayerFilter;
     
     // event listeners
@@ -47,10 +46,13 @@ private:
     void Setup();
 
     // debug
-    void WorkWithCollisionDebug();
     bool _debugCollision{false};
     CollisionDebug _debugInstance;
+    // handle to convert shapes to geometry representation for drawing
+    using ShapeToGeometryMap = JPH::UnorderedMap<JPH::RefConst<JPH::Shape>, JPH::DebugRenderer::GeometryRef>;
+	ShapeToGeometryMap _shapeToGeometry;            
 public:
+    void WorkWithCollisionDebug();
     void EnableCollisionDisplay();
     void Prepare();
     void Update();

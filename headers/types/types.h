@@ -76,6 +76,16 @@ struct EBOSetup
     uint32_t EBO{0};
 };
 
+
+struct EBOSetupFloat
+{
+    std::vector<float> vertices;
+    std::vector<uint32_t> indices;
+    uint32_t VAO{0};
+    uint32_t VBO{0};
+    uint32_t EBO{0};
+};
+
 struct EBOSetupUnskinned
 {
     std::vector<glm::vec3> vertices;

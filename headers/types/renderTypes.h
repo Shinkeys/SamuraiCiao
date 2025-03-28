@@ -12,7 +12,8 @@ enum class RenderPassType
     RENDER_DEPTHPASS,
     RENDER_PARTICLES,
     RENDER_PARTICLES_COMP,
-    RENDER_SCENE_EDITOR
+    RENDER_SCENE_EDITOR,
+    RENDER_COLLISION_DEBUG,
 };
 // basically struct to make it more convenient to operate later
 struct TextureDesc

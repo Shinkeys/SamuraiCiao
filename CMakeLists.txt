@@ -19,8 +19,11 @@ ${GLSL_SOURCE_FILES} ${HEADER_FILES} vendor/glad/src/glad.c)
 target_include_directories(SamuraiCiao PRIVATE vendor/glad/include)
 
 set_target_properties(SamuraiCiao PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS YES)
+# # need to turn off rtti, otherwise jolt won't compile
+# target_compile_options(SamuraiCiao PRIVATE -fno-rtti)
 
-# ASAN, UBSAN
+
+# ASAN, UBSAN 
 
 
 # compiling assimp
@@ -41,6 +44,8 @@ target_include_directories(SamuraiCiao PRIVATE vendor/imgui vendor/imgui/backend
 # defines for jolt to compile
 add_definitions(-DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER -DJPH_OBJECT_STREAM)
 target_include_directories(SamuraiCiao PRIVATE vendor/imgui ${JoltPhysics_SOURCE_DIR}/..)
+
+
 add_library(imgui STATIC 
     vendor/imgui/imgui.cpp
     vendor/imgui/imgui_draw.cpp
@@ -59,6 +64,9 @@ target_link_directories(SamuraiCiao PRIVATE vendor/assimp/lib)
 target_link_libraries(SamuraiCiao glfw OpenGL::GL imgui assimp Jolt)
 #  -fsanitize=address -fsanitize=undefined remove that to make it possible to work with renderdoc, otherwise place in target libs
 
+
+
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+

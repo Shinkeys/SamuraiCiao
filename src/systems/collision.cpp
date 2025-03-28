@@ -298,34 +298,6 @@ void Collision::PrePhysicsCamUpdate()
     auto camPos = _camera->GetPosition();
     auto camDir = _camera->GetDirection();
 
-    const float camHalfHeight = camPos.y / 2.0f;
-    
-    // TO REPLACE TO REPLACE TO REPLACE TO REPLACE TO REPLACE TO REPLACE TO REPLACE 
-
-    CapsuleShapeSettings cameraCapsuleSettings(camHalfHeight, _camCylinderRadius);
-    cameraCapsuleSettings.SetEmbedded();
-    
-    ShapeSettings::ShapeResult cameraShapeRes = cameraCapsuleSettings.Create();
-    if(cameraShapeRes.HasError())
-    {
-        std::cout << "Jolt: "  << cameraShapeRes.GetError() << "\n";
-        return;
-    }
-
-
-
-    RShapeCast shapeCast(cameraShapeRes.Get(), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Vec3(camDir.x, camDir.y, camDir.z));
-    ClosestHitCollisionCollector<CastShapeCollector> collector;
-    ShapeCastSettings settings;
-    _physSystem.GetNarrowPhaseQuery().CastShape(shapeCast, settings, Vec3(0.0f, 0.0f, 0.0f), collector);
-
-    if(collector.HadHit())
-    {
-        std::cout << "HIT\n";
-    }
-
-    ///////////////////////////////////////////////////////////////////
-
     Quat newRotation = Quat::sIdentity();
 
     auto cameraObj = _rigidbodyStorage.find("camera");
@@ -366,10 +338,140 @@ Collision::~Collision()
 
 void Collision::WorkWithCollisionDebug()
 {
-    if(!_debugCollision) return;
+#ifdef JPH_DEBUG_RENDERER
+    if(_debugCollision)
+#endif
+    {
+        ShapeToGeometryMap shapeToGeometry;
+        BodyIDVector bodies;
+        _physSystem.GetBodies(bodies);
+        const BodyLockInterface& bli = _physSystem.GetBodyLockInterface();
+        for(const auto& body : bodies)
+        {
+            BodyLockRead lock(bli, body);
+
+            if(lock.SucceededAndIsInBroadPhase())
+            {   
+                const Body& body = lock.GetBody();
+                AllHitCollisionCollector<TransformedShapeCollector> collector;
+                body.GetTransformedShape().CollectTransformedShapes(body.GetWorldSpaceBounds(), collector);
+                // can allocate memory on heap without deleting because it works like smart ptr
+                for(const TransformedShape& transformedShape : collector.mHits)
+                {
+                    DebugRenderer::GeometryRef geometry;
+                    
+                    
+                    // find if had some geometry in previous frame
+                    ShapeToGeometryMap::iterator mapIter = shapeToGeometry.find(transformedShape.mShape);
+
+                    if(mapIter != _shapeToGeometry.end())
+                    {
+                        geometry = mapIter->second;
+                    }
+
+                    // find geometry from this frame
+                    if(geometry == nullptr)
+                    {
+                        mapIter = shapeToGeometry.find(transformedShape.mShape);
+                        if(mapIter != _shapeToGeometry.end())
+                        {
+                            geometry = mapIter->second;
+                        }
+                    }
+                    
+
+                    // else geometry not cached, need to proceed manually
+                    if(geometry == nullptr)
+                    {
+                        Array<DebugRenderer::Triangle> triangles;
+
+                        Shape::GetTrianglesContext context;
+                        transformedShape.mShape->GetTrianglesStart(context, AABox::sBiggest(), Vec3::sZero(), Quat::sIdentity(), Vec3::sOne());
+                        for(;;)
+                        {
+                            constexpr int32_t cMaxTriangles = 1000;
+                            Float3 vertices[3 * cMaxTriangles];
+                            int32_t triangleCount = transformedShape.mShape->GetTrianglesNext(context, cMaxTriangles, vertices);
+                            if(triangleCount == 0)
+                            {
+                                std::cout << "Can't visualize, triangles count is 0\n";
+                                break;
+                            }
+                            
+                            // allocating space
+                            size_t outputIndex = triangles.size();
+                            triangles.resize(triangles.size() + triangleCount);
+                            DebugRenderer::Triangle* triangle = &triangles[outputIndex];
+                            
+                            for(int32_t vertex = 0, vertexMax = 3 * triangleCount; vertex < vertexMax; vertex += 3, ++triangle)
+                            {
+                                Vec3 v1(vertices[vertex + 0]);
+								Vec3 v2(vertices[vertex + 1]);
+								Vec3 v3(vertices[vertex + 2]);
+
+								// Calculate the normal
+								Float3 normal;
+								(v2 - v1).Cross(v3 - v1).NormalizedOr(Vec3::sZero()).StoreFloat3(&normal);
+
+								v1.StoreFloat3(&triangle->mV[0].mPosition);
+								triangle->mV[0].mNormal = normal;
+								triangle->mV[0].mColor = Color::sWhite;
+								triangle->mV[0].mUV = Float2(0, 0);
+
+								v2.StoreFloat3(&triangle->mV[1].mPosition);
+								triangle->mV[1].mNormal = normal;
+								triangle->mV[1].mColor = Color::sWhite;
+								triangle->mV[1].mUV = Float2(0, 0);
+
+								v3.StoreFloat3(&triangle->mV[2].mPosition);
+								triangle->mV[2].mNormal = normal;
+								triangle->mV[2].mColor = Color::sWhite;
+								triangle->mV[2].mUV = Float2(0, 0);
+                            }
+                            // to check
+                            geometry = new DebugRenderer::Geometry(_debugInstance.CreateTriangleBatch(triangles.data(), triangleCount), transformedShape.mShape->GetLocalBounds());
+                            
+                        }
+                        // caching for the next frame except soft bodies as their shape changes ery frame
+                        if(!body.IsSoftBody())
+                            shapeToGeometry[transformedShape.mShape] = geometry;
 
 
 
+                        Color color;
+                        switch(body.GetMotionType())
+                        {
+                        case EMotionType::Static:
+                            color = Color::sPurple;
+                            break;
+                        case EMotionType::Dynamic:
+                            color = Color::sBlue;
+                            break;
+                        case EMotionType::Kinematic:
+                            color = Color::sGreen;
+                            break;
+                        default:
+                            JPH_ASSERT(false);
+                            color = Color::sBlack;
+                            break;
+                        }
+
+                        // drawing
+                        Vec3 scale = transformedShape.GetShapeScale();
+                        RMat44 matrix = transformedShape.GetCenterOfMassTransform().PreScaled(scale);
+                        _debugInstance.DrawGeometry(matrix, AABox::sBiggest(), 1.0f, color, geometry);
+                    }
+                
+
+                }
+
+
+                
+            }
+
+        
+        }
+    }
 }
 
 void Collision::EnableCollisionDisplay()
