@@ -32,19 +32,23 @@ JPH::DebugRenderer::Batch CollisionDebug::CreateTriangleBatch(const JPH::DebugRe
 }
 
 
+#include "../../headers/systems/camera.h"
+
 // Purpose: core method in jolt to draw some shapes, so need to realize that
 // Type: own implementation of base jolt method
 void CollisionDebug::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox &inWorldSpaceBounds, float inLODScaleSq, JPH::ColorArg inModelColor, 
                                 const JPH::DebugRenderer::GeometryRef &inGeometry, JPH::DebugRenderer::ECullMode inCullMode, 
                                 JPH::DebugRenderer::ECastShadow inCastShadow, JPH::DebugRenderer::EDrawMode inDrawMode)
 {
+    std::cout  << "Draw geometry called\n";
+
     const JPH::Array<JPH::DebugRenderer::LOD>& geometryLods = inGeometry->mLODs;
     // using LOD 0 as don't use level of details
     TriangleData* triangleBatch = static_cast<TriangleData*>(geometryLods[0].mTriangleBatch.GetPtr());
 
     if(triangleBatch->_usesIndices)
     {
-        auto shaderIt = RenderManager::_shaderTypes.find(RenderPassType::RENDER_PARTICLES_COMP);
+        auto shaderIt = RenderManager::_shaderTypes.find(RenderPassType::RENDER_COLLISION_DEBUG);
         if(shaderIt == RenderManager::_shaderTypes.end())
         {
             std::cout << "Jolt: Cannot draw geometry, shader not found\n";
@@ -69,15 +73,46 @@ void CollisionDebug::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox
 
         glm::mat4 modelMatrix = ConvertJoltMat4ToGlm(inModelMatrix);
         shaderIt->second.SetMat4x4("model", modelMatrix);
+        // shaderIt->second.SetMat4x4("view", Camera::GetMVP().view);
+        // shaderIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
 
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDrawElements(GL_TRIANGLES, triangleBatch->GetIndices().size(), GL_UNSIGNED_INT, triangleBatch->GetIndices().data());
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    else
+    {
+        auto shaderIt = RenderManager::_shaderTypes.find(RenderPassType::RENDER_COLLISION_DEBUG);
+        if(shaderIt == RenderManager::_shaderTypes.end())
+        {
+            std::cout << "Jolt: Cannot draw geometry, shader not found\n";
+            return;
+        }
+
+        shaderIt->second.UseShader();
+        glBindVertexArray(_buffers.VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, _buffers.VBO);
+        glBufferData(GL_ARRAY_BUFFER, triangleBatch->GetVertices().size() * sizeof(float), triangleBatch->GetVertices().data(), GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        glm::mat4 modelMatrix = ConvertJoltMat4ToGlm(inModelMatrix);
+        shaderIt->second.SetMat4x4("model", modelMatrix);
+        shaderIt->second.SetMat4x4("view", Camera::GetMVP().view);
+        shaderIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDrawArrays(GL_TRIANGLES, 0, triangleBatch->_numOfTriangles * 3);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 }
-
-
 
 
 

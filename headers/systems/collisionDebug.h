@@ -13,7 +13,6 @@ class CollisionDebug : public JPH::DebugRenderer
 {
 private:
     EBOSetupBuffers _buffers;
-
 public:
     virtual void			                    DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override;
     virtual void			                    DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3, JPH::ColorArg inColor, JPH::DebugRenderer::ECastShadow inCastShadow = JPH::DebugRenderer::ECastShadow::Off) override;
@@ -23,7 +22,6 @@ public:
                                                             const JPH::DebugRenderer::GeometryRef &inGeometry, JPH::DebugRenderer::ECullMode inCullMode = JPH::DebugRenderer::ECullMode::CullBackFace, 
                                                             JPH::DebugRenderer::ECastShadow inCastShadow = JPH::DebugRenderer::ECastShadow::On, JPH::DebugRenderer::EDrawMode = JPH::DebugRenderer::EDrawMode::Solid) override;
     virtual void			                    DrawText3D(JPH::RVec3Arg inPosition, const JPH::string_view &inString, JPH::ColorArg inColor = JPH::Color::sWhite, float inHeight = 0.5f) override;
-
 
 
     CollisionDebug();
@@ -59,7 +57,7 @@ public:
 
     TriangleData() = delete;
     // Two constructors for two different types of batch method
-    TriangleData(const JPH::DebugRenderer::Triangle *inTriangles, int inTriangleCount)
+    explicit TriangleData(const JPH::DebugRenderer::Triangle *inTriangles, int inTriangleCount)
     {
         _numOfTriangles = inTriangleCount;
         _vertices.reserve(_numOfTriangles * 9);

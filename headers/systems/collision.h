@@ -23,7 +23,6 @@ private:
     JPH::JobSystemThreadPool _jobSystem;
     std::unique_ptr<JPH::TempAllocatorImpl> _tempAllocator;
     JPH::BodyInterface* _bodyInterface = nullptr;
-    // JPH::BodyManager* _bodyManager = nullptr;
     JPH::PhysicsSystem _physSystem;
     BPLayerInterfaceImpl _broadPhaseLayerInterface;
     JPH::ObjectVsBroadPhaseLayerFilter _objectVsBroadphaseLayerFilter;
@@ -47,10 +46,10 @@ private:
 
     // debug
     bool _debugCollision{false};
-    CollisionDebug _debugInstance;
+    std::unique_ptr<CollisionDebug> _debugInstance;
     // handle to convert shapes to geometry representation for drawing
     using ShapeToGeometryMap = JPH::UnorderedMap<JPH::RefConst<JPH::Shape>, JPH::DebugRenderer::GeometryRef>;
-	ShapeToGeometryMap _shapeToGeometry;            
+	std::unique_ptr<ShapeToGeometryMap> _shapeToGeometry;            
 public:
     void WorkWithCollisionDebug();
     void EnableCollisionDisplay();
