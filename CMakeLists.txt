@@ -20,11 +20,7 @@ target_include_directories(SamuraiCiao PRIVATE vendor/glad/include)
 
 set_target_properties(SamuraiCiao PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS YES)
 # # need to turn off rtti, otherwise jolt won't compile
-# target_compile_options(SamuraiCiao PRIVATE -fno-rtti)
-
-
-# ASAN, UBSAN 
-
+target_compile_options(SamuraiCiao PRIVATE -fno-rtti)
 
 # compiling assimp
 add_subdirectory(vendor/assimp)

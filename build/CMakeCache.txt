@@ -150,8 +150,8 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 // MinSizeRel ...
 CMAKE_BUILD_TYPE:STRING=Debug
 
-//No help, variable specified on the command line.
-CMAKE_CXX_COMPILER:UNINITIALIZED=g++
+//CXX compiler
+CMAKE_CXX_COMPILER:STRING=/usr/bin/g++
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -406,9 +406,6 @@ CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 // during the make.  This is useful for debugging only. With Visual
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
-
-//No help, variable specified on the command line.
-CPP_RTTI_ENABLED:UNINITIALIZED=ON
 
 //Doxygen documentation generation tool (https://www.doxygen.nl)
 DOXYGEN_EXECUTABLE:FILEPATH=DOXYGEN_EXECUTABLE-NOTFOUND
@@ -1247,7 +1244,7 @@ PKG_FONTCONFIG_STATIC_LIBS:INTERNAL=
 PKG_FONTCONFIG_STATIC_LIBS_L:INTERNAL=
 PKG_FONTCONFIG_STATIC_LIBS_OTHER:INTERNAL=
 PKG_FONTCONFIG_STATIC_LIBS_PATHS:INTERNAL=
-PKG_FONTCONFIG_VERSION:INTERNAL=2.16.0
+PKG_FONTCONFIG_VERSION:INTERNAL=2.16.1
 PKG_FONTCONFIG_fontconfig_INCLUDEDIR:INTERNAL=
 PKG_FONTCONFIG_fontconfig_LIBDIR:INTERNAL=
 PKG_FONTCONFIG_fontconfig_PREFIX:INTERNAL=
@@ -1339,7 +1336,7 @@ Wayland_xkbcommon_INCLUDEDIR:INTERNAL=/usr/include
 Wayland_xkbcommon_LIBDIR:INTERNAL=/usr/lib
 Wayland_xkbcommon_MODULE_NAME:INTERNAL=xkbcommon
 Wayland_xkbcommon_PREFIX:INTERNAL=/usr
-Wayland_xkbcommon_VERSION:INTERNAL=1.8.0
+Wayland_xkbcommon_VERSION:INTERNAL=1.8.1
 //ADVANCED property for variable: X11_ICE_INCLUDE_PATH
 X11_ICE_INCLUDE_PATH-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: X11_ICE_LIB

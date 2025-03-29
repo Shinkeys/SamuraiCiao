@@ -23,7 +23,7 @@ private:
     JPH::JobSystemThreadPool _jobSystem;
     std::unique_ptr<JPH::TempAllocatorImpl> _tempAllocator;
     JPH::BodyInterface* _bodyInterface = nullptr;
-    JPH::BodyManager* _bodyManager = nullptr;
+    // JPH::BodyManager* _bodyManager = nullptr;
     JPH::PhysicsSystem _physSystem;
     BPLayerInterfaceImpl _broadPhaseLayerInterface;
     JPH::ObjectVsBroadPhaseLayerFilter _objectVsBroadphaseLayerFilter;

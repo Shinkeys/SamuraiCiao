@@ -104,7 +104,7 @@ void Core::Render()
     _particles.RenderParticles();
 
 
-    _collision.WorkWithCollisionDebug();
+    // _collision.WorkWithCollisionDebug();
     if(Window::GetKeysState().showImgui)
     {
         SamuraiInterface::DebugWindow(_camera.GetPosition());

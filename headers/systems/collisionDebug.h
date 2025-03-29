@@ -104,5 +104,4 @@ public:
             _indices.push_back(inIndices[i]);
         }
     }
-
 };
