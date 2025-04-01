@@ -40,11 +40,16 @@ void CollisionDebug::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox
                                 const JPH::DebugRenderer::GeometryRef &inGeometry, JPH::DebugRenderer::ECullMode inCullMode, 
                                 JPH::DebugRenderer::ECastShadow inCastShadow, JPH::DebugRenderer::EDrawMode inDrawMode)
 {
-    std::cout  << "Draw geometry called\n";
+    // std::cout  << "Draw geometry called\n";
 
     const JPH::Array<JPH::DebugRenderer::LOD>& geometryLods = inGeometry->mLODs;
     // using LOD 0 as don't use level of details
     TriangleData* triangleBatch = static_cast<TriangleData*>(geometryLods[0].mTriangleBatch.GetPtr());
+
+    const glm::vec3 colliderColor = glm::vec3(static_cast<float>(inModelColor.r) / 256.0f, 
+                                    static_cast<float>(inModelColor.g) / 256.0f, 
+                                    static_cast<float>(inModelColor.b) / 256.0f);
+
 
     if(triangleBatch->_usesIndices)
     {
@@ -76,6 +81,7 @@ void CollisionDebug::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox
         // shaderIt->second.SetMat4x4("view", Camera::GetMVP().view);
         // shaderIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
 
+        shaderIt->second.SetVec3("color", colliderColor);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDrawElements(GL_TRIANGLES, triangleBatch->GetIndices().size(), GL_UNSIGNED_INT, triangleBatch->GetIndices().data());
@@ -108,9 +114,11 @@ void CollisionDebug::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox
         shaderIt->second.SetMat4x4("view", Camera::GetMVP().view);
         shaderIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        shaderIt->second.SetVec3("color", colliderColor);
+
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDrawArrays(GL_TRIANGLES, 0, triangleBatch->_numOfTriangles * 3);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 }
 

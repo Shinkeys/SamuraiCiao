@@ -37,7 +37,7 @@ private:
     Camera* _camera = nullptr;
     AssetManager* _manager = nullptr;
     std::unordered_map<std::string, JPH::Body*> _rigidbodyStorage; 
-    std::optional<JPH::Vec3> SimplifyBoxShapes(const std::string& entityName);
+    std::optional<JPH::Vec3> SimplifyBoxShapes(const std::string& entityName, glm::vec3& inOutDisplacement);
     void CreateCollidersForScene();
     void CreateCameraCollider();
     // unordered_map<std::string, BodyID> 

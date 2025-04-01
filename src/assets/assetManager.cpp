@@ -57,11 +57,11 @@ std::optional<std::vector<Vertex>> AssetManager::GetMeshVerticesByName(const std
     {
         result.reserve(it->second);
 
-        for(int32_t i = 0; i < it->second; ++i)
-        {
-            result.push_back(allVertices[i + it->first]);
-        }
+
+        result.insert(result.end(), allVertices.begin() + it->first, allVertices.begin() + (it->first + it->second));
+
     }   
+
 
     return result;
 }

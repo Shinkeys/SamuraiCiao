@@ -21,9 +21,9 @@ CurrentModelDesc Model::LoadModel(const std::filesystem::path& modelName, Entity
 	// to pass to asset manager
 	CurrentModelDesc modelDescriptor;
 	modelDescriptor.objDesc.type = type;
+	modelDescriptor.objDesc.name = modelName.string();
 
 	ProcessNode(scene->mRootNode, scene, modelDescriptor);
-	modelDescriptor.objDesc.name = modelName.string();
 
 	return modelDescriptor;
 }
@@ -57,6 +57,7 @@ void Model::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, CurrentModelDesc& 
 		vertices.position.y = aiMesh->mVertices[i].y;
 		vertices.position.z = aiMesh->mVertices[i].z;
 
+		
 		if (aiMesh->mTextureCoords[0])
 		{
 			vertices.texCoords.x = aiMesh->mTextureCoords[0][i].x;
@@ -83,7 +84,6 @@ void Model::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, CurrentModelDesc& 
 	modelDescriptor.indOffsetVertCount.insert({meshStartIndexInVAO, 0});
 
 	const uint32_t currentMeshStartIndex = meshStartIndexInVAO;
-	uint32_t currentMeshSize = 0;
 	for (uint32_t i = 0; i < aiMesh->mNumFaces; ++i)
 	{
 		aiFace face = aiMesh->mFaces[i];
@@ -96,11 +96,10 @@ void Model::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, CurrentModelDesc& 
 
 			++meshStartIndexInVAO;
 
-			++currentMeshSize;
+			++modelDescriptor.indOffsetVertCount[currentMeshStartIndex];
 		}
 	}
-    // storing amount of vertices of current mesh
-    modelDescriptor.indOffsetVertCount[currentMeshStartIndex] = currentMeshSize;
+
 
     if (aiMesh->mMaterialIndex >= 0)
 	{

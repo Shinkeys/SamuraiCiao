@@ -168,22 +168,14 @@ void Collision::CreateCollidersForScene()
         {
         case EntityType::TYPE_BOX_MESH:
             {
-                auto boxVertices = SimplifyBoxShapes(it->first);
-                if(boxVertices == std::nullopt) 
+                glm::vec3 displacement = glm::vec3(0.0f);
+
+                auto halfExtent = SimplifyBoxShapes(it->first, displacement);
+                if(halfExtent == std::nullopt) 
                     continue;
 
-                BoxShapeSettings boxShapeSettings(Vec3(boxVertices.value())); 
-                boxShapeSettings.SetEmbedded();
+                Ref<BoxShapeSettings> boxSettings = new BoxShapeSettings(halfExtent.value());
 
-                ShapeSettings::ShapeResult boxShapeRes = boxShapeSettings.Create();
-                if(boxShapeRes.HasError())
-                {
-                    std::cout << "Jolt: "  << boxShapeRes.GetError() << "\n";
-                    continue;
-                }
-                ShapeRefC boxShape = boxShapeRes.Get();
-
-                
                 
                 const glm::mat4* objectTransformMatrix = _manager->GetTransformMatrixByName(it->first);
                 if(objectTransformMatrix == nullptr)
@@ -191,19 +183,16 @@ void Collision::CreateCollidersForScene()
                     std::cout << "Transform matrix of object " << it->first << " is empty\n";
                     continue;
                 }
-                // applying scale
-                const Vec3 objScale = Vec3((*objectTransformMatrix)[0][0], (*objectTransformMatrix)[1][1], (*objectTransformMatrix)[2][2]);
-                RefConst<Shape> scaledShape = new JPH::ScaledShape(boxShape, objScale);
 
-                
                 const glm::vec3 worldPos = glm::vec3((*objectTransformMatrix)[3]);
 
-                BodyCreationSettings boxSettings(scaledShape, RVec3(worldPos.x, worldPos.y, worldPos.z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
-
-
+                // offset and rotate to dispatch center point
+                Ref<RotatedTranslatedShapeSettings> rotBox = new RotatedTranslatedShapeSettings(Vec3(displacement.x, displacement.y, displacement.z),
+                                                             Quat::sIdentity(), boxSettings);
+                
+                BodyCreationSettings rotatedBoxSettings(rotBox, RVec3(0.0f, 0.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
                 // creating rigidbody
-                Body* body = _bodyInterface->CreateBody(boxSettings);
-
+                Body* body = _bodyInterface->CreateBody(rotatedBoxSettings);
                 if(body == nullptr)
                 {
                     std::cout << "Reached limit of body count, can't create rigidbodies\n";
@@ -221,7 +210,7 @@ void Collision::CreateCollidersForScene()
     }
 }
 
-std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName)
+std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName, glm::vec3& inOutDisplacement)
 {
     auto meshVertices = _manager->GetMeshVerticesByName(entityName);
     if(meshVertices == std::nullopt)
@@ -238,6 +227,10 @@ std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName)
         modelAABB.min.y = std::min(modelAABB.min.y, meshVertices.value()[i].position.y);
         modelAABB.min.z = std::min(modelAABB.min.z, meshVertices.value()[i].position.z);
 
+        modelAABB.max.x = std::max(modelAABB.max.x, meshVertices.value()[i].position.x);
+        modelAABB.max.y = std::max(modelAABB.max.y, meshVertices.value()[i].position.y);
+        modelAABB.max.z = std::max(modelAABB.max.z, meshVertices.value()[i].position.z);
+
     }
 
     // Transforming to world coords
@@ -248,7 +241,18 @@ std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName)
         return std::nullopt;
     }
 
+    // scaling boundaries of the AABB
+    modelAABB.min = *mat * glm::vec4(modelAABB.min, 1.0f);
+    modelAABB.max = *mat * glm::vec4(modelAABB.max, 1.0f);
+    
+    // offset to the ground. As object is not guaranteed to be placed on the 0 coordinates,
+    // need to calculate offset to displace this obj
+    const glm::vec3 midPoint = (modelAABB.max + modelAABB.min) / 2.0f;
+    inOutDisplacement = inOutDisplacement + midPoint;
+    
     glm::vec3 halfExtent = (modelAABB.max - modelAABB.min) / 2.0f;
+    constexpr float offsetToFixZFighting = 0.05f;
+    halfExtent += offsetToFixZFighting;
 
     // Jolt doesn't support 0 convex radius
 
@@ -402,7 +406,7 @@ void Collision::WorkWithCollisionDebug()
                             int32_t triangleCount = transformedShape.mShape->GetTrianglesNext(context, cMaxTriangles, vertices);
                             if(triangleCount == 0)
                             {
-                                std::cout << "Can't visualize, triangles count is 0\n";
+                                // std::cout << "Can't visualize, triangles count is 0\n";
                                 break;
                             }
                             
@@ -443,7 +447,6 @@ void Collision::WorkWithCollisionDebug()
                         // caching for the next frame except soft bodies as their shape changes ery frame
                         if(!body.IsSoftBody())
                             shapeToGeometry[transformedShape.mShape] = geometry;
-
 
 
                         Color color;
