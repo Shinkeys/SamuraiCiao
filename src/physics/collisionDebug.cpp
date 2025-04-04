@@ -1,4 +1,4 @@
-#include "../../headers/systems/collisionDebug.h"
+#include "../../headers/physics/collisionDebug.h"
 #include "../../headers/systems/renderManager.h"
 
 #include "../../headers/systems/shaders.h"
@@ -78,8 +78,10 @@ void CollisionDebug::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox
 
         glm::mat4 modelMatrix = ConvertJoltMat4ToGlm(inModelMatrix);
         shaderIt->second.SetMat4x4("model", modelMatrix);
-        // shaderIt->second.SetMat4x4("view", Camera::GetMVP().view);
-        // shaderIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
+        const Matrices& cameraMatrices = SamuraiCameras::g_mainCamera.GetMVP();
+
+        shaderIt->second.SetMat4x4("view", cameraMatrices.view);
+        shaderIt->second.SetMat4x4("projection", cameraMatrices.projection);
 
         shaderIt->second.SetVec3("color", colliderColor);
 
@@ -111,8 +113,10 @@ void CollisionDebug::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox
 
         glm::mat4 modelMatrix = ConvertJoltMat4ToGlm(inModelMatrix);
         shaderIt->second.SetMat4x4("model", modelMatrix);
-        shaderIt->second.SetMat4x4("view", Camera::GetMVP().view);
-        shaderIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
+        const Matrices& cameraMatrices = SamuraiCameras::g_mainCamera.GetMVP();
+
+        shaderIt->second.SetMat4x4("view", cameraMatrices.view);
+        shaderIt->second.SetMat4x4("projection", cameraMatrices.projection);
 
         shaderIt->second.SetVec3("color", colliderColor);
 

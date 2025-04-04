@@ -163,9 +163,10 @@ void Particles::DrawParticles()
     auto shaderIt = RenderManager::_shaderTypes.find(RenderPassType::RENDER_PARTICLES);
     if(shaderIt != RenderManager::_shaderTypes.end())
     {
+        const Matrices& cameraMatrices = SamuraiCameras::g_mainCamera.GetMVP();
         shaderIt->second.UseShader();
-        shaderIt->second.SetMat4x4("view", Camera::GetMVP().view);
-        shaderIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
+        shaderIt->second.SetMat4x4("view", cameraMatrices.view);
+        shaderIt->second.SetMat4x4("projection", cameraMatrices.projection);
 
         // variable with random number to shuffle colors
         const float randomValue = Random::RandomFloat(-2.0f, 2.0f);

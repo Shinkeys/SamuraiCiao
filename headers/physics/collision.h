@@ -2,11 +2,10 @@
 
 #include "../types/types.h"
 #include "../assets/assetManager.h"
-#include "../systems/camera.h"
-
 
 #include "../types/collisionTypes.h"
 #include "collisionDebug.h"
+#include "collisionPlayer.h"
 
 struct AABB
 {
@@ -33,29 +32,29 @@ private:
     MyContactListener* _contactListener;
     
 
-    const float _camCylinderRadius = 1.5f;
-    Camera* _camera = nullptr;
     AssetManager* _manager = nullptr;
     std::unordered_map<std::string, JPH::Body*> _rigidbodyStorage; 
     std::optional<JPH::Vec3> SimplifyBoxShapes(const std::string& entityName, glm::vec3& inOutDisplacement);
     void CreateCollidersForScene();
-    void CreateCameraCollider();
-    // unordered_map<std::string, BodyID> 
-    void PrePhysicsCamUpdate();
     void Setup();
+    // unordered_map<std::string, BodyID> 
 
-    // debug
+    // Debug
     bool _debugCollision{false};
     std::unique_ptr<CollisionDebug> _debugInstance;
     // handle to convert shapes to geometry representation for drawing
     using ShapeToGeometryMap = JPH::UnorderedMap<JPH::RefConst<JPH::Shape>, JPH::DebugRenderer::GeometryRef>;
-	std::unique_ptr<ShapeToGeometryMap> _shapeToGeometry;            
+	std::unique_ptr<ShapeToGeometryMap> _shapeToGeometry;
+    
+    // Player(need to be ptr with later init)
+    CollisionPlayer _playerCollision;
+
+    void PassStructures();
 public:
     void WorkWithCollisionDebug();
-    void EnableCollisionDisplay();
+    void InterfaceUpdate();
     void Prepare();
     void Update();
     void PassAssetManager(AssetManager* manager);
-    void PassCamera(Camera* camera);
     ~Collision();
 };

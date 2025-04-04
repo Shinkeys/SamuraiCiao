@@ -70,7 +70,6 @@ bool Core::Initialize()
 
     // collision
     _collision.PassAssetManager(&_assetManager);
-    _collision.PassCamera(&_camera);
     _collision.Prepare();
     // particles
     _particles.Prepare();
@@ -80,7 +79,7 @@ bool Core::Initialize()
 
 void Core::Update()
 {
-    _camera.Update(Window::GetWindowPointer());
+    SamuraiCameras::g_mainCamera.Update(Window::GetWindowPointer());
     _collision.Update();
 
     // passing light pos in view to the shader
@@ -94,7 +93,7 @@ void Core::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     
-    _shadowsHelper.DrawDepthScene(_assetManager, _camera);
+    _shadowsHelper.DrawDepthScene(_assetManager, SamuraiCameras::g_mainCamera);
     
     OpenglBackend::SetViewport(Window::_width, Window::_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -107,11 +106,11 @@ void Core::Render()
     _collision.WorkWithCollisionDebug();
     if(Window::GetKeysState().showImgui)
     {
-        SamuraiInterface::DebugWindow(_camera.GetPosition());
+        SamuraiInterface::DebugWindow(SamuraiCameras::g_mainCamera.GetPosition());
         // must be first: creating window
         _shadowsHelper.DebugShadows();
         _particles.EnableParticles();
-        _collision.EnableCollisionDisplay();
+        _collision.InterfaceUpdate();
 
         // must be last: finishing frame
         SamuraiInterface::RenderImgui();

@@ -7,6 +7,9 @@
 
 #include <Jolt/Renderer/DebugRenderer.h>
 
+
+class Camera;
+
 // Purpose: To make debug system for physics(displaying colliders etc)
 // Type: Own implementation of Jolt class
 class CollisionDebug : public JPH::DebugRenderer

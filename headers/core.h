@@ -7,7 +7,7 @@
 #include "systems/renderManager.h"
 #include "systems/sceneEditor.h"
 #include "systems/shaders.h"
-#include "systems/collision.h"
+#include "physics/collision.h"
 #include "systems/camera.h"
 #include "assets/assetManager.h"
 
@@ -18,7 +18,6 @@ class Core : public Window
 private:
     void Update() override;
     void Render() override;
-    Camera _camera;
     Lanterns _lanternsObjects;
     AssetManager _assetManager;
     ShadowsHelper _shadowsHelper;

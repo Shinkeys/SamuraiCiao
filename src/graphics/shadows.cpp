@@ -85,8 +85,7 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
     }
 
     shader->second.UseShader();
-    const Matrices* matrices = &Camera::GetMVP();
-
+    
     if(_lanterns != nullptr)
     {
         const glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, _nearPlane, _farPlane);

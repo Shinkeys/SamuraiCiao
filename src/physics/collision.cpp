@@ -1,4 +1,4 @@
-#include "../../headers/systems/collision.h"
+#include "../../headers/physics/collision.h"
 #include "../../headers/systems/interface.h"
 #include "../../headers/backend/openglbackend.h"
 
@@ -77,25 +77,17 @@ void Collision::PassAssetManager(AssetManager* manager)
     _manager = manager;
 }
 
-void Collision::PassCamera(Camera* camera)
-{
-    if(camera == nullptr)
-    {
-        std::cout << "Passed camera to the collision class is null\n";
-        return;
-    }
-    _camera = camera;
-}
-
 
 // Purpose: Simplify readability a bit
 // Type: Collision class method impl
 void Collision::Prepare()
 {
     Setup();
-    CreateCameraCollider();
     CreateCollidersForScene();
     _physSystem.OptimizeBroadPhase();
+
+    PassStructures();
+    _playerCollision.Prepare();
 }
 
 // Purpose: Initialize all jolt stuff
@@ -153,6 +145,12 @@ void Collision::Setup()
     
 
     _bodyInterface = &_physSystem.GetBodyInterface();
+
+}
+
+void Collision::PassStructures()
+{
+    _playerCollision.PassPhysSystem(&_physSystem);
 }
 
 void Collision::CreateCollidersForScene()
@@ -193,6 +191,7 @@ void Collision::CreateCollidersForScene()
                 BodyCreationSettings rotatedBoxSettings(rotBox, RVec3(0.0f, 0.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
                 // creating rigidbody
                 Body* body = _bodyInterface->CreateBody(rotatedBoxSettings);
+                // body->SetCollideKinematicVsNonDynamic(true);
                 if(body == nullptr)
                 {
                     std::cout << "Reached limit of body count, can't create rigidbodies\n";
@@ -267,74 +266,78 @@ std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName, 
 }
 
 
-void Collision::CreateCameraCollider()
-{
-    const glm::vec3& camPos = _camera->GetPosition();
+// void Collision::CreateCameraCollider()
+// {
+//     const glm::vec3& camPos = _camera->GetPosition();
 
-    const float camHalfHeight = camPos.y / 2.0f;
+//     const float camHalfHeight = camPos.y / 2.0f;
     
 
-    CapsuleShapeSettings cameraCapsuleSettings(camHalfHeight, _camCylinderRadius);
-    cameraCapsuleSettings.SetEmbedded();
+//     CapsuleShapeSettings cameraCapsuleSettings(camHalfHeight, _camCylinderRadius);
+//     cameraCapsuleSettings.SetEmbedded();
     
-    ShapeSettings::ShapeResult cameraShapeRes = cameraCapsuleSettings.Create();
-    if(cameraShapeRes.HasError())
-    {
-        std::cout << "Jolt: "  << cameraShapeRes.GetError() << "\n";
-        return;
-    }
-    ShapeRefC cameraShape = cameraShapeRes.Get();
+//     ShapeSettings::ShapeResult cameraShapeRes = cameraCapsuleSettings.Create();
+//     if(cameraShapeRes.HasError())
+//     {
+//         std::cout << "Jolt: "  << cameraShapeRes.GetError() << "\n";
+//         return;
+//     }
+//     ShapeRefC cameraShape = cameraShapeRes.Get();
 
-    BodyCreationSettings cameraSettings(cameraShape, RVec3(camPos.x, camPos.y, camPos.z), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING);
+//     BodyCreationSettings cameraSettings(cameraShape, RVec3(camPos.x, camPos.y, camPos.z), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING);
 
-    // creating rigidbody
-    Body* body = _bodyInterface->CreateBody(cameraSettings);
+//     // creating rigidbody
+//     Body* body = _bodyInterface->CreateBody(cameraSettings);
 
-    if(body == nullptr)
-    {
-        std::cout << "Reached limit of body count, can't create rigidbodies\n";
-    }
-    const std::string cameraObjName = "camera";
-    _rigidbodyStorage.emplace(cameraObjName, body);
+//     if(body == nullptr)
+//     {
+//         std::cout << "Reached limit of body count, can't create rigidbodies\n";
+//     }
+//     const std::string cameraObjName = "camera";
+//     _rigidbodyStorage.emplace(cameraObjName, body);
                 
-    // adding to the world
-    _bodyInterface->AddBody(body->GetID(), EActivation::Activate);
+//     // adding to the world
+//     _bodyInterface->AddBody(body->GetID(), EActivation::Activate);
 
-}
+// }
 
-void Collision::PrePhysicsCamUpdate()
-{
-    if(_camera == nullptr)
-    {
-        std::cout << "Camera object is nullptr\n";
-        return;
-    }
-    auto camPos = _camera->GetPosition();
-    auto camDir = _camera->GetDirection();
+// void Collision::PrePhysicsCamUpdate()
+// {
+//     // if(_camera == nullptr)
+//     // {
+//     //     std::cout << "Camera object is nullptr\n";
+//     //     return;
+//     // }
+//     // auto camPos = _camera->GetPosition();
+//     // auto camDir = _camera->GetDirection();
 
-    Quat newRotation = Quat::sIdentity();
+//     // Quat newRotation = Quat::sIdentity();
 
-    auto cameraObj = _rigidbodyStorage.find("camera");
-    if(cameraObj == _rigidbodyStorage.end())
-    {
-        std::cout << "Camera object is not stored in the storage\n";
-        return;
-    }
+//     // auto cameraObj = _rigidbodyStorage.find("camera");
+//     // if(cameraObj == _rigidbodyStorage.end())
+//     // {
+//     //     std::cout << "Camera object is not stored in the storage\n";
+//     //     return;
+//     // }
 
-
-    const Vec3 cameraNewPos = Vec3(camPos.x, camPos.y, camPos.z);
-    _bodyInterface->MoveKinematic(cameraObj->second->GetID(), cameraNewPos, newRotation, CollisionDefines::g_DeltaTime);
-}
+//     // const Vec3 cameraNewPos = Vec3(camPos.x, camPos.y, camPos.z);
+//     // _bodyInterface->MoveKinematic(cameraObj->second->GetID(), cameraNewPos, newRotation, CollisionDefines::g_DeltaTime);
+// }
 
 
 void Collision::Update()
 {
-    PrePhysicsCamUpdate();
+    // PrePhysicsCamUpdate();
+    // Calculate cam collision, new position...
+    _playerCollision.Update(_tempAllocator.get());
+    
     _physSystem.Update(CollisionDefines::g_DeltaTime, CollisionDefines::g_CollisionSteps, _tempAllocator.get(), &_jobSystem);
 }
 
 Collision::~Collision()
 {
+    _playerCollision.Cleanup();
+
     for(const auto& body : _rigidbodyStorage)
     {
         _bodyInterface->RemoveBody(body.second->GetID());
@@ -352,8 +355,8 @@ Collision::~Collision()
 
 void Collision::WorkWithCollisionDebug()
 {
-    // if(_debugCollision)
-    // {
+    if(_debugCollision)
+    {
         ShapeToGeometryMap shapeToGeometry;
         BodyIDVector bodies;
         _physSystem.GetBodies(bodies);
@@ -476,11 +479,13 @@ void Collision::WorkWithCollisionDebug()
             }
         }
         _shapeToGeometry.reset(new ShapeToGeometryMap(shapeToGeometry));
-    // }
+    }
 
 }
 
-void Collision::EnableCollisionDisplay()
+void Collision::InterfaceUpdate()
 {
     ImGui::Checkbox("Debug collision", &_debugCollision);
+
+    _playerCollision.InterfaceUpdate();
 }

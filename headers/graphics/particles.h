@@ -1,5 +1,5 @@
+#pragma once
 #include "../types/types.h"
-
 
 class Particles
 {

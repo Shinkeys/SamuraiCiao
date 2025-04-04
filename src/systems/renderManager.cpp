@@ -198,12 +198,14 @@ void RenderManager::DrawMainScene(AssetManager& manager)
         }
         else if(shaderMainIt != _shaderTypes.end())
         {
-            shaderMainIt->second.SetMat4x4("view", Camera::GetMVP().view);
-            shaderMainIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
+            const Matrices& cameraMatrices = SamuraiCameras::g_mainCamera.GetMVP();
+
+            shaderMainIt->second.SetMat4x4("view", cameraMatrices.view);
+            shaderMainIt->second.SetMat4x4("projection", cameraMatrices.projection);
 
             shaderMainIt->second.SetMat4x4("model", *transformation);
             const glm::mat4& currModelMatrix = *transformation;
-            const glm::mat4& currViewMatrix = Camera::GetMVP().view;
+            const glm::mat4& currViewMatrix = cameraMatrices.view;
             const glm::mat4 normalMatrix = 
             glm::transpose(glm::inverse(currViewMatrix * currModelMatrix));
             shaderMainIt->second.SetMat4x4("normalMatrix", normalMatrix);
@@ -246,10 +248,12 @@ void RenderManager::DrawSkybox(AssetManager& manager)
         return;
     }
 
+    const Matrices& cameraMatrices = SamuraiCameras::g_mainCamera.GetMVP();
+
     shaderSkyboxIt->second.UseShader();
     // setting matrices
-    shaderSkyboxIt->second.SetMat4x4("view", Camera::GetMVP().view);
-    shaderSkyboxIt->second.SetMat4x4("projection", Camera::GetMVP().projection);
+    shaderSkyboxIt->second.SetMat4x4("view", cameraMatrices.view);
+    shaderSkyboxIt->second.SetMat4x4("projection", cameraMatrices.projection);
     for(const auto skybox : _renderTypes.find(passType)->second)
     {
         int32_t textureId = 0;

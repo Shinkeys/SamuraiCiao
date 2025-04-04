@@ -1,7 +1,11 @@
 #include "../../headers/systems/camera.h"
 #include <algorithm>
 
-Matrices Camera::_matrices;
+Camera SamuraiCameras::g_mainCamera;
+Camera SamuraiCameras::g_editorCamera;
+const int32_t SamuraiCameras::g_cameraCount = 2;
+
+
 
 Camera::Camera()
 {
@@ -20,7 +24,7 @@ void Camera::Update(Window* window)
 		CalculateDirection(window);
 		CalculateKeyboard(window);
 	}
-	Camera::_matrices.view = glm::lookAt(_position, _position + _direction, _up);
+	_matrices.view = glm::lookAt(_position, _position + _direction, _up);
 }
 
 void Camera::CalculateKeyboard(Window* window)
@@ -31,27 +35,52 @@ void Camera::CalculateKeyboard(Window* window)
 		return;
 	}
 
-	static float lastFrame = 0.0f;
-	const float currentFrame = glfwGetTime();
-	const float deltaTime = currentFrame - lastFrame;
-	lastFrame = currentFrame;
+	// static float lastFrame = 0.0f;
+	// const float currentFrame = glfwGetTime();
+	// const float deltaTime = currentFrame - lastFrame;
+	// lastFrame = currentFrame;
+	// if (window->GetKeysState().right)
+	// {
+	// 	_position += glm::normalize(_right) * deltaTime * _speed;
+	// }
+	// if (window->GetKeysState().left)
+	// {
+	// 	_position -= glm::normalize(_right) * deltaTime * _speed;
+	// }
+	// if (window->GetKeysState().front)
+	// {
+	// 	_position += _forward * deltaTime * _speed;
+	// }
+	// if (window->GetKeysState().back)
+	// {
+	// 	_position -= _forward * deltaTime * _speed;
+	// }
+	// _position.y = 2.5f;
+
+
+	// To check //
+
+	glm::vec3 movDirStack = glm::vec3(0.0f);
 	if (window->GetKeysState().right)
 	{
-		_position += glm::normalize(_right) * deltaTime * _velocity;
+		movDirStack += glm::normalize(_right);
 	}
 	if (window->GetKeysState().left)
 	{
-		_position -= glm::normalize(_right) * deltaTime * _velocity;
+		movDirStack -= glm::normalize(_right);
 	}
 	if (window->GetKeysState().front)
 	{
-		_position += _forward * deltaTime * _velocity;
+		movDirStack += _forward;
 	}
 	if (window->GetKeysState().back)
 	{
-		_position -= _forward * deltaTime * _velocity;
+		movDirStack -= _forward;
 	}
-	_position.y = 2.5f;
+
+	movDirStack.y = 0.0f;
+
+	_movementDirection = movDirStack;
 }
 void Camera::CalculateDirection(Window* window)
 {

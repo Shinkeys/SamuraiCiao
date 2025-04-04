@@ -5,6 +5,7 @@
 
 // Main includes
 #include <Jolt/Math/Vec3.h>
+
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/Body/BodyInterface.h>
 #include <Jolt/RegisterTypes.h>
@@ -13,6 +14,7 @@
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 
 // Collision
 #include <Jolt/Physics/Collision/ShapeCast.h>
@@ -24,7 +26,6 @@
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
-#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 
@@ -168,6 +169,28 @@ inline glm::mat4 ConvertJoltMat4ToGlm(JPH::RMat44Arg inModelMatrix)
 	result[1] = glm::vec4(axisY.GetX(), axisY.GetY(), axisY.GetZ(), axisY.GetW());
 	result[2] = glm::vec4(axisZ.GetX(), axisZ.GetY(), axisZ.GetZ(), axisZ.GetW());
 	result[3] = glm::vec4(translationPart.GetX(), translationPart.GetY(), translationPart.GetZ(), translationPart.GetW());
+
+	return result;
+}
+// Purpose: convert GLM vector to Jolt vector
+inline JPH::Vec3 ConvertGlmVec3ToJolt(glm::vec3 inVector)
+{
+	JPH::Vec3 result;
+
+	result.SetComponent(0, inVector.x);
+	result.SetComponent(1, inVector.y);
+	result.SetComponent(2, inVector.z);
+
+	return result;
+}
+// Purpose: convert Jolt vector to GLM vector
+inline glm::vec3 ConvertJoltVec3ToGlm(JPH::Vec3 inVector)
+{
+	glm::vec3 result;
+
+	result.x = inVector.GetX();
+	result.y = inVector.GetY();
+	result.z = inVector.GetZ();
 
 	return result;
 }
