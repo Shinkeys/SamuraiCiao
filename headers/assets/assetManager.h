@@ -12,6 +12,7 @@ private:
     std::unordered_map<std::string, glm::mat4> _assetMatrices;
     std::unordered_map<std::string, CurrentModelDesc> _assetStorage;
 public:
+    std::optional<std::pair<uint32_t, uint32_t>> GetMeshStartEndIndices(const std::string& entityName) const;
     const uint32_t GetAssetsVAO() const { return _model->GetModelsEBOData().VAO;}
     void AddEntityToLoad(ObjectDescriptor objectDesc);
     void BindStructures();
@@ -20,8 +21,8 @@ public:
     const auto& GetAssetStorage() const { return _assetStorage;}
     const glm::mat4* GetTransformMatrixByName(const std::string& name) const;
     const auto& GetBuffers() const { return _model.get()->GetModelsEBOData();}
-    std::optional<std::vector<Vertex>> GetMeshVerticesByName(const std::string& entityName) const;
+    std::optional<std::vector<Vertex>> GetMeshVerticesByName(const std::string& entityName)                          const;
 
     // making pointer as it easier to error handle that case
-    const CurrentModelDesc* GetModelDescriptorByName(const std::string& entityName) const;
+    const CurrentModelDesc* GetModelDescriptorByName(const std::string& entityName)                                  const;
 };

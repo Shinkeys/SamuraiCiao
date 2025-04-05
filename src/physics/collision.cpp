@@ -205,6 +205,73 @@ void Collision::CreateCollidersForScene()
 
             }
             break;
+        
+        case EntityType::TYPE_COMPOUND_STATIC_MESH:
+            {
+                auto meshVertices = _manager->GetMeshStartEndIndices(it->first);
+                if(meshVertices == std::nullopt) 
+                    continue;    
+                
+                uint32_t startInd = meshVertices.value().first;
+                const uint32_t endInd = meshVertices.value().second;
+
+                std::cout << "Start: " << startInd << '\n';
+                std::cout << "End: " << endInd << '\n';
+
+                const auto& allVertices = _manager->GetBuffers();
+                const uint32_t verticesCount = static_cast<uint32_t>(allVertices.vertices.size());
+
+                Array<Vec3> triangles;
+                triangles.reserve(endInd - startInd);
+
+                const glm::mat4* objectTransformMatrix = _manager->GetTransformMatrixByName(it->first);
+                if(objectTransformMatrix == nullptr)
+                {
+                    std::cout << "Transform matrix of object " << it->first << " is empty\n";
+                    continue;
+                }
+
+                for(; startInd < endInd; startInd += 3)
+                {
+                    if(startInd + 3 > verticesCount) break;
+
+                    const glm::vec3 firstVertex  = glm::mat3(*objectTransformMatrix) * allVertices.vertices[startInd].position;
+                    triangles.push_back(Vec3(firstVertex.x,  firstVertex.y,  firstVertex.z));
+                }
+                
+                if(triangles.size() == 0)
+                {
+                    std::cout << "Triangle list size is 0\n";
+                    continue;
+                }
+            
+                Ref<ConvexHullShapeSettings> convexSettings = new ConvexHullShapeSettings(triangles);
+
+        
+                const glm::vec3 worldPos = glm::vec3((*objectTransformMatrix)[3]);
+                
+                BodyCreationSettings convexBodySettings(convexSettings, RVec3(worldPos.x, worldPos.y, worldPos.z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+                // meshBodySettings.ConvertShapeSettings();
+                // creating rigidbody
+                Body* body = _bodyInterface->CreateBody(convexBodySettings);
+                // body->SetCollideKinematicVsNonDynamic(true);
+                if(body == nullptr)
+                {
+                    std::cout << "Reached limit of body count, can't create rigidbodies\n";
+                    continue;
+                }
+                _rigidbodyStorage.emplace(it->first, body);
+                
+                // adding to the world
+                _bodyInterface->AddBody(body->GetID(), EActivation::DontActivate);
+            }
+            break;
+        
+        case EntityType::TYPE_COMPOUND_DYNAMIC_MESH:
+            { 
+                // TO DO
+            }
+            break;
         }
     }
 }
@@ -264,66 +331,6 @@ std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName, 
 
     return halfExtentVec;
 }
-
-
-// void Collision::CreateCameraCollider()
-// {
-//     const glm::vec3& camPos = _camera->GetPosition();
-
-//     const float camHalfHeight = camPos.y / 2.0f;
-    
-
-//     CapsuleShapeSettings cameraCapsuleSettings(camHalfHeight, _camCylinderRadius);
-//     cameraCapsuleSettings.SetEmbedded();
-    
-//     ShapeSettings::ShapeResult cameraShapeRes = cameraCapsuleSettings.Create();
-//     if(cameraShapeRes.HasError())
-//     {
-//         std::cout << "Jolt: "  << cameraShapeRes.GetError() << "\n";
-//         return;
-//     }
-//     ShapeRefC cameraShape = cameraShapeRes.Get();
-
-//     BodyCreationSettings cameraSettings(cameraShape, RVec3(camPos.x, camPos.y, camPos.z), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING);
-
-//     // creating rigidbody
-//     Body* body = _bodyInterface->CreateBody(cameraSettings);
-
-//     if(body == nullptr)
-//     {
-//         std::cout << "Reached limit of body count, can't create rigidbodies\n";
-//     }
-//     const std::string cameraObjName = "camera";
-//     _rigidbodyStorage.emplace(cameraObjName, body);
-                
-//     // adding to the world
-//     _bodyInterface->AddBody(body->GetID(), EActivation::Activate);
-
-// }
-
-// void Collision::PrePhysicsCamUpdate()
-// {
-//     // if(_camera == nullptr)
-//     // {
-//     //     std::cout << "Camera object is nullptr\n";
-//     //     return;
-//     // }
-//     // auto camPos = _camera->GetPosition();
-//     // auto camDir = _camera->GetDirection();
-
-//     // Quat newRotation = Quat::sIdentity();
-
-//     // auto cameraObj = _rigidbodyStorage.find("camera");
-//     // if(cameraObj == _rigidbodyStorage.end())
-//     // {
-//     //     std::cout << "Camera object is not stored in the storage\n";
-//     //     return;
-//     // }
-
-//     // const Vec3 cameraNewPos = Vec3(camPos.x, camPos.y, camPos.z);
-//     // _bodyInterface->MoveKinematic(cameraObj->second->GetID(), cameraNewPos, newRotation, CollisionDefines::g_DeltaTime);
-// }
-
 
 void Collision::Update()
 {
@@ -465,11 +472,11 @@ void Collision::WorkWithCollisionDebug()
                             color = Color::sGreen;
                             break;
                         default:
-                            JPH_ASSERT(false);
                             color = Color::sBlack;
                             break;
                         }
 
+                        
                         // drawing
                         Vec3 scale = transformedShape.GetShapeScale();
                         RMat44 matrix = transformedShape.GetCenterOfMassTransform().PreScaled(scale);

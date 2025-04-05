@@ -66,6 +66,41 @@ std::optional<std::vector<Vertex>> AssetManager::GetMeshVerticesByName(const std
     return result;
 }
 
+// Purpose: get start and end indices in the buffer to not make undesired copies of
+// large buffer when need to extract some mesh vertices
+std::optional<std::pair<uint32_t, uint32_t>> AssetManager::GetMeshStartEndIndices(const std::string& entityName) const
+{
+    const CurrentModelDesc* lookingForModel = GetModelDescriptorByName(entityName);
+    if(lookingForModel == nullptr)
+    {
+        std::cout << "Can't find model by name " << entityName << '\n';
+        return std::nullopt;
+    }
+
+    const uint32_t maxInt = std::numeric_limits<uint32_t>::max();
+
+    std::pair<uint32_t, uint32_t> result;
+    result.first = std::numeric_limits<uint32_t>::max();
+    result.second = 0; // as it is unsigned int
+
+    for(auto it = lookingForModel->indOffsetVertCount.begin(); it != lookingForModel->indOffsetVertCount.end(); ++it)
+    {
+        result.first   = std::min(result.first,  it->first);
+        result.second += it->second;
+    }
+
+    // end offset: start index + all vertices count for curr mesh
+    result.second += result.first;
+
+    if(result.first == std::numeric_limits<uint32_t>::max() && result.second == 0)
+    {
+        std::cout << "Some error in getting models indices in buffer\n";
+        return std::nullopt;
+    }
+
+    return result;
+}
+
 
 void AssetManager::AddEntityToLoad(ObjectDescriptor objectDesc)
 {

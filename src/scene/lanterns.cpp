@@ -6,7 +6,7 @@ void Lanterns::Prepare(AssetManager& manager)
 {
     ObjectDescriptor lanterObject;
     lanterObject.name = "Sun.glb";
-    lanterObject.type = EntityType::TYPE_COMPOUND_MESH;
+    lanterObject.type = EntityType::TYPE_COMPOUND_STATIC_MESH;
     // manager.AddEntityToLoad(lanternObjectName);
     glm::mat4 model = glm::mat4(1.0f);
 

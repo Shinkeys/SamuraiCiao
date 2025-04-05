@@ -78,7 +78,7 @@ void Camera::CalculateKeyboard(Window* window)
 		movDirStack -= _forward;
 	}
 
-	movDirStack.y = 0.0f;
+	// movDirStack.y = 0.0f;
 
 	_movementDirection = movDirStack;
 }

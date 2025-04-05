@@ -48,50 +48,6 @@ void CollisionPlayer::Prepare()
     // _player->SetCharacterVsCharacterCollision()
 }
 
-// void CollisionPlayer::CreateCameraCollider()
-// {
-//     const glm::vec3& camPos = SamuraiCameras::g_mainCamera.GetPosition();
-
-//     const float camHalfHeight = camPos.y / 2.0f;
-    
-
-//     CapsuleShapeSettings cameraCapsuleSettings(camHalfHeight, _camCylinderRadius);
-//     cameraCapsuleSettings.SetEmbedded();
-    
-//     ShapeSettings::ShapeResult cameraShapeRes = cameraCapsuleSettings.Create();
-//     if(cameraShapeRes.HasError())
-//     {
-//         std::cout << "Jolt: "  << cameraShapeRes.GetError() << "\n";
-//         return;
-//     }
-//     ShapeRefC cameraShape = cameraShapeRes.Get();
-
-//     BodyCreationSettings cameraSettings(cameraShape, RVec3(camPos.x, camPos.y, camPos.z), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING);
-
-//     // creating rigidbody
-//     Body* body = _bodyInterface->CreateBody(cameraSettings);
-
-    
-//     if(body == nullptr)
-//     {
-//         std::cout << "Reached limit of body count, can't create rigidbodies\n";
-//     }
-    
-//     // adding to the world
-//     _bodyInterface->AddBody(body->GetID(), EActivation::Activate);
-// }
-
-// void CollisionPlayer::PrePhysicsCamUpdate()
-// {
-//     auto camPos = SamuraiCameras::g_mainCamera.GetPosition();
-
-//     Quat newRotation = Quat::sIdentity();
-
-
-//     const Vec3 cameraNewPos = Vec3(camPos.x, camPos.y, camPos.z);
-//     _bodyInterface->MoveKinematic(_camID, cameraNewPos, newRotation, CollisionDefines::g_DeltaTime);
-// }
-
 void CollisionPlayer::PrePhysicsUpdate(TempAllocator* tempAlloc)
 {
     CharacterVirtual::ExtendedUpdateSettings updateSettings;
@@ -205,5 +161,5 @@ void CollisionPlayer::InterfaceUpdate()
 
 void CollisionPlayer::Cleanup()
 {
-    _player->Release();
+    _player = nullptr;
 }

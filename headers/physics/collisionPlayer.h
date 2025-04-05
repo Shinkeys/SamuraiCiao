@@ -39,7 +39,7 @@ private:
 
     
     // Camera settings
-    const float _camCylinderRadius = 1.5f;
+    const float _camCylinderRadius = 1.0f;
     
     // void PrePhysicsCamUpdate();
     void CreateCameraCollider();

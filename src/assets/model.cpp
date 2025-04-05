@@ -9,7 +9,7 @@ CurrentModelDesc Model::LoadModel(const std::filesystem::path& modelName, Entity
 
 	std::filesystem::path pathToModel = std::filesystem::absolute("objects/models" / modelName);
 
-	const aiScene* scene = importer.ReadFile(pathToModel.string(), aiProcess_Triangulate | 
+	const aiScene* scene = importer.ReadFile(pathToModel.string(), aiProcess_Triangulate |
     aiProcess_FlipUVs | aiProcess_CalcTangentSpace |  aiProcess_PreTransformVertices);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)

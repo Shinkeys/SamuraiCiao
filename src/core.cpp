@@ -17,7 +17,7 @@ bool Core::Initialize()
 
     ObjectDescriptor characterObject;
     characterObject.name = "character.obj";
-    characterObject.type = EntityType::TYPE_COMPOUND_MESH;
+    characterObject.type = EntityType::TYPE_COMPOUND_STATIC_MESH;
     _assetManager.AddEntityToLoad(characterObject);
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 25.0f));
@@ -38,7 +38,7 @@ bool Core::Initialize()
     // testing normal mapping
     ObjectDescriptor normalObject;
     normalObject.name = "testnormalmapping.gltf";
-    normalObject.type = EntityType::TYPE_COMPOUND_MESH;
+    normalObject.type = EntityType::TYPE_COMPOUND_STATIC_MESH;
     _assetManager.AddEntityToLoad(normalObject);
     glm::mat4 normalModel = glm::mat4(1.0);
     normalModel = glm::translate(normalModel, glm::vec3(0.0f, -5.0f, 40.0f));
