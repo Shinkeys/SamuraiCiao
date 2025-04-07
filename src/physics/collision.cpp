@@ -215,9 +215,6 @@ void Collision::CreateCollidersForScene()
                 uint32_t startInd = meshVertices.value().first;
                 const uint32_t endInd = meshVertices.value().second;
 
-                std::cout << "Start: " << startInd << '\n';
-                std::cout << "End: " << endInd << '\n';
-
                 const auto& allVertices = _manager->GetBuffers();
                 const uint32_t verticesCount = static_cast<uint32_t>(allVertices.vertices.size());
 
@@ -480,6 +477,7 @@ void Collision::WorkWithCollisionDebug()
                         // drawing
                         Vec3 scale = transformedShape.GetShapeScale();
                         RMat44 matrix = transformedShape.GetCenterOfMassTransform().PreScaled(scale);
+                        // To do: cull mode depending character is inside or out
                         _debugInstance->DrawGeometry(matrix, AABox::sBiggest(), 1.0f, color, geometry);
                     }
                 }       
@@ -492,6 +490,8 @@ void Collision::WorkWithCollisionDebug()
 
 void Collision::InterfaceUpdate()
 {
+    ImGui::NewLine();
+    ImGui::Text("Collision:");
     ImGui::Checkbox("Debug collision", &_debugCollision);
 
     _playerCollision.InterfaceUpdate();

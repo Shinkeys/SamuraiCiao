@@ -35,14 +35,13 @@ void CollisionPlayer::Prepare()
 
     ShapeRefC camShape = new CapsuleShape(camHalfHeight, _camCylinderRadius);
     Ref<CharacterVirtualSettings> settings = new CharacterVirtualSettings();
-    settings->mMass = 75.0f;
+    settings->mMass = 50.0f;
     settings->mShape = camShape;
     settings->mInnerBodyLayer = Layers::MOVING;
     settings->mInnerBodyShape = camShape;
     // everything else is default(at least for now)
 
     _player = new CharacterVirtual(settings, RVec3(camPos.x, camPos.y, camPos.z), Quat::sIdentity(), 0, _physSystem);
-    _player->IsSupported();
 
     // If would need to use multiple characters in the future:
     // _player->SetCharacterVsCharacterCollision()
@@ -69,13 +68,19 @@ void CollisionPlayer::HandleInput()
     const glm::vec3 movementDir = SamuraiCameras::g_mainCamera.GetMovementDirection();
     const float playerSpeed = SamuraiCameras::g_mainCamera.GetSpeed();
     const glm::vec3 upVector = SamuraiCameras::g_mainCamera.GetUp();
-    ResolveInput(ConvertGlmVec3ToJolt(movementDir), ConvertGlmVec3ToJolt(upVector), playerSpeed);
+    const bool jump = SamuraiCameras::g_mainCamera.GetJumpState();
+
+    ResolveInput(ConvertGlmVec3ToJolt(movementDir), jump, ConvertGlmVec3ToJolt(upVector), playerSpeed);
+
     SamuraiCameras::g_mainCamera.SetPosition(ConvertJoltVec3ToGlm(_player.GetPtr()->GetPosition()));
 }
 
 
 void CollisionPlayer::Update(TempAllocator* tempAlloc)
 {
+    if(SamuraiCameras::g_activeCamera->GetCameraType() == CameraType::CAMERA_TYPE_EDIT)
+        return;
+
     HandleInput();
 
     if(tempAlloc == nullptr)
@@ -86,10 +91,9 @@ void CollisionPlayer::Update(TempAllocator* tempAlloc)
     PrePhysicsUpdate(tempAlloc);
 }
 
-void CollisionPlayer::ResolveInput(Vec3Arg inMovementDirection, Vec3Arg inUpVector, float inPlayerSpeed)
+void CollisionPlayer::ResolveInput(Vec3Arg inMovementDirection, bool inJump, Vec3Arg inUpVector, float inPlayerSpeed)
 {
-    // bool playerControlsHorizontalVelocity = _player->IsSupported();
-    bool playerControlsHorizontalVelocity = true; // Always true now because doesn't need jumps logic as for now
+    bool playerControlsHorizontalVelocity = _canMoveDuringJump || _player->IsSupported();
 
     if(playerControlsHorizontalVelocity)
     {
@@ -124,6 +128,10 @@ void CollisionPlayer::ResolveInput(Vec3Arg inMovementDirection, Vec3Arg inUpVect
         newVelocity = groundVelocity;
 
         // To do: jump
+        if(inJump && isMovingTowardsGround)
+        {
+            newVelocity += _jumpSpeed * _player->GetUp() * _jumpMultiplier;
+        }
     }
     else newVelocity = currentVerticalVelocity;
 
@@ -157,6 +165,11 @@ void CollisionPlayer::InterfaceUpdate()
     _velocity.Set(changedVelocity[0], changedVelocity[1], changedVelocity[2]);
 
     ImGui::Checkbox("Enable inertia", &_enablePlayerIntertia);
+
+    // Jump multiplier to adjust height
+    ImGui::InputFloat("Set jump height", &_jumpMultiplier);
+    if(_jumpMultiplier < 1.0f)
+        _jumpMultiplier = 1.15f;
 }
 
 void CollisionPlayer::Cleanup()

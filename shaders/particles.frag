@@ -34,7 +34,7 @@ void main()
     if(distSquared > 0.25) discard;
 
 
-    vec3 color = vec3(1.0, 1.0, 1.0);
+    vec3 color = vec3(0.21, 1.0, 0.1);
     CalcColor(color, coord);
 
     FragColor = vec4(color, 1.0);

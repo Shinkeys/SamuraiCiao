@@ -4,9 +4,26 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+
+enum class CameraType
+{
+    CAMERA_TYPE_NONE,
+    CAMERA_TYPE_MAIN,
+    CAMERA_TYPE_EDIT,
+};
+
+struct CameraBehaviour
+{
+    CameraType cameraType = CameraType::CAMERA_TYPE_NONE;
+    bool canMoveVertical { false };
+    bool canMoveFreely   { false };
+};
+
 class Camera
 {
 private:
+    CameraBehaviour _behaviour;
+
     glm::vec3 _position{ 0.0f, 1.5f, 30.0f };
     const glm::vec3 _origin{_position};
     glm::vec3 _direction{ glm::normalize(-_position) };
@@ -16,8 +33,10 @@ private:
 
     float _speed = 3.0f;
 
+    bool _needToJump { false };
+
     void CalculateDirection(Window* window);
-    void CalculateKeyboard(Window* window);
+    void CalculateButtons(Window* window);
 
     glm::vec3 _movementDirection{0.0f};
 
@@ -25,7 +44,7 @@ private:
 public:
     Camera(const Camera&)            = delete;
     Camera& operator=(const Camera&) = delete;
-    Camera();
+    explicit Camera(CameraType type);
     ~Camera();
     void Update(Window* window);
     float GetSpeed()                       const    { return _speed;       }
@@ -37,7 +56,10 @@ public:
 	const glm::vec3 GetPosition()          const    { return _position;    }
     const glm::vec3 GetMovementDirection() const    { return _movementDirection;   }
     void SetPosition(glm::vec3 newPos)              { _position = newPos;  }
+    
+    bool GetJumpState()                             { if(_needToJump) { _needToJump = false; return true;} return false; }
 
+    CameraType GetCameraType()             const    { return _behaviour.cameraType;  }
 };
 
 
@@ -48,4 +70,6 @@ namespace SamuraiCameras
     extern const int32_t g_cameraCount;
     extern Camera g_mainCamera;
     extern Camera g_editorCamera;
+
+    extern Camera* g_activeCamera;
 };

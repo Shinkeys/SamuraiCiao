@@ -43,15 +43,18 @@ private:
     
     // void PrePhysicsCamUpdate();
     void CreateCameraCollider();
-    void ResolveInput(JPH::Vec3Arg inMovementDirection, JPH::Vec3Arg inUpVector, float inPlayerSpeed);
+    void ResolveInput(JPH::Vec3Arg inMovementDirection, bool inJump, JPH::Vec3Arg inUpVector, float inPlayerSpeed);
     void HandleInput();
     void PrePhysicsUpdate(JPH::TempAllocator* tempAlloc);
     
     // Common
     JPH::Vec3 _velocity = JPH::Vec3::sZero();
-    bool _allowSliding{false};
-    bool _enablePlayerIntertia{true};
-    JPH::PhysicsSystem* _physSystem = nullptr;
+    bool _allowSliding         { false };
+    bool _enablePlayerIntertia { true };
+    bool _canMoveDuringJump    { true };
+    float _jumpSpeed = 7.5f;
+    float _jumpMultiplier = 1.15f;
+    JPH::PhysicsSystem* _physSystem    = nullptr;
     JPH::BodyInterface* _bodyInterface = nullptr;
 
     JPH::Ref<JPH::CharacterVirtual> _player;

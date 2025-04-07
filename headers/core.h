@@ -10,6 +10,7 @@
 #include "physics/collision.h"
 #include "systems/camera.h"
 #include "assets/assetManager.h"
+#include "systems/editor.h"
 
 #include "graphics/particles.h"
 
@@ -18,6 +19,8 @@ class Core : public Window
 private:
     void Update() override;
     void Render() override;
+
+    void InterfaceUpdate();
     Lanterns _lanternsObjects;
     AssetManager _assetManager;
     ShadowsHelper _shadowsHelper;
@@ -26,6 +29,8 @@ private:
     SceneEditor _sceneEditor;
     // to remove
     Particles _particles;
+
+    Editor _editor;
 public:
     bool Initialize() override;
 };

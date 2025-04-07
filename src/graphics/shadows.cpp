@@ -72,7 +72,7 @@ void ShadowsHelper::Prepare()
 
 }
 
-void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
+void ShadowsHelper::DrawDepthScene(AssetManager& manager)
 {
     glBindVertexArray(manager.GetAssetsVAO());
     // getting shader where shadows are calculated
@@ -127,20 +127,20 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager, const Camera& camera)
     for(const auto& mesh : manager.GetAssetStorage())
     {
         
-        if(mesh.second.objDesc.name != "ground.gltf" && mesh.second.objDesc.name != "skybox.gltf")
+        if(mesh.second.objDesc.name == "ground.gltf" || mesh.second.objDesc.name == "skybox.gltf")
+            continue;
+
+        const glm::mat4* modelMat = manager.GetTransformMatrixByName(mesh.second.objDesc.name);
+        if(modelMat != nullptr)
+        shader->second.SetMat4x4("model", *modelMat);
+        else std::cout << "Model matrix for shadows not found\n";
+        // actually drawing
+        for(auto it = mesh.second.indOffsetVertCount.begin(); it != mesh.second.indOffsetVertCount.end(); ++it)
         {
-            const glm::mat4* modelMat = manager.GetTransformMatrixByName(mesh.second.objDesc.name);
-            if(modelMat != nullptr)
-            shader->second.SetMat4x4("model", *modelMat);
-            else std::cout << "Model matrix for shadows not found\n";
-            // actually drawing
-            for(auto it = mesh.second.indOffsetVertCount.begin(); it != mesh.second.indOffsetVertCount.end(); ++it)
-            {
-                const uint32_t vertexCount = it->second;
-                const uint32_t offset = it->first;
-                glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
-                    (void*)(offset + manager.GetBuffers().indices.data()));
-            }
+            const uint32_t vertexCount = it->second;
+            const uint32_t offset = it->first;
+            glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 
+                (void*)(offset + manager.GetBuffers().indices.data()));
         }
     }
 
@@ -156,7 +156,10 @@ void ShadowsHelper::DebugShadows()
     if(shadows)
     {  
        ImGui::Text("Depth texture:");
-       ImGui::Image(_depthTex, ImVec2{512.0f, 512.0f}); 
+       // For flip
+       ImVec2 uv0 = ImVec2(1.0f, 1.0f);
+       ImVec2 uv1 = ImVec2(0.0f, 0.0f);
+       ImGui::Image(_depthTex, ImVec2{512.0f, 512.0f}, uv0, uv1);
     }
 }
 

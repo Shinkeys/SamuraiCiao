@@ -113,25 +113,25 @@ void SceneEditor::HandleObjectSelection(const Window& window, const Matrices& ma
 
 void SceneEditor::SelectObject(const Window& window, const Matrices& matrices)
 {
-    const Mouse& mouse = window.GetMousePositions();
-    const uint32_t width = window.GetWindowWidth();
-    const uint32_t height = window.GetWindowHeight();
-    if(window.GetMousePositions().clicked)
-    {
-        // making normalize device coords from mouse pos
-        const float x = (2.0f * mouse.x) / static_cast<float>(width) - 1.0f;
-        const float y = 1.0f - (2.0f * mouse.y) / static_cast<float>(height);
-        const float z = 1.0f;
+    // const Mouse& mouse = window.GetMousePositions();
+    // const uint32_t width = window.GetWindowWidth();
+    // const uint32_t height = window.GetWindowHeight();
+    // if(window.GetMousePositions().clicked)
+    // {
+    //     // making normalize device coords from mouse pos
+    //     const float x = (2.0f * mouse.x) / static_cast<float>(width) - 1.0f;
+    //     const float y = 1.0f - (2.0f * mouse.y) / static_cast<float>(height);
+    //     const float z = 1.0f;
 
-        // making z point forwards in homo clip space
-        glm::vec4 rayClip = glm::vec4(x, y, -z, 1.0);
-        // going to view space
-        glm::vec4 rayViewSpace = glm::inverse(matrices.projection) * rayClip;
-        rayViewSpace = glm::vec4(rayViewSpace.x, rayViewSpace.y, -z, 0.0);
+    //     // making z point forwards in homo clip space
+    //     glm::vec4 rayClip = glm::vec4(x, y, -z, 1.0);
+    //     // going to view space
+    //     glm::vec4 rayViewSpace = glm::inverse(matrices.projection) * rayClip;
+    //     rayViewSpace = glm::vec4(rayViewSpace.x, rayViewSpace.y, -z, 0.0);
 
-        // maybe to do in world space, would see
-        _rayCoords = glm::normalize(rayViewSpace);
+    //     // maybe to do in world space, would see
+    //     _rayCoords = glm::normalize(rayViewSpace);
 
 
-    }
+    // }
 }

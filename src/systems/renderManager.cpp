@@ -201,7 +201,7 @@ void RenderManager::DrawMainScene(AssetManager& manager)
         }
         else if(shaderMainIt != _shaderTypes.end())
         {
-            const Matrices& cameraMatrices = SamuraiCameras::g_mainCamera.GetMVP();
+            const Matrices& cameraMatrices = SamuraiCameras::g_activeCamera->GetMVP();
 
             shaderMainIt->second.SetMat4x4("view", cameraMatrices.view);
             shaderMainIt->second.SetMat4x4("projection", cameraMatrices.projection);
@@ -251,7 +251,7 @@ void RenderManager::DrawSkybox(AssetManager& manager)
         return;
     }
 
-    const Matrices& cameraMatrices = SamuraiCameras::g_mainCamera.GetMVP();
+    const Matrices& cameraMatrices = SamuraiCameras::g_activeCamera->GetMVP();
 
     shaderSkyboxIt->second.UseShader();
     // setting matrices

@@ -163,7 +163,7 @@ void Particles::DrawParticles()
     auto shaderIt = RenderManager::_shaderTypes.find(RenderPassType::RENDER_PARTICLES);
     if(shaderIt != RenderManager::_shaderTypes.end())
     {
-        const Matrices& cameraMatrices = SamuraiCameras::g_mainCamera.GetMVP();
+        const Matrices& cameraMatrices = SamuraiCameras::g_activeCamera->GetMVP();
         shaderIt->second.UseShader();
         shaderIt->second.SetMat4x4("view", cameraMatrices.view);
         shaderIt->second.SetMat4x4("projection", cameraMatrices.projection);

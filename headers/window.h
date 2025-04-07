@@ -9,11 +9,12 @@
 struct Keys
 {
 	bool front{ false };
-	bool back{ false };
-	bool left{ false };
+	bool back { false };
+	bool left { false };
 	bool right{ false };
+    bool jump { false };
     // if true switch camera look from light position
-    bool showImgui{false};
+    bool sceneEditor { false };
 };
 
 struct Mouse
@@ -21,7 +22,8 @@ struct Mouse
 	double x{ 0.0 };
 	double y{ 0.0 };
 
-    bool clicked{false};
+    bool mouseMiddle { false };
+    bool mouseRight  { false };
 };
 
 class Window
@@ -33,12 +35,13 @@ private:
     static void CursorPosCallback(GLFWwindow* window, double xPos, double yPos);
     static void MouseClickCallback(GLFWwindow* window, int button, int action, int mods);
     void ProceedMouseMovement(double xPos, double yPos);
-    void ProceedMousePress(int action);
+    void ProceedMousePress(int button, int action, int mods);
     
     virtual void Cleanup();
     virtual void Update() = 0;
     virtual void Render() = 0;
 
+    void HandleMouseSpin();
     
     // inputs
     Keys _keys;
@@ -53,16 +56,17 @@ protected:
     uint32_t _width{2560};
     uint32_t _height{1440};
     virtual bool Initialize();
-    Window* GetWindowPointer() const { return reinterpret_cast<Window*>(glfwGetWindowUserPointer(Window::_window));}
+    Window* GetWindowPointer()       const { return reinterpret_cast<Window*>(glfwGetWindowUserPointer(Window::_window));}
     
 public:
     void EnableCursor();
     void DisableCursor();
-    uint32_t GetWindowWidth() const { return _width;}
-    uint32_t GetWindowHeight() const { return _height;}
-    const Mouse& GetMousePositions() const { return _mouse; }
-	Keys GetKeysState() const { return _keys; }
+    uint32_t GetWindowWidth()        const  { return _width; }
+    uint32_t GetWindowHeight()       const  { return _height;}
+    const Mouse& GetMousePositions() const  { return _mouse; }
+	Keys GetKeysState()              const  { return _keys;  }
     void ResetMouse();
+    Mouse GetMouseState()            const  { return _mouse; }
     Window();
     void Run();
     virtual ~Window();

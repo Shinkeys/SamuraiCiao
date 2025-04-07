@@ -73,22 +73,58 @@ void Window::ResetMouse()
 void Window::MouseClickCallback(GLFWwindow* window, int button, int action, int mods)
 {
     Window* app = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
-    if(button == GLFW_MOUSE_BUTTON_LEFT)
-    {
-        app->ProceedMousePress(action);
-    }
+    app->ProceedMousePress(button, action, mods);
+    
 }
 
-void Window::ProceedMousePress(int action)
+// Purpose: handle mouse spin 360 degrees in editor mode
+void Window::HandleMouseSpin()
+{
+    const auto currInputMode = glfwGetInputMode(_window, GLFW_CURSOR);
+    if(_keys.sceneEditor && _mouse.mouseMiddle)
+    {
+        glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+
+    else if(currInputMode != GLFW_CURSOR_NORMAL && _keys.sceneEditor && !_mouse.mouseMiddle)
+    {
+        glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+}
+void Window::ProceedMousePress(int button, int action, int mods)
 {
     switch(action)
     {
     case GLFW_PRESS:
-        _mouse.clicked = true;
+        {
+            switch(button)
+            {
+                case GLFW_MOUSE_BUTTON_MIDDLE:
+                    _mouse.mouseMiddle = true;
+                    break;
+
+                case GLFW_MOUSE_BUTTON_2:
+                    std::cout << "Toggle\n";
+                    _mouse.mouseRight = true;
+                    break;
+            }
+        }
         break;
+
     case GLFW_RELEASE:
-        _mouse.clicked = false;
+        switch(button)
+            {
+                case GLFW_MOUSE_BUTTON_MIDDLE:
+                    _mouse.mouseMiddle = false;
+                    break;
+
+                case GLFW_MOUSE_BUTTON_2:
+                    std::cout << "Boom\n";
+                    _mouse.mouseRight = false;
+                    break;
+            }
         break;
+        
     default:
         std::cout << "Unknown action on mouse click\n";
         break;
@@ -134,11 +170,15 @@ void Window::ProceedKeys(int key)
 	{
 		_keys.right = true;
 	}
-
-    if(key == GLFW_KEY_1)
+    if(key == GLFW_KEY_SPACE)
     {
-        _keys.showImgui = !_keys.showImgui;
-        if(_keys.showImgui)
+        _keys.jump = true;
+    }
+
+    if(key == GLFW_KEY_F2)
+    {
+        _keys.sceneEditor = !_keys.sceneEditor;
+        if(_keys.sceneEditor)
             EnableCursor();
         else
             DisableCursor();
@@ -152,6 +192,8 @@ void Window::ResetKey(int key)
 	case GLFW_KEY_S: _keys.back = false; break;
 	case GLFW_KEY_A: _keys.left = false; break;
 	case GLFW_KEY_D: _keys.right = false; break;
+    case GLFW_KEY_SPACE: _keys.jump = false; break;
+
     default: break;
 	}
 }
@@ -183,8 +225,9 @@ void Window::Run()
     }
     while(!glfwWindowShouldClose(_window))
     {
+        HandleMouseSpin();
         Update();
-        if(_keys.showImgui)
+        if(_keys.sceneEditor)
             SamuraiInterface::UpdateImgui(_width, _height);
         Render();
     }

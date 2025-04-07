@@ -21,5 +21,5 @@ public:
     void MakeDynamicArea(float zNear, float zFar);
     void Prepare();
     void DebugShadows();
-    void DrawDepthScene(AssetManager& manager, const Camera& camera);
+    void DrawDepthScene(AssetManager& manager);
 };

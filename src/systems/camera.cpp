@@ -1,14 +1,38 @@
 #include "../../headers/systems/camera.h"
 #include <algorithm>
 
-Camera SamuraiCameras::g_mainCamera;
-Camera SamuraiCameras::g_editorCamera;
+Camera  SamuraiCameras::g_mainCamera(CameraType::CAMERA_TYPE_MAIN);
+Camera  SamuraiCameras::g_editorCamera(CameraType::CAMERA_TYPE_EDIT);
+Camera* SamuraiCameras::g_activeCamera = &g_mainCamera;
 const int32_t SamuraiCameras::g_cameraCount = 2;
 
 
 
-Camera::Camera()
+
+Camera::Camera(CameraType type)
 {
+	_behaviour.cameraType = type;
+	switch(type)
+	{
+	case CameraType::CAMERA_TYPE_MAIN:
+		_behaviour.canMoveFreely   = true;
+		_behaviour.canMoveVertical = false;
+		break;
+	
+	case CameraType::CAMERA_TYPE_EDIT:
+		_behaviour.canMoveFreely   = false;
+		_behaviour.canMoveVertical = true;
+		break;
+
+	case CameraType::CAMERA_TYPE_NONE:
+		_behaviour.canMoveFreely   = false;
+		_behaviour.canMoveVertical = false;
+		break;
+
+	default: std::cout << "Unrecognized camera type\n";
+		break;
+	}
+
 }
 
 
@@ -19,19 +43,17 @@ Camera::~Camera()
 
 void Camera::Update(Window* window)
 {
-	if(!window->GetKeysState().showImgui)
-	{
-		CalculateDirection(window);
-		CalculateKeyboard(window);
-	}
+	CalculateDirection(window);
+	CalculateButtons(window);
+
 	_matrices.view = glm::lookAt(_position, _position + _direction, _up);
 }
 
-void Camera::CalculateKeyboard(Window* window)
+void Camera::CalculateButtons(Window* window)
 {
 	if(window == nullptr)
 	{
-		std::cerr << "Window pointer is null in camera calculate keyboard method\n";
+		std::cerr << "Window pointer is null in camera calculate buttons method\n";
 		return;
 	}
 
@@ -58,7 +80,9 @@ void Camera::CalculateKeyboard(Window* window)
 	// _position.y = 2.5f;
 
 
-	// To check //
+	// In the editor mode it's possible to move only with RMB + WASD
+	if(!window->GetMouseState().mouseRight && _behaviour.cameraType == CameraType::CAMERA_TYPE_EDIT)
+		return;
 
 	glm::vec3 movDirStack = glm::vec3(0.0f);
 	if (window->GetKeysState().right)
@@ -78,7 +102,10 @@ void Camera::CalculateKeyboard(Window* window)
 		movDirStack -= _forward;
 	}
 
-	// movDirStack.y = 0.0f;
+	if(window->GetKeysState().jump)
+	{
+		_needToJump = true;
+	}
 
 	_movementDirection = movDirStack;
 }
@@ -90,10 +117,17 @@ void Camera::CalculateDirection(Window* window)
 		return;
 	}
 
+	// If not in editor mode - return
+	if(window->GetKeysState().sceneEditor && !window->GetMouseState().mouseMiddle)
+		return;
+
+
 	const float sensitivity = 0.05f;
 
 	float rotateX = window->GetMousePositions().x;
 	float rotateY = window->GetMousePositions().y;
+
+	window->ResetMouse();
 
 	static float yaw = -90.0f; // camera initially looks in x direction, but character position forward(z)
 	static float pitch = 0.0f;
@@ -111,7 +145,9 @@ void Camera::CalculateDirection(Window* window)
     _direction.z = std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch));
 	_right = glm::normalize(glm::cross(_direction, _up));
 
-	_forward = glm::normalize(glm::cross(_up, _right));
+	if(_behaviour.canMoveVertical)
+		_forward = glm::normalize(_direction);
+	else 
+		_forward = glm::normalize(glm::cross(_up, _right));
 
-	window->ResetMouse();
 }

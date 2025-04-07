@@ -73,14 +73,18 @@ bool Core::Initialize()
     _collision.Prepare();
     // particles
     _particles.Prepare();
+
+    // scenee editor
+    _editor.PassWindow(Window::GetWindowPointer());
   
     return true;
 }
 
 void Core::Update()
 {
-    SamuraiCameras::g_mainCamera.Update(Window::GetWindowPointer());
+    SamuraiCameras::g_activeCamera->Update(Window::GetWindowPointer());
     _collision.Update();
+    _editor.Update();
 
     // passing light pos in view to the shader
     // const glm::vec3 lightPosView = _lanternsObjects.LightPositionViewSpace(_camera.GetMVP());
@@ -93,7 +97,7 @@ void Core::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     
-    _shadowsHelper.DrawDepthScene(_assetManager, SamuraiCameras::g_mainCamera);
+    _shadowsHelper.DrawDepthScene(_assetManager);
     
     OpenglBackend::SetViewport(Window::_width, Window::_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -104,10 +108,21 @@ void Core::Render()
 
 
     _collision.WorkWithCollisionDebug();
-    if(Window::GetKeysState().showImgui)
+    
+        
+    InterfaceUpdate();
+
+    glfwSwapBuffers(Window::_window);
+    glfwPollEvents();
+}
+
+void Core::InterfaceUpdate()
+{
+    if(Window::GetKeysState().sceneEditor)
     {
-        SamuraiInterface::DebugWindow(SamuraiCameras::g_mainCamera.GetPosition());
         // must be first: creating window
+        SamuraiInterface::DebugWindow(Window::_width / 4, Window::_height, SamuraiCameras::g_mainCamera.GetPosition());
+        
         _shadowsHelper.DebugShadows();
         _particles.EnableParticles();
         _collision.InterfaceUpdate();
@@ -115,7 +130,4 @@ void Core::Render()
         // must be last: finishing frame
         SamuraiInterface::RenderImgui();
     }
-        
-    glfwSwapBuffers(Window::_window);
-    glfwPollEvents();
 }
