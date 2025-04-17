@@ -152,6 +152,12 @@ void Shader::SetInt(const std::string& name, int value)
         _uniformLocations[name] = glGetUniformLocation(_programID, name.c_str());
     glUniform1i(_uniformLocations[name], value);
 }
+void Shader::SetUInt(const std::string& name, unsigned int value)
+{
+    if(_uniformLocations.find(name) == _uniformLocations.end())
+        _uniformLocations[name] = glGetUniformLocation(_programID, name.c_str());
+    glUniform1ui(_uniformLocations[name], value);
+}
 void Shader::SetFloat(const std::string& name, float value)
 {
     if(_uniformLocations.find(name) == _uniformLocations.end())

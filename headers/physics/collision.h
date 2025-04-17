@@ -50,9 +50,13 @@ private:
     CollisionPlayer _playerCollision;
 
     void PassStructures();
+
+    CollisionDependency _dependencies;
 public:
+    JPH::PhysicsSystem* GetPhysSystem() { return &_physSystem; }
     void WorkWithCollisionDebug();
     void InterfaceUpdate();
+    const CollisionDependency& GetDependencies() const { return _dependencies;}
     void Prepare();
     void Update();
     void PassAssetManager(AssetManager* manager);

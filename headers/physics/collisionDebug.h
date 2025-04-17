@@ -15,7 +15,8 @@ class Camera;
 class CollisionDebug : public JPH::DebugRenderer
 {
 private:
-    EBOSetupBuffers _buffers;
+    EBOSetupBuffers _geometryBuffers;
+    VBOSetupUnskinned _linesBuffers;
 public:
     virtual void			                    DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override;
     virtual void			                    DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3, JPH::ColorArg inColor, JPH::DebugRenderer::ECastShadow inCastShadow = JPH::DebugRenderer::ECastShadow::Off) override;
@@ -105,4 +106,13 @@ public:
             _indices.push_back(inIndices[i]);
         }
     }
+};
+
+
+// Purpose: to inject everything needed from collision class at once
+// forward declaration of collision debug;
+struct CollisionDependency
+{
+	JPH::PhysicsSystem* physSystem     = nullptr;
+	CollisionDebug*     collisionDebug = nullptr;
 };

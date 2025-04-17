@@ -3,6 +3,7 @@
 #include "../../headers/systems/renderManager.h"
 #include "../../headers/systems/interface.h"
 
+
 void ShadowsHelper::PassLanterns(Lanterns* lant)
 {
     _lanterns = lant;
@@ -132,8 +133,12 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
 
         const glm::mat4* modelMat = manager.GetTransformMatrixByName(mesh.second.objDesc.name);
         if(modelMat != nullptr)
-        shader->second.SetMat4x4("model", *modelMat);
-        else std::cout << "Model matrix for shadows not found\n";
+            shader->second.SetMat4x4("model", *modelMat);
+        else 
+        {
+            shader->second.SetMat4x4("model", glm::mat4(1.0f));
+            std::cout << "Model matrix for shadows not found\n";
+        }
         // actually drawing
         for(auto it = mesh.second.indOffsetVertCount.begin(); it != mesh.second.indOffsetVertCount.end(); ++it)
         {

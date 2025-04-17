@@ -76,6 +76,9 @@ bool Core::Initialize()
 
     // scenee editor
     _editor.PassWindow(Window::GetWindowPointer());
+    _editor.PassManager(&_assetManager);
+    _editor.PassCollisionDependency(_collision.GetDependencies());
+    _editor.Initialize();
   
     return true;
 }
@@ -104,6 +107,9 @@ void Core::Render()
 
     
     RenderManager::GlobalDraw(_assetManager);
+
+    _editor.Render();
+
     _particles.RenderParticles();
 
 
@@ -126,6 +132,7 @@ void Core::InterfaceUpdate()
         _shadowsHelper.DebugShadows();
         _particles.EnableParticles();
         _collision.InterfaceUpdate();
+        _editor.InterfaceUpdate();
 
         // must be last: finishing frame
         SamuraiInterface::RenderImgui();

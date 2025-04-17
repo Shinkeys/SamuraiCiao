@@ -19,11 +19,16 @@ struct Keys
 
 struct Mouse
 {
-	double x{ 0.0 };
-	double y{ 0.0 };
+	double displacementX{ 0.0 };
+	double displacementY{ 0.0 };
+
+    double xPos { 0.0 };
+    double yPos { 0.0 };
 
     bool mouseMiddle { false };
     bool mouseRight  { false };
+
+    bool mouseLeft   { false };
 };
 
 class Window
@@ -53,8 +58,8 @@ private:
     
 protected:
     GLFWwindow* _window;
-    uint32_t _width{2560};
-    uint32_t _height{1440};
+    uint32_t _width { 2560 };
+    uint32_t _height{ 1440 };
     virtual bool Initialize();
     Window* GetWindowPointer()       const { return reinterpret_cast<Window*>(glfwGetWindowUserPointer(Window::_window));}
     
@@ -63,7 +68,6 @@ public:
     void DisableCursor();
     uint32_t GetWindowWidth()        const  { return _width; }
     uint32_t GetWindowHeight()       const  { return _height;}
-    const Mouse& GetMousePositions() const  { return _mouse; }
 	Keys GetKeysState()              const  { return _keys;  }
     void ResetMouse();
     Mouse GetMouseState()            const  { return _mouse; }

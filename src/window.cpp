@@ -66,8 +66,8 @@ bool Window::Initialize()
 
 void Window::ResetMouse()
 {
-	_mouse.x = 0.0f;
-	_mouse.y = 0.0f;
+	_mouse.displacementX = 0.0f;
+	_mouse.displacementY = 0.0f;
 }
 
 void Window::MouseClickCallback(GLFWwindow* window, int button, int action, int mods)
@@ -104,9 +104,13 @@ void Window::ProceedMousePress(int button, int action, int mods)
                     break;
 
                 case GLFW_MOUSE_BUTTON_2:
-                    std::cout << "Toggle\n";
                     _mouse.mouseRight = true;
                     break;
+                
+                case GLFW_MOUSE_BUTTON_1:
+                    _mouse.mouseLeft =  true;
+                    break;
+                    
             }
         }
         break;
@@ -119,8 +123,11 @@ void Window::ProceedMousePress(int button, int action, int mods)
                     break;
 
                 case GLFW_MOUSE_BUTTON_2:
-                    std::cout << "Boom\n";
                     _mouse.mouseRight = false;
+                    break;
+
+                case GLFW_MOUSE_BUTTON_1:
+                    _mouse.mouseLeft = false;
                     break;
             }
         break;
@@ -133,8 +140,11 @@ void Window::ProceedMousePress(int button, int action, int mods)
 
 void Window::ProceedMouseMovement(double xPos, double yPos)
 {
-    _mouse.x = xPos - _lastMouseWidth;
-	_mouse.y = yPos - _lastMouseHeight;
+    _mouse.displacementX = xPos - _lastMouseWidth;
+	_mouse.displacementY = yPos - _lastMouseHeight;
+
+    _mouse.xPos = xPos;
+    _mouse.yPos = yPos;
 
 	_lastMouseWidth = xPos;
 	_lastMouseHeight = yPos;

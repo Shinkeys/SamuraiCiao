@@ -1,8 +1,8 @@
-// #include "../types/types.h"
+#pragma once
+#include "../types/types.h"
 
 
-// namespace SamuraiMath
-// {
-//     void SimplifyMeshQEM(const std::vector<Vertex>& vertices);
-//     void ComputeQuadric(glm::vec3 vertex);
-// };
+namespace SamuraiMath
+{
+    bool IntersectAABB(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::vec3 boxMin, glm::vec3 boxMax);
+};

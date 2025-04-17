@@ -5,12 +5,11 @@
 #include "scene/lanterns.h"
 #include "graphics/shadows.h"
 #include "systems/renderManager.h"
-#include "systems/sceneEditor.h"
 #include "systems/shaders.h"
 #include "physics/collision.h"
 #include "systems/camera.h"
 #include "assets/assetManager.h"
-#include "systems/editor.h"
+#include "editor/editor.h"
 
 #include "graphics/particles.h"
 
@@ -26,8 +25,6 @@ private:
     ShadowsHelper _shadowsHelper;
     
     Collision _collision;
-    SceneEditor _sceneEditor;
-    // to remove
     Particles _particles;
 
     Editor _editor;

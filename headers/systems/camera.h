@@ -50,11 +50,12 @@ public:
     float GetSpeed()                       const    { return _speed;       }
     glm::vec3 GetUp()                      const    { return _up;          }
     void SetSpeed(float speed)                      { _speed = speed;      }
-    const glm::vec3 GetOrigin()            const    { return _origin;      } 
+    glm::vec3 GetOrigin()                  const    { return _origin;      } 
     const Matrices& GetMVP()                        { return _matrices;    }
     void SetMatrices(Matrices& matr)                { _matrices = matr;    }
-	const glm::vec3 GetPosition()          const    { return _position;    }
-    const glm::vec3 GetMovementDirection() const    { return _movementDirection;   }
+	glm::vec3 GetPosition()                const    { return _position;    }
+    glm::vec3 GetMovementDirection()       const    { return _movementDirection;   }
+    glm::vec3 GetLookDirection()           const    { return _direction;}
     void SetPosition(glm::vec3 newPos)              { _position = newPos;  }
     
     bool GetJumpState()                             { if(_needToJump) { _needToJump = false; return true;} return false; }

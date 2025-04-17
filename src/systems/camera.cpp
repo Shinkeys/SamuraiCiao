@@ -29,7 +29,8 @@ Camera::Camera(CameraType type)
 		_behaviour.canMoveVertical = false;
 		break;
 
-	default: std::cout << "Unrecognized camera type\n";
+	default: 
+		std::cout << "Unrecognized camera type\n";
 		break;
 	}
 
@@ -57,32 +58,33 @@ void Camera::CalculateButtons(Window* window)
 		return;
 	}
 
-	// static float lastFrame = 0.0f;
-	// const float currentFrame = glfwGetTime();
-	// const float deltaTime = currentFrame - lastFrame;
-	// lastFrame = currentFrame;
-	// if (window->GetKeysState().right)
-	// {
-	// 	_position += glm::normalize(_right) * deltaTime * _speed;
-	// }
-	// if (window->GetKeysState().left)
-	// {
-	// 	_position -= glm::normalize(_right) * deltaTime * _speed;
-	// }
-	// if (window->GetKeysState().front)
-	// {
-	// 	_position += _forward * deltaTime * _speed;
-	// }
-	// if (window->GetKeysState().back)
-	// {
-	// 	_position -= _forward * deltaTime * _speed;
-	// }
-	// _position.y = 2.5f;
-
+	static float lastFrame = 0.0f;
+	const float currentFrame = glfwGetTime();
+	const float deltaTime = currentFrame - lastFrame;
+	lastFrame = currentFrame;
 
 	// In the editor mode it's possible to move only with RMB + WASD
 	if(!window->GetMouseState().mouseRight && _behaviour.cameraType == CameraType::CAMERA_TYPE_EDIT)
 		return;
+	else if(window->GetMouseState().mouseRight && _behaviour.cameraType == CameraType::CAMERA_TYPE_EDIT)
+	{
+		if (window->GetKeysState().right)
+		{
+			_position += glm::normalize(_right) * deltaTime * _speed;
+		}
+		if (window->GetKeysState().left)
+		{
+			_position -= glm::normalize(_right) * deltaTime * _speed;
+		}
+		if (window->GetKeysState().front)
+		{
+			_position += _forward * deltaTime * _speed;
+		}
+		if (window->GetKeysState().back)
+		{
+			_position -= _forward * deltaTime * _speed;
+		}
+	}
 
 	glm::vec3 movDirStack = glm::vec3(0.0f);
 	if (window->GetKeysState().right)
@@ -124,8 +126,8 @@ void Camera::CalculateDirection(Window* window)
 
 	const float sensitivity = 0.05f;
 
-	float rotateX = window->GetMousePositions().x;
-	float rotateY = window->GetMousePositions().y;
+	float rotateX = window->GetMouseState().displacementX;
+	float rotateY = window->GetMouseState().displacementY;
 
 	window->ResetMouse();
 
@@ -149,5 +151,4 @@ void Camera::CalculateDirection(Window* window)
 		_forward = glm::normalize(_direction);
 	else 
 		_forward = glm::normalize(glm::cross(_up, _right));
-
 }
