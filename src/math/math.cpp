@@ -3,35 +3,28 @@
     bool SamuraiMath::IntersectAABB(glm::vec3 rayOrigin, glm::vec3 rayDir, 
                     glm::vec3 boxMin, glm::vec3 boxMax)
     {
-        float tMin = std::numeric_limits<float>::lowest();
-        float tMax = std::numeric_limits<float>::max();
+        float t1 = (boxMin.x - rayOrigin.x) / rayDir.x;
+        float t2 = (boxMax.x - rayOrigin.x) / rayDir.x;
+        float t3 = (boxMin.y - rayOrigin.y) / rayDir.y;
+        float t4 = (boxMax.y - rayOrigin.y) / rayDir.y;
+        float t5 = (boxMin.z - rayOrigin.z) / rayDir.z;
+        float t6 = (boxMax.z - rayOrigin.z) / rayDir.z;
 
-        if(rayDir.x != 0.0f)
+        float tMin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
+        float tMax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
+
+
+    
+        if(tMax < 0.0f)
         {
-            float tx1 = (boxMin.x - rayOrigin.x) / rayDir.x;
-            float tx2 = (boxMax.x - rayOrigin.x) / rayDir.x;
-
-            tMin = std::max(tMin, std::min(tx1, tx2));
-            tMax = std::min(tMax, std::max(tx1, tx2));
+            return false;
         }
 
-        if(rayDir.y != 0.0f)
+        if(tMin > tMax)
         {
-            float ty1 = (boxMin.y - rayOrigin.y) / rayDir.y;
-            float ty2 = (boxMax.y - rayOrigin.y) / rayDir.y;
-
-            tMin = std::max(tMin, std::min(ty1, ty2));
-            tMax = std::min(tMax, std::max(ty1, ty2));
+            return false;
         }
 
-        if(rayDir.z != 0.0f)
-        {
-            float tz1 = (boxMin.z - rayOrigin.z) / rayDir.z;
-            float tz2 = (boxMax.z - rayOrigin.z) / rayDir.z;
 
-            tMin = std::max(tMin, std::min(tz1, tz2));
-            tMax = std::min(tMax, std::max(tz1, tz2));
-        }
-
-        return tMax >= tMin;
+        return true;
     }

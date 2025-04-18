@@ -7,11 +7,6 @@
 #include "collisionDebug.h"
 #include "collisionPlayer.h"
 
-struct AABB
-{
-    glm::vec3 min{glm::vec3(std::numeric_limits<float>::max())};
-    glm::vec3 max{glm::vec3(std::numeric_limits<float>::lowest())};
-};
 
 class MyBodyActivationListener; 
 class MyContactListener;
@@ -37,7 +32,6 @@ private:
     std::optional<JPH::Vec3> SimplifyBoxShapes(const std::string& entityName, glm::vec3& inOutDisplacement);
     void CreateCollidersForScene();
     void Setup();
-    // unordered_map<std::string, BodyID> 
 
     // Debug
     bool _debugCollision{false};
@@ -52,6 +46,8 @@ private:
     void PassStructures();
 
     CollisionDependency _dependencies;
+
+    std::optional<AABB> CalculateMeshAABB(const std::string& entityName);
 public:
     JPH::PhysicsSystem* GetPhysSystem() { return &_physSystem; }
     void WorkWithCollisionDebug();
@@ -60,5 +56,15 @@ public:
     void Prepare();
     void Update();
     void PassAssetManager(AssetManager* manager);
+
+    // Collision(Collision&) = delete;
+    // TO DO
+    // Collision(Collision&& oldInstance)
+    // {
+    //     if(this != &oldInstance)
+    //     {
+            
+    //     }
+    // }
     ~Collision();
 };

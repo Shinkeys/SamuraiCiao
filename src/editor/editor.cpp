@@ -44,6 +44,7 @@ void Editor::PassCollisionDependency(const CollisionDependency& dependencies)
         _collisionDependency.physSystem = dependencies.physSystem;
     }
     else std::cout << "Cannot inject collision. Physics system is null\n";
+
 }
 
 void Editor::Initialize()

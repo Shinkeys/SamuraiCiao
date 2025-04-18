@@ -34,6 +34,7 @@ void SceneEditor::PassCollisionDependency(const CollisionDependency& dependencie
         _collisionDependency.physSystem = dependencies.physSystem;
     }
     else std::cout << "Cannot inject collision. Physics system is null\n";
+
 }
 // Purpose: as I decided to use raycasting to handle object selection, would be great
 // idea to use Jolt to get AABB of every object.
@@ -56,19 +57,20 @@ void SceneEditor::PrepareObjectSelection()
         if(lock.Succeeded())
         {   
             const Body& body = lock.GetBody();
-
-            const JPH::Shape* shape = body.GetShape();
+            const Shape* shape = body.GetShape();
             if(shape == nullptr)
             {
                 std::cout << "Can't get AABB of object with id " << bodyID.GetIndex() << " to prepare object selection\n";
                 continue;
-            }
-
+            }   
+            
+            JPH::AABox localBounds = shape->GetLocalBounds();
+            localBounds.Translate(shape->GetCenterOfMass());
             if(_collidersAABBs.find(bodyID) == _collidersAABBs.end())
-                _collidersAABBs.emplace(bodyID, shape->GetLocalBounds());
+                _collidersAABBs.insert({bodyID, localBounds});
         }
     }
-
+  
     Shader sceneEditorShader;
     sceneEditorShader.LoadShaders("sceneEditor.vert", "sceneEditor.frag");
     
@@ -120,15 +122,18 @@ void SceneEditor::SelectObject()
         newRayDebug.endType   = LineDebug::EndType::END_TYPE_DIRECTION;
         _editorDebug->RequestLineDebugUpdate(newRayDebug);
         
+
+
         for(auto body : _collidersAABBs)
         {
-            JPH::AABox& aaBoxLocal = body.second;
-            JPH::Vec3 aabbCenter = aaBoxLocal.GetCenter();
+            JPH::AABox aaBoxLocal = body.second;
             
             const glm::vec3 aabbMin = ConvertJoltVec3ToGlm(aaBoxLocal.mMin);
             const glm::vec3 aabbMax = ConvertJoltVec3ToGlm(aaBoxLocal.mMax);
 
+            
             // Means that point is inside
+            // TO CHECK: Jolt's AABB generation, I think the issue lies over there.
             if(SamuraiMath::IntersectAABB(rayOrigin, rayWorldNormalized, aabbMin, aabbMax))
             {
                 std::cout << "Intersects\n";

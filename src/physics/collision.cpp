@@ -147,9 +147,9 @@ void Collision::Setup()
     _bodyInterface = &_physSystem.GetBodyInterface();
 
 
-
     _dependencies.physSystem = &_physSystem;
     _dependencies.collisionDebug = _debugInstance.get();
+
 }
 
 void Collision::PassStructures()
@@ -205,7 +205,7 @@ void Collision::CreateCollidersForScene()
                 
                 // adding to the world
                 _bodyInterface->AddBody(body->GetID(), EActivation::DontActivate);
-            
+
 
             }
             break;
@@ -236,8 +236,8 @@ void Collision::CreateCollidersForScene()
                 {
                     if(startInd + 3 > verticesCount) break;
 
-                    const glm::vec3 firstVertex  = glm::mat3(*objectTransformMatrix) * allVertices.vertices[startInd].position;
-                    triangles.push_back(Vec3(firstVertex.x,  firstVertex.y,  firstVertex.z));
+                    const glm::vec3 vertex  = glm::mat3(*objectTransformMatrix) * allVertices.vertices[startInd].position;
+                    triangles.push_back(Vec3(vertex.x,  vertex.y,  vertex.z));
                 }
                 
                 if(triangles.size() == 0)
@@ -248,10 +248,14 @@ void Collision::CreateCollidersForScene()
             
                 Ref<ConvexHullShapeSettings> convexSettings = new ConvexHullShapeSettings(triangles);
 
-        
                 const glm::vec3 worldPos = glm::vec3((*objectTransformMatrix)[3]);
+
+
+                // Need this to adjust center of mass for mesh
+                Ref<RotatedTranslatedShapeSettings> rotConvexHull = new RotatedTranslatedShapeSettings(Vec3(worldPos.x, worldPos.y, worldPos.z),
+                                                             Quat::sIdentity(), convexSettings);
                 
-                BodyCreationSettings convexBodySettings(convexSettings, RVec3(worldPos.x, worldPos.y, worldPos.z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+                BodyCreationSettings convexBodySettings(rotConvexHull, RVec3(0.0f, 0.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
                 // meshBodySettings.ConvertShapeSettings();
                 // creating rigidbody
                 Body* body = _bodyInterface->CreateBody(convexBodySettings);
@@ -261,8 +265,10 @@ void Collision::CreateCollidersForScene()
                     std::cout << "Reached limit of body count, can't create rigidbodies\n";
                     continue;
                 }
+
+
                 _rigidbodyStorage.emplace(it->first, body);
-                
+               
                 // adding to the world
                 _bodyInterface->AddBody(body->GetID(), EActivation::DontActivate);
 
@@ -278,7 +284,7 @@ void Collision::CreateCollidersForScene()
     }
 }
 
-std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName, glm::vec3& inOutDisplacement)
+std::optional<AABB> Collision::CalculateMeshAABB(const std::string& entityName)
 {
     auto meshVertices = _manager->GetMeshVerticesByName(entityName);
     if(meshVertices == std::nullopt)
@@ -298,7 +304,19 @@ std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName, 
         modelAABB.max.x = std::max(modelAABB.max.x, meshVertices.value()[i].position.x);
         modelAABB.max.y = std::max(modelAABB.max.y, meshVertices.value()[i].position.y);
         modelAABB.max.z = std::max(modelAABB.max.z, meshVertices.value()[i].position.z);
+    }
 
+    return modelAABB;
+}
+
+std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName, glm::vec3& inOutDisplacement)
+{
+    auto calculatedAABB = CalculateMeshAABB(entityName);
+
+    if(calculatedAABB == std::nullopt)
+    {
+        std::cout << "Can't simplify  box shape. Calculate Mesh AABB result is null\n";
+        return std::nullopt;
     }
 
     // Transforming to world coords
@@ -309,6 +327,7 @@ std::optional<Vec3> Collision::SimplifyBoxShapes(const std::string& entityName, 
         return std::nullopt;
     }
 
+    AABB modelAABB = calculatedAABB.value();
     // scaling boundaries of the AABB
     modelAABB.min = *mat * glm::vec4(modelAABB.min, 1.0f);
     modelAABB.max = *mat * glm::vec4(modelAABB.max, 1.0f);
