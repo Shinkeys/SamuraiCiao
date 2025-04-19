@@ -108,11 +108,3 @@ public:
     }
 };
 
-
-// Purpose: to inject everything needed from collision class at once
-// forward declaration of collision debug;
-struct CollisionDependency
-{
-	JPH::PhysicsSystem* physSystem     = nullptr;
-	CollisionDebug*     collisionDebug = nullptr;
-};

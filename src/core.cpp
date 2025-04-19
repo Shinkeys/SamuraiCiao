@@ -77,7 +77,7 @@ bool Core::Initialize()
     // scenee editor
     _editor.PassWindow(Window::GetWindowPointer());
     _editor.PassManager(&_assetManager);
-    _editor.PassCollisionDependency(_collision.GetDependencies());
+    _editor.PassCollisionDependency(_collision.GetCollisionDependency());
     _editor.Initialize();
   
     return true;

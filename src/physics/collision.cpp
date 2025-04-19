@@ -146,10 +146,7 @@ void Collision::Setup()
 
     _bodyInterface = &_physSystem.GetBodyInterface();
 
-
-    _dependencies.physSystem = &_physSystem;
-    _dependencies.collisionDebug = _debugInstance.get();
-
+    _dependencies = std::make_unique<CollisionDependency>(_physSystem, *_debugInstance.get());
 }
 
 void Collision::PassStructures()
@@ -206,7 +203,7 @@ void Collision::CreateCollidersForScene()
                 // adding to the world
                 _bodyInterface->AddBody(body->GetID(), EActivation::DontActivate);
 
-
+                _dependencies->GetObjectsHandle().insert({it->first, &body->GetID()});
             }
             break;
         
@@ -271,6 +268,8 @@ void Collision::CreateCollidersForScene()
                
                 // adding to the world
                 _bodyInterface->AddBody(body->GetID(), EActivation::DontActivate);
+
+                _dependencies->GetObjectsHandle().insert({it->first, &body->GetID()});
 
             }
             break;

@@ -1,18 +1,14 @@
 #include "../../headers/editor/editorDebug.h"
 
-void EditorDebug::PassCollisionDependency(const CollisionDependency& dependencies)
+void EditorDebug::PassCollisionDependency(CollisionDependency* dependencies)
 {
-    if(dependencies.collisionDebug != nullptr)
+    if(dependencies == nullptr)
     {
-        _collisionDependency.collisionDebug = dependencies.collisionDebug;
+        std::cout << "Cannot inject collision. Collision dependencies is null\n";
+        return;
     }
-    else std::cout << "Cannot inject collision. Collision debug is null\n";
     
-    if(dependencies.physSystem != nullptr)
-    {
-        _collisionDependency.physSystem = dependencies.physSystem;
-    }
-    else std::cout << "Cannot inject collision. Physics system is null\n";
+    _collisionDependency = dependencies;
 }
 
 void EditorDebug::RequestLineDebugUpdate(const LineDebug& newData)
@@ -38,10 +34,10 @@ void EditorDebug::RequestLineDebugUpdate(const LineDebug& newData)
 
 void EditorDebug::DebugScene() const
 {
-    if(_collisionDependency.collisionDebug == nullptr)
-    {
-        std::cout << "Can't debug in editor mode, collision debug is null\n";
-        return;
-    }
-    _collisionDependency.collisionDebug->DrawLine(_clickRay.origin, _clickRay.direction, _clickRay.color); 
+    // if(_collisionDependency == nullptr)
+    // {
+    //     std::cout << "Can't debug in editor mode, collision debug is null\n";
+    //     return;
+    // }
+    // _collisionDependency.collisionDebug->DrawLine(_clickRay.origin, _clickRay.direction, _clickRay.color); 
 }

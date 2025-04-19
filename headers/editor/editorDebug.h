@@ -20,10 +20,10 @@ class EditorDebug
 {
 private:
     LineDebug _clickRay;
-    CollisionDependency _collisionDependency;
+    CollisionDependency* _collisionDependency = nullptr;
 
 public:
     void RequestLineDebugUpdate(const LineDebug& newData);
-    void PassCollisionDependency(const CollisionDependency& dependency);
+    void PassCollisionDependency(CollisionDependency* dependency);
     void DebugScene() const;
 };

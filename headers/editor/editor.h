@@ -16,9 +16,9 @@ private:
     EditorDebug _editorDebug;
 
     bool _inEditingMode { false };
-    AssetManager* _manager = nullptr;
-    Window*       _window  = nullptr;
-    CollisionDependency _collisionDependency;
+    AssetManager* _manager                    = nullptr;
+    Window*       _window                     = nullptr;
+    CollisionDependency* _collisionDependency = nullptr;
 
     SceneStatus _sceneStatus;
     void ChangeActiveCamera();
@@ -28,7 +28,7 @@ public:
     void Render();
     void InterfaceUpdate();
     void PassWindow(Window* wnd);
-    void PassCollisionDependency(const CollisionDependency& dependency);
+    void PassCollisionDependency(CollisionDependency* dependency);
     void PassManager(AssetManager* manager);
     Editor();
 };

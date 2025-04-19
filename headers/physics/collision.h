@@ -45,14 +45,14 @@ private:
 
     void PassStructures();
 
-    CollisionDependency _dependencies;
+    std::unique_ptr<CollisionDependency> _dependencies;
 
     std::optional<AABB> CalculateMeshAABB(const std::string& entityName);
 public:
+    CollisionDependency* GetCollisionDependency() { return _dependencies.get(); }
     JPH::PhysicsSystem* GetPhysSystem() { return &_physSystem; }
     void WorkWithCollisionDebug();
     void InterfaceUpdate();
-    const CollisionDependency& GetDependencies() const { return _dependencies;}
     void Prepare();
     void Update();
     void PassAssetManager(AssetManager* manager);

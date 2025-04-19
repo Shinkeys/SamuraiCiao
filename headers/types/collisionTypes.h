@@ -70,19 +70,7 @@ namespace Layers
 class ObjectLayerPairFilterImpl : public JPH::ObjectLayerPairFilter
 {
 public:
-	virtual bool					ShouldCollide(JPH::ObjectLayer inObject1, JPH::ObjectLayer inObject2) const override
-	{
-		switch (inObject1)
-		{
-		case Layers::NON_MOVING:
-			return inObject2 == Layers::MOVING;
-		case Layers::MOVING:
-			return true;
-		default:
-			JPH_ASSERT(false);
-			return false;
-		}
-	}
+	virtual bool					ShouldCollide(JPH::ObjectLayer inObject1, JPH::ObjectLayer inObject2) const override;
 };
 
 // Purpose: need to divide objects into different broadphases to make them different trees,
@@ -139,19 +127,7 @@ private:
 class ObjectVsBroadPhaseLayerFilterImpl : public JPH::ObjectVsBroadPhaseLayerFilter
 {
 public:
-	virtual bool				ShouldCollide(JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2) const override
-	{
-		switch (inLayer1)
-		{
-		case Layers::NON_MOVING:
-			return inLayer2 == BroadPhaseLayers::MOVING;
-		case Layers::MOVING:
-			return true;
-		default:
-			JPH_ASSERT(false);
-			return false;
-		}
-	}
+	virtual bool				ShouldCollide(JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2) const override;
 };
 
 
@@ -202,4 +178,24 @@ struct AABB
 {
     glm::vec3 min{glm::vec3(std::numeric_limits<float>::max())};
     glm::vec3 max{glm::vec3(std::numeric_limits<float>::lowest())};
+};
+
+
+
+// Forward decl
+class CollisionDebug;
+// Purpose: to inject everything needed from collision class at once
+// forward declaration of collision debug;
+class CollisionDependency
+{
+private:
+    std::unordered_map<std::string, const JPH::BodyID* const> _objectsHandle;
+	JPH::PhysicsSystem& _physSystem;
+	CollisionDebug&     _collisionDebug;
+public:
+	const auto& GetObjectsHandle() const { return _objectsHandle; }
+	auto& GetObjectsHandle() 			 { return _objectsHandle; }
+	explicit CollisionDependency(JPH::PhysicsSystem& physSystem, CollisionDebug& collisionDebug);
+	std::optional<JPH::AABox> GetObjectAABB(const JPH::BodyID& bodyID) const;
+	std::optional<std::string> CheckForRayIntersection(glm::vec3 rayOrigin, glm::vec3 rayDirection) const;
 };

@@ -12,9 +12,9 @@
 class SceneEditor
 {
 private:
-    Window* _window           = nullptr;
-    EditorDebug* _editorDebug = nullptr;
-    CollisionDependency _collisionDependency;
+    Window* _window                           = nullptr;
+    EditorDebug* _editorDebug                 = nullptr;
+    CollisionDependency* _collisionDependency = nullptr;
 
     glm::vec4 _rayCoords;
     uint32_t _fbo      = 0;
@@ -26,7 +26,7 @@ private:
 public:
     void PassEditorDebug(EditorDebug& debug);
     void PassWindow(Window* wnd);
-    void PassCollisionDependency(const CollisionDependency& dependencies);
+    void PassCollisionDependency(CollisionDependency* dependencies);
     void PrepareObjectSelection();
     void HandleObjectSelection();
 };

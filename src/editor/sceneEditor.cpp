@@ -2,7 +2,7 @@
 #include "../../headers/backend/openglbackend.h"
 #include "../../headers/systems/renderManager.h"
 #include "../../headers/editor/editor.h"
-#include "../../headers/math/math.h"
+#include "../../headers/types/collisionTypes.h"
 
 void SceneEditor::PassWindow(Window* wnd)
 {
@@ -21,56 +21,21 @@ void SceneEditor::PassEditorDebug(EditorDebug& debug)
 }
 
 
-void SceneEditor::PassCollisionDependency(const CollisionDependency& dependencies)
+void SceneEditor::PassCollisionDependency(CollisionDependency* dependencies)
 {
-    if(dependencies.collisionDebug != nullptr)
+    if(dependencies == nullptr)
     {
-        _collisionDependency.collisionDebug = dependencies.collisionDebug;
+        std::cout << "Cannot inject collision. Collision dependencies is null\n";
+        return;
     }
-    else std::cout << "Cannot inject collision. Collision debug is null\n";
     
-    if(dependencies.physSystem != nullptr)
-    {
-        _collisionDependency.physSystem = dependencies.physSystem;
-    }
-    else std::cout << "Cannot inject collision. Physics system is null\n";
+    _collisionDependency = dependencies;
 
 }
 // Purpose: as I decided to use raycasting to handle object selection, would be great
 // idea to use Jolt to get AABB of every object.
 void SceneEditor::PrepareObjectSelection()
 {
-    using namespace JPH;
-    if(_collisionDependency.physSystem == nullptr)
-    {
-        std::cout << "Phys system instance is empty. Can't prepare object selection\n";
-        return;
-    }
-
-    BodyIDVector bodies;
-    _collisionDependency.physSystem->GetBodies(bodies);
-    const BodyLockInterface& bli = _collisionDependency.physSystem->GetBodyLockInterface();
-    for(BodyID bodyID : bodies)
-    {
-        BodyLockRead lock(bli, bodyID);
-
-        if(lock.Succeeded())
-        {   
-            const Body& body = lock.GetBody();
-            const Shape* shape = body.GetShape();
-            if(shape == nullptr)
-            {
-                std::cout << "Can't get AABB of object with id " << bodyID.GetIndex() << " to prepare object selection\n";
-                continue;
-            }   
-            
-            JPH::AABox localBounds = shape->GetLocalBounds();
-            localBounds.Translate(shape->GetCenterOfMass());
-            if(_collidersAABBs.find(bodyID) == _collidersAABBs.end())
-                _collidersAABBs.insert({bodyID, localBounds});
-        }
-    }
-  
     Shader sceneEditorShader;
     sceneEditorShader.LoadShaders("sceneEditor.vert", "sceneEditor.frag");
     
@@ -123,21 +88,10 @@ void SceneEditor::SelectObject()
         _editorDebug->RequestLineDebugUpdate(newRayDebug);
         
 
-
-        for(auto body : _collidersAABBs)
+        auto rayResult = _collisionDependency->CheckForRayIntersection(rayOrigin, rayWorldNormalized);
+        if(rayResult != std::nullopt)
         {
-            JPH::AABox aaBoxLocal = body.second;
-            
-            const glm::vec3 aabbMin = ConvertJoltVec3ToGlm(aaBoxLocal.mMin);
-            const glm::vec3 aabbMax = ConvertJoltVec3ToGlm(aaBoxLocal.mMax);
-
-            
-            // Means that point is inside
-            // TO CHECK: Jolt's AABB generation, I think the issue lies over there.
-            if(SamuraiMath::IntersectAABB(rayOrigin, rayWorldNormalized, aabbMin, aabbMax))
-            {
-                std::cout << "Intersects\n";
-            }
+            std::cout << "Selected object is: " << rayResult.value() << '\n';
         }
     }
 }

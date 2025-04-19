@@ -1,7 +1,6 @@
 #include "../../headers/editor/editor.h"
 #include "../../headers/systems/interface.h"
 
-
 Editor::Editor()
 {
     SamuraiCameras::g_editorCamera.SetPosition(glm::vec3(0.0f, 10.0f, 50.0f));
@@ -31,20 +30,14 @@ void Editor::PassWindow(Window* wnd)
 }
 
 
-void Editor::PassCollisionDependency(const CollisionDependency& dependencies)
+void Editor::PassCollisionDependency(CollisionDependency* dependencies)
 {
-    if(dependencies.collisionDebug != nullptr)
+    if(dependencies == nullptr)
     {
-        _collisionDependency.collisionDebug = dependencies.collisionDebug;
+        std::cout << "Cannot inject collision. Collision dependencies is null\n";
+        return;
     }
-    else std::cout << "Cannot inject collision. Collision debug is null\n";
-    
-    if(dependencies.physSystem != nullptr)
-    {
-        _collisionDependency.physSystem = dependencies.physSystem;
-    }
-    else std::cout << "Cannot inject collision. Physics system is null\n";
-
+    _collisionDependency = dependencies;
 }
 
 void Editor::Initialize()
