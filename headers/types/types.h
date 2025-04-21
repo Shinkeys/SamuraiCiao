@@ -9,6 +9,7 @@
 #include <vector>
 #include <unordered_set>
 #include <optional>
+#include <queue>
 
 class Shader;
 

@@ -4,6 +4,7 @@
 #include "../../headers/editor/editor.h"
 #include "../../headers/types/collisionTypes.h"
 
+
 void SceneEditor::PassWindow(Window* wnd)
 {
     if(wnd == nullptr)

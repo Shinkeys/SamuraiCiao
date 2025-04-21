@@ -180,8 +180,29 @@ struct AABB
     glm::vec3 max{glm::vec3(std::numeric_limits<float>::lowest())};
 };
 
+// Purpose: struct to be handled in draw line method
+struct LineDebug
+{
+    JPH::Vec3 origin    = JPH::Vec3(0.0f, 0.0f, 0.0f);
+    JPH::Vec3 direction = JPH::Vec3(0.0f, 0.0f, 0.0f);
+    JPH::Color color    = JPH::Color::sYellow;
+    bool changed = false;
+
+    enum class EndType
+    {
+        END_TYPE_POINT,
+        END_TYPE_DIRECTION,
+    };
+    EndType endType;
+};
 
 
+enum class CollisionCmdList
+{
+	COLLISION_CMD_EMPTY = 0,
+	COLLISION_DRAW_LINE,
+	COLLISION_DRAW_GEOMETRY,
+};
 // Forward decl
 class CollisionDebug;
 // Purpose: to inject everything needed from collision class at once
@@ -191,11 +212,21 @@ class CollisionDependency
 private:
     std::unordered_map<std::string, const JPH::BodyID* const> _objectsHandle;
 	JPH::PhysicsSystem& _physSystem;
-	CollisionDebug&     _collisionDebug;
+
+	LineDebug _clickRay;
+	// Container to send commands to the main collision class
+	std::queue<CollisionCmdList> _commandsList;
 public:
+	void AddCommand(CollisionCmdList command) { _commandsList.push(command); }
+	void RemoveCommand();
+	CollisionCmdList GetNextCommand() const;
+	void UpdateLineData(const LineDebug& newData);
+	const LineDebug& GetLineData() const { return _clickRay; }
+
 	const auto& GetObjectsHandle() const { return _objectsHandle; }
 	auto& GetObjectsHandle() 			 { return _objectsHandle; }
-	explicit CollisionDependency(JPH::PhysicsSystem& physSystem, CollisionDebug& collisionDebug);
+	explicit CollisionDependency(JPH::PhysicsSystem& physSystem);
 	std::optional<JPH::AABox> GetObjectAABB(const JPH::BodyID& bodyID) const;
 	std::optional<std::string> CheckForRayIntersection(glm::vec3 rayOrigin, glm::vec3 rayDirection) const;
+
 };

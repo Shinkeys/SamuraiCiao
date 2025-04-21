@@ -186,6 +186,7 @@ void CollisionDebug::DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::Col
     shaderIt->second.SetVec3("color", colliderColor);
 
     glDrawArrays(GL_LINES, 0, pointsCount);
+
 }
 
 

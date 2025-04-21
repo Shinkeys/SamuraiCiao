@@ -48,6 +48,8 @@ private:
     std::unique_ptr<CollisionDependency> _dependencies;
 
     std::optional<AABB> CalculateMeshAABB(const std::string& entityName);
+
+    void HandleCommands();
 public:
     CollisionDependency* GetCollisionDependency() { return _dependencies.get(); }
     JPH::PhysicsSystem* GetPhysSystem() { return &_physSystem; }

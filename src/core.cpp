@@ -24,7 +24,6 @@ bool Core::Initialize()
     model = glm::scale(model, glm::vec3(0.5f));
     _assetManager.ApplyTransformation(characterObject.name, model);
 
-
     ObjectDescriptor groundObject;
     groundObject.name = "ground.gltf";
     groundObject.type = EntityType::TYPE_BOX_MESH;

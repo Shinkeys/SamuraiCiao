@@ -2,8 +2,7 @@
 #include "../../headers/math/math.h"
 
 
-CollisionDependency::CollisionDependency(JPH::PhysicsSystem& physSystem, CollisionDebug& collisionDebug) 
-                                                : _physSystem{physSystem}, _collisionDebug{collisionDebug}
+CollisionDependency::CollisionDependency(JPH::PhysicsSystem& physSystem) : _physSystem{physSystem}
 {
 
 }
@@ -92,7 +91,38 @@ std::optional<std::string> CollisionDependency::CheckForRayIntersection(glm::vec
     return objectName;
 }
 
+void CollisionDependency::UpdateLineData(const LineDebug& newData)
+{
+    _clickRay = newData;
+    _clickRay.changed = true;
 
+    if(_clickRay.endType == LineDebug::EndType::END_TYPE_DIRECTION)
+    {
+        _clickRay.direction *= 1000.0f;
+    }
+}
+
+void CollisionDependency::RemoveCommand()
+{
+    if(_commandsList.empty())
+    {
+        std::cout << "Can't remove command from the queue, it's empty\n";
+        return;
+    }
+
+    _commandsList.pop();
+}
+
+CollisionCmdList CollisionDependency::GetNextCommand() const
+{
+    if(_commandsList.empty())
+    {
+        // std::cout << "Can't get next command from the queue, it's empty\n";
+        return CollisionCmdList::COLLISION_CMD_EMPTY;
+    }
+
+    return _commandsList.front();
+}
 
 /*
   _        _ __   _______ ____  ____  

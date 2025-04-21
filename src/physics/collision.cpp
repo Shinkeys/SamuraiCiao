@@ -146,7 +146,7 @@ void Collision::Setup()
 
     _bodyInterface = &_physSystem.GetBodyInterface();
 
-    _dependencies = std::make_unique<CollisionDependency>(_physSystem, *_debugInstance.get());
+    _dependencies = std::make_unique<CollisionDependency>(_physSystem);
 }
 
 void Collision::PassStructures()
@@ -356,9 +356,38 @@ void Collision::Update()
 {
     // PrePhysicsCamUpdate();
     // Calculate cam collision, new position...
+    
     _playerCollision.Update(_tempAllocator.get());
     
     _physSystem.Update(CollisionDefines::g_DeltaTime, CollisionDefines::g_CollisionSteps, _tempAllocator.get(), &_jobSystem);
+}
+
+void Collision::HandleCommands()
+{
+    CollisionDependency* dependency = _dependencies.get();
+    while(dependency->GetNextCommand() != CollisionCmdList::COLLISION_CMD_EMPTY)
+    {
+        const auto command = dependency->GetNextCommand();
+        switch(command)
+        {
+        case CollisionCmdList::COLLISION_DRAW_LINE:
+        {
+            const LineDebug& lineData = dependency->GetLineData();
+            _debugInstance.get()->DrawLine(lineData.origin, lineData.direction, lineData.color);
+            break;
+        }
+
+        case CollisionCmdList::COLLISION_DRAW_GEOMETRY:
+            // to do
+            break;
+        
+        default: 
+            std::cout << "Unknown cmd in collision class\n";
+            break;
+        }
+
+        dependency->RemoveCommand();
+    }
 }
 
 Collision::~Collision()
@@ -507,6 +536,10 @@ void Collision::WorkWithCollisionDebug()
             }
         }
         _shapeToGeometry.reset(new ShapeToGeometryMap(shapeToGeometry));
+
+
+        // Visualize all commands gathered in the child object
+        HandleCommands();
     }
 
 }
