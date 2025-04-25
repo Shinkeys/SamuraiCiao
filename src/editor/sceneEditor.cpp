@@ -41,13 +41,15 @@ void SceneEditor::PrepareObjectSelection()
     sceneEditorShader.LoadShaders("sceneEditor.vert", "sceneEditor.frag");
     
     RenderManager::AddShaderByType(std::move(sceneEditorShader), RenderPassType::RENDER_SCENE_EDITOR);
+
+    _gizmo.Initialize();
 }
 
 void SceneEditor::HandleObjectSelection()
 {
     // handle picking by itself
     SelectObject();
-
+    _gizmo.Render();
 }
 
 

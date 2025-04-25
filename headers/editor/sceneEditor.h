@@ -3,6 +3,7 @@
 #include "../../headers/assets/assetManager.h"
 #include "../../headers/types/collisionTypes.h"
 #include "../../headers/physics/collisionDebug.h"
+#include "gizmo.h"
 #include "editorDebug.h"
 
 
@@ -23,6 +24,8 @@ private:
 
     std::pair<uint32_t, uint32_t> _viewportExtent {0, 0};
     void SelectObject();
+
+    Gizmo _gizmo;
 public:
     void PassEditorDebug(EditorDebug& debug);
     void PassWindow(Window* wnd);

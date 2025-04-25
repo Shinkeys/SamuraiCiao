@@ -26,10 +26,11 @@ enum class EntityType
 
 namespace SamuraiDefines
 {
-    inline float g_fov = 45.0f;
+    inline float g_fov       = 45.0f;
     inline float g_nearPlane = 0.002f;
-    inline float g_farPlane = 500.0f;
-    inline double g_Pi = 3.141592653589793;
+    inline float g_farPlane  = 500.0f;
+    inline double g_Pi       = 3.141592653589793;
+    inline double g_TwoPi    = 6.28318530717958647692528676655900576;
 };
 
 
@@ -39,12 +40,23 @@ struct ObjectDescriptor
     EntityType type = EntityType::TYPE_NONE;
 };
 
-struct Vertex
+class Vertex
 {
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec3 tangents;
-    glm::vec2 texCoords;
+public:
+    glm::vec3 position  = glm::vec3(0.0f);
+    glm::vec3 normal    = glm::vec3(0.0f);
+    glm::vec3 tangents  = glm::vec3(0.0f);
+    glm::vec2 texCoords = glm::vec3(0.0f);
+
+    Vertex& operator/=(float divider)
+    {
+        position.x /= divider;
+        position.y /= divider;
+        position.z /= divider;
+
+
+        return *this;
+    }
 };
 
 enum class LightType
@@ -77,6 +89,8 @@ struct EBOSetup
     uint32_t VAO{0};
     uint32_t VBO{0};
     uint32_t EBO{0};
+
+    int32_t type = 0x00;
 };
 
 
@@ -144,4 +158,48 @@ struct SSBOBindVec4
     int32_t size = 0;
     glm::vec4* data;
     uint32_t* ssboId = nullptr;
+};
+
+// Purpose: class to handle object colors by values
+enum class ColorsType
+{
+    DEFAULT,
+    RED,
+    BLUE,
+    GREEN,
+};
+class ObjColor
+{
+private:
+    glm::vec4 _color{1.0f, 1.0f, 1.0f, 1.0f};
+public:
+    glm::vec4 GetColor() const { return _color; }
+    ObjColor& operator=(ColorsType color)
+    {
+        switch(color)
+        {
+        case ColorsType::DEFAULT:
+            _color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+            break;
+        
+        case ColorsType::RED:
+            _color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+            break;
+        
+        case ColorsType::GREEN:
+            _color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+            break;
+        
+        case ColorsType::BLUE:
+            _color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+            break;
+        
+        default:
+            std::cout << "Unable to recognize color of object\n";
+            break;
+        }
+
+        return *this;
+    }
+
 };

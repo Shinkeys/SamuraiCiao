@@ -1,10 +1,11 @@
 #version 460 core
 
-uniform uint objectIndex;
-uniform uint drawIndex;
-out uvec3 FragColor;
+
+uniform vec4 color;
+
+out vec4 FragColor;
 
 void main()
 {
-    FragColor = uvec3(objectIndex, drawIndex, gl_PrimitiveID);
+    FragColor = color;
 }
