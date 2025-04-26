@@ -184,6 +184,10 @@ void Window::ProceedKeys(int key)
     {
         _keys.jump = true;
     }
+    if(key == GLFW_KEY_ESCAPE)
+    {
+        _keys.cancelSelection = true;
+    }
 
     if(key == GLFW_KEY_F2)
     {
@@ -198,12 +202,12 @@ void Window::ResetKey(int key)
 {
 	switch (key)
 	{
-	case GLFW_KEY_W: _keys.front = false; break;
-	case GLFW_KEY_S: _keys.back = false; break;
-	case GLFW_KEY_A: _keys.left = false; break;
-	case GLFW_KEY_D: _keys.right = false; break;
-    case GLFW_KEY_SPACE: _keys.jump = false; break;
-
+	case GLFW_KEY_W: _keys.front = false;               break;
+	case GLFW_KEY_S: _keys.back = false;                break;
+	case GLFW_KEY_A: _keys.left = false;                break;
+	case GLFW_KEY_D: _keys.right = false;               break;
+    case GLFW_KEY_SPACE: _keys.jump = false;            break;
+    case GLFW_KEY_ESCAPE: _keys.cancelSelection = false;    break;
     default: break;
 	}
 }
@@ -211,10 +215,10 @@ void Window::ResetKey(int key)
 void Window::KeyCallback(GLFWwindow* window, int key, int scan, int action, int mods)
 {
     Window* app =  reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
-    if(action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
+    // if(action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
+    // {
+    //     glfwSetWindowShouldClose(window, true);
+    // }
 
 	if (action == GLFW_PRESS)
 	{

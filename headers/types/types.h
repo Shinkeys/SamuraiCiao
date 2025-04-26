@@ -57,6 +57,15 @@ public:
 
         return *this;
     }
+    Vertex& operator*=(float divider)
+    {
+        position.x *= divider;
+        position.y *= divider;
+        position.z *= divider;
+
+
+        return *this;
+    }
 };
 
 enum class LightType

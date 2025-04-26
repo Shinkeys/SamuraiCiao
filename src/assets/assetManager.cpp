@@ -38,6 +38,55 @@ const glm::mat4* AssetManager::GetTransformMatrixByName(const std::string& entit
     return nullptr;
 }
 
+// Purpose: get center point of the mesh model
+// Output: if object was found - vector of position, otherwise std::nullopt
+std::optional<glm::vec3> AssetManager::GetMeshCenterPoint(const std::string& entityName)
+{
+    auto storageIt = _meshCenterCache.find(entityName);
+    if(storageIt != _meshCenterCache.end())
+        return storageIt->second;
+    
+    auto nameValidationIt = _assetStorage.find(entityName);
+    if(nameValidationIt == _assetStorage.end())
+    {
+        std::cout << "Mesh by name " << entityName << " is not found in the storage\n";
+        return std::nullopt;
+    }
+
+    auto indVert = GetMeshStartEndIndices(entityName);
+    if(indVert == std::nullopt)
+    {
+        std::cout << "Mesh start and end indices by name are not found\n";
+        return std::nullopt;
+    }
+
+    uint32_t startOffset = indVert.value().first;
+    const uint32_t endIndex = indVert.value().second;
+
+    const float lowest = std::numeric_limits<float>::lowest();
+    const float maximum = std::numeric_limits<float>::max();
+
+    glm::vec3 minPoint = glm::vec3(maximum);
+    glm::vec3 maxPoint = glm::vec3(lowest);
+
+    const auto& vertices = _model.get()->GetModelsEBOData().vertices;
+    for(; startOffset < endIndex; ++startOffset)
+    {
+        minPoint.x = std::min(minPoint.x, vertices[startOffset].position.x);
+        minPoint.y = std::min(minPoint.y, vertices[startOffset].position.y);
+        minPoint.z = std::min(minPoint.z, vertices[startOffset].position.z);
+
+        maxPoint.x = std::max(maxPoint.x, vertices[startOffset].position.x);
+        maxPoint.y = std::max(maxPoint.y, vertices[startOffset].position.y);
+        maxPoint.z = std::max(maxPoint.z, vertices[startOffset].position.z);
+    }
+
+    glm::vec3 centerPoint = (minPoint + maxPoint) / 2.0f;
+
+    _meshCenterCache.insert({entityName, centerPoint});
+
+    return centerPoint;
+}
 
 // Purpose: to find needed vertices from large buffer by mesh name, pack as a vector
 // Output: vector containing vertices if found mesh by name, std::nullopt otherwise

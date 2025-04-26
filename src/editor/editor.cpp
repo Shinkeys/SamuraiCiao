@@ -45,6 +45,7 @@ void Editor::Initialize()
     _sceneEditor.PassWindow(_window);
     _sceneEditor.PassCollisionDependency(_collisionDependency);
     _sceneEditor.PassEditorDebug(_editorDebug);
+    _sceneEditor.PassAssetManager(_manager);
     _sceneEditor.PrepareObjectSelection();
     _editorDebug.PassCollisionDependency(_collisionDependency);
 

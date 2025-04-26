@@ -15,6 +15,9 @@ struct Keys
     bool jump { false };
     // if true switch camera look from light position
     bool sceneEditor { false };
+
+    // If some object selected, gizmo is displayed. This variable is used to cancel it
+    bool cancelSelection { false };
 };
 
 struct Mouse

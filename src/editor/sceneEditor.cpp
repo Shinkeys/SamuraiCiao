@@ -21,6 +21,17 @@ void SceneEditor::PassEditorDebug(EditorDebug& debug)
     _editorDebug = &debug;
 }
 
+void SceneEditor::PassAssetManager(AssetManager* manager)
+{
+    if(manager == nullptr)
+    {
+        std::cout << "Asset manager instance is empty. Can't use it in the editor\n";
+        return;
+    }
+
+    _manager = manager;
+}
+
 
 void SceneEditor::PassCollisionDependency(CollisionDependency* dependencies)
 {
@@ -49,9 +60,26 @@ void SceneEditor::HandleObjectSelection()
 {
     // handle picking by itself
     SelectObject();
-    _gizmo.Render();
+    
+    ChangeSelectionState();
+
+
+
+    if(_someObjectSelected)
+        _gizmo.RenderLoop();
 }
 
+
+// Purpose: method to change state of the variable which shows that some 
+// object is currently selected or not
+void SceneEditor::ChangeSelectionState()
+{
+    if(_someObjectSelected && _window->GetKeysState().cancelSelection)
+    {
+        _someObjectSelected = false;
+        return;
+    }
+}
 
 void SceneEditor::SelectObject()
 {
@@ -95,6 +123,22 @@ void SceneEditor::SelectObject()
         if(rayResult != std::nullopt)
         {
             std::cout << "Selected object is: " << rayResult.value() << '\n';
+            
+            const std::string& meshName = rayResult.value();
+
+
+            const auto objectCenter = _manager->GetMeshCenterPoint(meshName);
+            const glm::mat4* modelMatrix = _manager->GetTransformMatrixByName(meshName);
+            
+            if(objectCenter == std::nullopt)
+                return;
+            if(modelMatrix == nullptr)
+                return;
+                
+            const glm::vec3 centerWorldSpace = (*modelMatrix) * glm::vec4(objectCenter.value(), 1.0f);
+            _gizmo.TranslateGizmoObject(centerWorldSpace);
+
+            _someObjectSelected = true;
         }
     }
 }

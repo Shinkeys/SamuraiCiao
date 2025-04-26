@@ -15,6 +15,13 @@ void Gizmo::Initialize()
 }
 
 
+// Purpose: method to move all gizmo parts at once. Basically called inside handle is a
+// handle to overall position in world for the gizmo(including all the parts(e.g. x,y,z arrows))
+void Gizmo::TranslateGizmoObject(glm::vec3 position)
+{
+    _gizmoObjectTransform.worldPos = position;
+}
+
 // Purpose: Apply local transformation to vertices, to basically create gizmo for every
 // axis from only one piece of every shape from the "Create Geometry" method
 void Gizmo::ApplyLocalTransformations()
@@ -48,7 +55,7 @@ void Gizmo::CreateGeometry()
 
     for(auto& vert : cube.vertices)
     {
-        vert /= 1.5f;
+        vert *= 0.50f;
     }
 
     auto functor = [](const auto& lhs, const auto& rhs)
@@ -68,7 +75,9 @@ void Gizmo::CreateGeometry()
 
     for(auto& vert : cylinder.vertices)
     {
-        vert /= 2.5f;
+        vert.position *= 0.2f;
+        // Making it longer
+        vert.position.y *= 4.5f;
         vert.position.y += cubeMaxPoint;
     }
     for(auto& ind : cylinder.indices)
@@ -88,7 +97,7 @@ void Gizmo::CreateGeometry()
     cone.indices  = SamuraiUtils::GenerateConeIndices(segments);
     for(auto& vert : cone.vertices)
     {
-        vert /= 1.45f;
+        vert *= 0.35f;
         vert.position.y += cylinderMaxPoint;
     }
     for(auto& ind : cone.indices)
@@ -108,6 +117,16 @@ void Gizmo::CreateGeometry()
 
 }
 
+void Gizmo::RenderLoop()
+{
+    Update();
+    Render();
+}
+
+void Gizmo::Update()
+{
+    
+}
 
 void Gizmo::Render()
 {
@@ -134,16 +153,15 @@ void Gizmo::Render()
     constexpr size_t cubeIndices = 24;
     for(const auto& gizmoDesc : _gizmoPartDescriptors)
     {
+        auto modelMat = gizmoDesc.second.rotation;
+
+        // Applying overall world transformation of gizmo
+        modelMat[3] = glm::vec4(_gizmoObjectTransform.worldPos, 1.0f);
         // To do: translate
-        shaderIt->second.SetMat4x4("model", gizmoDesc.second.rotation);
+        shaderIt->second.SetMat4x4("model", modelMat);
         shaderIt->second.SetVec4("color", gizmoDesc.second.color.GetColor());
         glDrawElements(GL_TRIANGLES, _setup.indices.size() - cubeIndices, GL_UNSIGNED_INT, _setup.indices.data() + cubeIndices);
     }
-        // // temp
-        // model = glm::translate(gizmoHandle.second.rotation, glm::vec3(0.0f, 5.0f, 25.0f));    
-        // shaderIt->second.SetVec4("color", gizmoHandle.second.color.GetColor());
-
-    
 
 
     glEnable(GL_CULL_FACE);

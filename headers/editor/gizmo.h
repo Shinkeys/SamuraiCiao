@@ -40,8 +40,7 @@ struct GizmoPartHandle
 // Purpose: structure to set position and rotation of the WHOLE gizmo (including all the parts)
 struct GizmoTotalTransform
 {
-    glm::vec3 position;
-    glm::vec4 rotation;
+    glm::vec3 worldPos;
 };
 
 // Purpose: structure to set position and rotation of some part of gizmo separately
@@ -56,12 +55,15 @@ class Gizmo
 {
 private:    
     EBOSetup _setup;
+    GizmoTotalTransform _gizmoObjectTransform;
     std::unordered_map<GizmoGroup, GizmoPartTransform> _gizmoPartDescriptors;
-
 
     void CreateGeometry();
     void ApplyLocalTransformations();
-public:
+    void Update();
     void Render();
+public:
+    void TranslateGizmoObject(glm::vec3 position);
+    void RenderLoop();
     void Initialize();
 };

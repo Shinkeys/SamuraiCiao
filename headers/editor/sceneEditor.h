@@ -16,6 +16,7 @@ private:
     Window* _window                           = nullptr;
     EditorDebug* _editorDebug                 = nullptr;
     CollisionDependency* _collisionDependency = nullptr;
+    AssetManager* _manager                    = nullptr;
 
     glm::vec4 _rayCoords;
     uint32_t _fbo      = 0;
@@ -25,8 +26,12 @@ private:
     std::pair<uint32_t, uint32_t> _viewportExtent {0, 0};
     void SelectObject();
 
+    // Work with gizmo
+    bool _someObjectSelected { false }; 
     Gizmo _gizmo;
+    void ChangeSelectionState();
 public:
+    void PassAssetManager(AssetManager* manager);
     void PassEditorDebug(EditorDebug& debug);
     void PassWindow(Window* wnd);
     void PassCollisionDependency(CollisionDependency* dependencies);
