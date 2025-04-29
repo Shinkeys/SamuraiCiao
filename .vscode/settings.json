@@ -85,6 +85,7 @@
         "typeindex": "cpp",
         "ranges": "cpp",
         "filesystem": "cpp",
-        "csignal": "cpp"
+        "csignal": "cpp",
+        "expected": "cpp"
     }
 }

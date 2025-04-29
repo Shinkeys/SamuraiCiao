@@ -7,6 +7,17 @@ CollisionDependency::CollisionDependency(JPH::PhysicsSystem& physSystem) : _phys
 
 }
 
+CollisionCreateDesc::CollisionCreateDesc()
+{
+
+}
+
+CollisionCreateDesc::CollisionCreateDesc(const std::string& name, glm::vec3 axis, glm::vec3 position, float angle, float halfCylinderExtent, float radius) :
+                                        _name{name}, _axis{axis}, _position{position}, _angle{angle}, _halfCylinderExtent{halfCylinderExtent}, _radius{radius}
+{
+
+}
+
 
 std::optional<JPH::AABox> CollisionDependency::GetObjectAABB(const JPH::BodyID& bodyID) const
 {
@@ -67,6 +78,8 @@ std::optional<std::string> CollisionDependency::CheckForRayIntersection(glm::vec
             continue;
         }
 
+        std::cout << nameID.first << "\n";
+
         JPH::AABox objectAABB = optAABB.value();
         
         if(SamuraiMath::IntersectAABB(rayOrigin, rayDirection, 
@@ -91,6 +104,23 @@ std::optional<std::string> CollisionDependency::CheckForRayIntersection(glm::vec
     return objectName;
 }
 
+void CollisionDependency::MoveCollider(const std::string& entityName, glm::vec3 newPos)
+{
+    if(_objectsHandle.find(entityName) == _objectsHandle.end())
+    {
+        std::cout << "Unable to move collider, object " << entityName << " is not found in the storage\n";
+        return;
+    }
+
+    const JPH::BodyID* bodyID = _objectsHandle[entityName];
+    if(bodyID == nullptr)
+    {
+        std::cout << "Unable to move collider, bodyID is nullptr for object " << entityName << '\n';
+        return;
+    }
+    _physSystem.GetBodyInterface().MoveKinematic(*bodyID, ConvertGlmVec3ToJolt(newPos), JPH::Quat::sIdentity(), CollisionDefines::g_DeltaTime);
+}
+
 void CollisionDependency::UpdateLineData(const LineDebug& newData)
 {
     _clickRay = newData;
@@ -102,26 +132,72 @@ void CollisionDependency::UpdateLineData(const LineDebug& newData)
     }
 }
 
+void CollisionDependency::AddCommand(CollisionCmd command) 
+{
+    _commandsQueue.push(command);
+}
+void CollisionDependency::AddCommand(CollisionCmd command, CollisionCreateDesc& createDesc)
+{
+    _commandsQueue.push(command);
+    _creationDescQueue.push(createDesc);
+}
+
 void CollisionDependency::RemoveCommand()
 {
-    if(_commandsList.empty())
+    if(_commandsQueue.empty())
     {
         std::cout << "Can't remove command from the queue, it's empty\n";
         return;
     }
 
-    _commandsList.pop();
-}
-
-CollisionCmdList CollisionDependency::GetNextCommand() const
-{
-    if(_commandsList.empty())
+    switch(_commandsQueue.front())
     {
-        // std::cout << "Can't get next command from the queue, it's empty\n";
-        return CollisionCmdList::COLLISION_CMD_EMPTY;
+    case CollisionCmd::COLLISION_CREATE_BOX:
+        _creationDescQueue.pop();
+        break;
+    case CollisionCmd::COLLISION_CREATE_CAPSULE:
+        _creationDescQueue.pop();
+        break;
     }
 
-    return _commandsList.front();
+    _commandsQueue.pop();
+}
+
+CollisionCmd CollisionDependency::GetNextCommand() const
+{
+    if(_commandsQueue.empty())
+    {
+        // std::cout << "Can't get next command from the queue, it's empty\n";
+        // Returning default command(no commands in the list) if queue is empty, to handle in the
+        // collision class.
+        return CollisionCmd::COLLISION_CMD_EMPTY;
+    }
+
+    return _commandsQueue.front();
+}
+CollisionCreateDesc& CollisionDependency::GetCreationDesc()
+{
+    if(_creationDescQueue.empty())
+    {
+        std::cout << "You forgot to pass creation data\n";
+        _creationDescQueue.push(CollisionCreateDesc{});
+    }
+
+    return _creationDescQueue.front();
+}
+
+CapsuleCreateInfo CollisionCreateDesc::GetCapsuleDesc()
+{
+    CapsuleCreateInfo createInfo;
+    createInfo.name = _name;
+    createInfo.axis = _axis;
+    createInfo.angle = _angle;
+    createInfo.position = _position;
+    createInfo.halfCylinderExtent = _halfCylinderExtent;
+    createInfo.radius = _radius;
+
+
+    return createInfo;
 }
 
 /*

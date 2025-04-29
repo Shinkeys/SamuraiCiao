@@ -149,6 +149,35 @@ void Collision::Setup()
     _dependencies = std::make_unique<CollisionDependency>(_physSystem);
 }
 
+void Collision::CreateCapsuleCollider(const CapsuleCreateInfo& createDesc)
+{
+    Ref<CapsuleShapeSettings> boxSettings = new CapsuleShapeSettings(createDesc.halfCylinderExtent, createDesc.radius);
+
+
+    // offset and rotate to dispatch center point
+
+    // REMINDER: angle in RADIANS
+    Ref<RotatedTranslatedShapeSettings> rotCapsule = new RotatedTranslatedShapeSettings(Vec3(ConvertGlmVec3ToJolt(createDesc.position)),
+                                                Quat::sRotation(ConvertGlmVec3ToJolt(createDesc.axis), createDesc.angle), boxSettings);
+    
+    BodyCreationSettings rotatedBoxSettings(rotCapsule, RVec3(0.0f, 0.0f, 0.0f), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING);
+
+    // creating rigidbody
+    Body* body = _bodyInterface->CreateBody(rotatedBoxSettings);
+    // body->SetCollideKinematicVsNonDynamic(true);
+    if(body == nullptr)
+    {
+        std::cout << "Reached limit of body count, can't create rigidbodies\n";
+        return;
+    }
+    _rigidbodyStorage.emplace(createDesc.name, body);
+    
+    // adding to the world
+    _bodyInterface->AddBody(body->GetID(), EActivation::DontActivate);
+
+    _dependencies->GetObjectsHandle().insert({createDesc.name, &body->GetID()});
+}
+
 void Collision::PassStructures()
 {
     _playerCollision.PassPhysSystem(&_physSystem);
@@ -365,21 +394,32 @@ void Collision::Update()
 void Collision::HandleCommands()
 {
     CollisionDependency* dependency = _dependencies.get();
-    while(dependency->GetNextCommand() != CollisionCmdList::COLLISION_CMD_EMPTY)
+    while(dependency->GetNextCommand() != CollisionCmd::COLLISION_CMD_EMPTY)
     {
         const auto command = dependency->GetNextCommand();
         switch(command)
         {
-        case CollisionCmdList::COLLISION_DRAW_LINE:
+        case CollisionCmd::COLLISION_DRAW_LINE:
         {
-            const LineDebug& lineData = dependency->GetLineData();
-            _debugInstance.get()->DrawLine(lineData.origin, lineData.direction, lineData.color);
-            break;
+            if(_debugCollision)
+            {
+                const LineDebug& lineData = dependency->GetLineData();
+                _debugInstance.get()->DrawLine(lineData.origin, lineData.direction, lineData.color);
+                break;
+            }
         }
 
-        case CollisionCmdList::COLLISION_DRAW_GEOMETRY:
+        case CollisionCmd::COLLISION_DRAW_GEOMETRY:
             // to do
             break;
+
+
+        case CollisionCmd::COLLISION_CREATE_CAPSULE:
+        {
+            auto& capsuleDesc = dependency->GetCreationDesc();
+            CreateCapsuleCollider(capsuleDesc.GetCapsuleDesc());
+            break;
+        }
         
         default: 
             std::cout << "Unknown cmd in collision class\n";
@@ -538,9 +578,9 @@ void Collision::WorkWithCollisionDebug()
         _shapeToGeometry.reset(new ShapeToGeometryMap(shapeToGeometry));
 
 
-        // Visualize all commands gathered in the child object
-        HandleCommands();
     }
+    // Visualize all commands gathered in the child object
+    HandleCommands();
 
 }
 

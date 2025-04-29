@@ -53,6 +53,8 @@ void SceneEditor::PrepareObjectSelection()
     
     RenderManager::AddShaderByType(std::move(sceneEditorShader), RenderPassType::RENDER_SCENE_EDITOR);
 
+
+    _gizmo.PassCollisionDependency(_collisionDependency);
     _gizmo.Initialize();
 }
 
@@ -124,21 +126,31 @@ void SceneEditor::SelectObject()
         {
             std::cout << "Selected object is: " << rayResult.value() << '\n';
             
-            const std::string& meshName = rayResult.value();
 
+            const std::string& meshName = rayResult.value();
 
             const auto objectCenter = _manager->GetMeshCenterPoint(meshName);
             const glm::mat4* modelMatrix = _manager->GetTransformMatrixByName(meshName);
             
-            if(objectCenter == std::nullopt)
-                return;
-            if(modelMatrix == nullptr)
-                return;
+                if(objectCenter == std::nullopt)
+                    return;
+                if(modelMatrix == nullptr)
+                    return;
                 
             const glm::vec3 centerWorldSpace = (*modelMatrix) * glm::vec4(objectCenter.value(), 1.0f);
             _gizmo.TranslateGizmoObject(centerWorldSpace);
 
-            _someObjectSelected = true;
+
+            if(meshName == "gizmo_axis_x" || meshName == "gizmo_axis_y" || meshName == "gizmo_axis_z")
+            {
+
+            }
+            else
+            {
+                
+                
+                _someObjectSelected = true;
+            }
         }
     }
 }

@@ -4,6 +4,16 @@
 #include "../../headers/systems/camera.h"
 #include "../../headers/systems/renderManager.h"
 
+void Gizmo::PassCollisionDependency(CollisionDependency* dependencies)
+{
+    if(dependencies == nullptr)
+    {
+        std::cout << "Cannot inject collision. Collision dependencies is null\n";
+        return;
+    }
+    
+    _collisionDependency = dependencies;
+}
 
 void Gizmo::Initialize()
 {
@@ -11,7 +21,12 @@ void Gizmo::Initialize()
     _setup.type = GL_DYNAMIC_DRAW;
     OpenglBackend::BindModelEBO(_setup);
 
-    ApplyLocalTransformations();
+    if(_collisionDependency == nullptr)
+    {
+        std::cout << "You forgot to pass collision dependency to create gizmo colliders\n";
+        return;
+    }
+    CreateGizmoHandles();
 }
 
 
@@ -20,16 +35,24 @@ void Gizmo::Initialize()
 void Gizmo::TranslateGizmoObject(glm::vec3 position)
 {
     _gizmoObjectTransform.worldPos = position;
+
+    _collisionDependency->MoveCollider("gizmo_axis_x", position);
+    _collisionDependency->MoveCollider("gizmo_axis_y", position);
+    _collisionDependency->MoveCollider("gizmo_axis_z", position);
 }
 
 // Purpose: Apply local transformation to vertices, to basically create gizmo for every
 // axis from only one piece of every shape from the "Create Geometry" method
-void Gizmo::ApplyLocalTransformations()
+void Gizmo::CreateGizmoHandles()
 {
     const glm::mat4 defaultModel = glm::mat4(1.0f);
 
+    const glm::vec3 aroundX = glm::vec3(1.0f, 0.0f, 0.0f);
+    const glm::vec3 aroundY = glm::vec3(0.0f, 1.0f, 0.0f);
+    const glm::vec3 aroundZ = glm::vec3(0.0f, 0.0f, 1.0f);
+
     GizmoPartTransform transformX;
-    transformX.rotation = glm::rotate(defaultModel, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f)); 
+    transformX.rotation = glm::rotate(defaultModel, glm::radians(-90.0f), aroundZ); 
     transformX.color    = ColorsType::RED;
 
     GizmoPartTransform transformY;
@@ -37,8 +60,24 @@ void Gizmo::ApplyLocalTransformations()
     transformY.color    = ColorsType::GREEN;
 
     GizmoPartTransform transformZ;
-    transformZ.rotation = glm::rotate(defaultModel, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
+    transformZ.rotation = glm::rotate(defaultModel, glm::radians(90.0f), aroundX); 
     transformZ.color    = ColorsType::BLUE;
+
+
+    const float halfCylinderExt = 3.5f;
+    const float radius = 0.25f;
+    CollisionCreateDesc axisCollider("gizmo_axis_x", aroundZ, glm::vec3(halfCylinderExt, 0.0f, 0.0f), glm::radians(-90.0f), halfCylinderExt, radius);
+    _collisionDependency->AddCommand(CollisionCmd::COLLISION_CREATE_CAPSULE, axisCollider);
+
+    axisCollider.SetName("gizmo_axis_y");
+    axisCollider.SetRotationAxisAndAngle(aroundY, 0.0f);
+    axisCollider.SetPosition(glm::vec3(0.0f, halfCylinderExt, 0.0f));
+    _collisionDependency->AddCommand(CollisionCmd::COLLISION_CREATE_CAPSULE, axisCollider);
+
+    axisCollider.SetName("gizmo_axis_z");
+    axisCollider.SetRotationAxisAndAngle(aroundX, glm::radians(90.0f));
+    axisCollider.SetPosition(glm::vec3(0.0f, 0.0f, halfCylinderExt));
+    _collisionDependency->AddCommand(CollisionCmd::COLLISION_CREATE_CAPSULE, axisCollider);
 
     _gizmoPartDescriptors.insert({GizmoGroup::GIZMO_PART_X, transformX});
     _gizmoPartDescriptors.insert({GizmoGroup::GIZMO_PART_Y, transformY});
@@ -125,7 +164,7 @@ void Gizmo::RenderLoop()
 
 void Gizmo::Update()
 {
-    
+
 }
 
 void Gizmo::Render()

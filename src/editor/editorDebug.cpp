@@ -18,5 +18,5 @@ void EditorDebug::RequestLineDebugUpdate(const LineDebug& newData)
 
 void EditorDebug::DebugScene()
 {
-    _collisionDependency->AddCommand(CollisionCmdList::COLLISION_DRAW_LINE);
+    _collisionDependency->AddCommand(CollisionCmd::COLLISION_DRAW_LINE);
 }

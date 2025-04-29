@@ -54,15 +54,18 @@ struct GizmoPartTransform
 class Gizmo
 {
 private:    
+    CollisionDependency* _collisionDependency = nullptr;
     EBOSetup _setup;
     GizmoTotalTransform _gizmoObjectTransform;
     std::unordered_map<GizmoGroup, GizmoPartTransform> _gizmoPartDescriptors;
 
     void CreateGeometry();
-    void ApplyLocalTransformations();
+    void CreateGizmoHandles();
     void Update();
     void Render();
 public:
+    void PassCollisionDependency(CollisionDependency* dependencies);
+    const std::vector<Vertex>& GetGizmoAxisVertices() const { return _setup.vertices; } 
     void TranslateGizmoObject(glm::vec3 position);
     void RenderLoop();
     void Initialize();

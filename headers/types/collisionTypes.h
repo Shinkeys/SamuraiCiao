@@ -197,11 +197,52 @@ struct LineDebug
 };
 
 
-enum class CollisionCmdList
+
+enum class CollisionCmd
 {
 	COLLISION_CMD_EMPTY = 0,
+	// Graphics commands
 	COLLISION_DRAW_LINE,
-	COLLISION_DRAW_GEOMETRY,
+	COLLISION_DRAW_GEOMETRY, 
+
+	// Creational commands
+	COLLISION_CREATE_BOX,
+	COLLISION_CREATE_CAPSULE,
+};
+
+struct CapsuleCreateInfo
+{
+	std::string name;
+	glm::vec3 axis;
+	glm::vec3 position;
+	float angle;
+	float halfCylinderExtent;
+	float radius;
+};
+
+// Purpose: if some command from the structure above is CREATIONAL, then would need
+// to use data from this class. As it's initialized only once at some time, it's okay
+// to store data for all the types. As for now only for capsule
+// TO DO: other types
+class CollisionCreateDesc
+{
+private:
+	std::string _name = "";
+	glm::vec3 _axis = glm::vec3(0.0f);
+	glm::vec3 _position = glm::vec3(0.0f);
+	float _angle = 0.0f;
+	float _halfCylinderExtent = 0.0f;
+	float _radius = 0.0f;
+
+	std::vector<glm::vec3> _vertices;
+public:
+	CollisionCreateDesc();
+	CollisionCreateDesc(const std::string& name, glm::vec3 axis, glm::vec3 position, float angle, float halfCylinderExtent, float radius);
+	CapsuleCreateInfo GetCapsuleDesc();
+
+	void SetRotationAxisAndAngle(glm::vec3 newRotationAxis, float angle) { _axis = newRotationAxis; _angle = angle; }
+	void SetName(const std::string& newName) 		{ _name = newName; }
+	void SetPosition(glm::vec3 newPos) { _position = newPos; }
 };
 // Forward decl
 class CollisionDebug;
@@ -215,18 +256,22 @@ private:
 
 	LineDebug _clickRay;
 	// Container to send commands to the main collision class
-	std::queue<CollisionCmdList> _commandsList;
+	std::queue<CollisionCmd> _commandsQueue;
+	std::queue<CollisionCreateDesc> _creationDescQueue;
 public:
-	void AddCommand(CollisionCmdList command) { _commandsList.push(command); }
+	void AddCommand(CollisionCmd command);
+	void AddCommand(CollisionCmd command, CollisionCreateDesc& createDesc);
 	void RemoveCommand();
-	CollisionCmdList GetNextCommand() const;
+	CollisionCreateDesc& GetCreationDesc();
+	CollisionCmd GetNextCommand() const;
 	void UpdateLineData(const LineDebug& newData);
 	const LineDebug& GetLineData() const { return _clickRay; }
+
+	void MoveCollider(const std::string& entityName, glm::vec3 newPos);
 
 	const auto& GetObjectsHandle() const { return _objectsHandle; }
 	auto& GetObjectsHandle() 			 { return _objectsHandle; }
 	explicit CollisionDependency(JPH::PhysicsSystem& physSystem);
 	std::optional<JPH::AABox> GetObjectAABB(const JPH::BodyID& bodyID) const;
 	std::optional<std::string> CheckForRayIntersection(glm::vec3 rayOrigin, glm::vec3 rayDirection) const;
-
 };

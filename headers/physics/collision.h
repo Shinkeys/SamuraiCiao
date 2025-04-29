@@ -50,6 +50,8 @@ private:
     std::optional<AABB> CalculateMeshAABB(const std::string& entityName);
 
     void HandleCommands();
+
+    void CreateCapsuleCollider(const CapsuleCreateInfo& createDesc);
 public:
     CollisionDependency* GetCollisionDependency() { return _dependencies.get(); }
     JPH::PhysicsSystem* GetPhysSystem() { return &_physSystem; }

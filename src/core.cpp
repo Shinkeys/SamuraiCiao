@@ -103,18 +103,21 @@ void Core::Render()
     
     OpenglBackend::SetViewport(Window::_width, Window::_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    
     
     RenderManager::GlobalDraw(_assetManager);
-
-    _editor.Render();
-
-    _particles.RenderParticles();
-
-
-    _collision.WorkWithCollisionDebug();
     
-        
+    
+    _particles.RenderParticles();
+    
+    
+    _collision.WorkWithCollisionDebug();
+
+    
+    // Making editor objects in front of others
+    glClear(GL_DEPTH_BUFFER_BIT);
+    _editor.Render();
+    
     InterfaceUpdate();
 
     glfwSwapBuffers(Window::_window);

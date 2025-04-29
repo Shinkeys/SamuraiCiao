@@ -146,15 +146,12 @@ CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 //Path to a program.
 CMAKE_AR:FILEPATH=/usr/bin/ar
 
-//No help, variable specified on the command line.
-CMAKE_BUILD_COMPILER:UNINITIALIZED=g++
-
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
 CMAKE_BUILD_TYPE:STRING=Debug
 
-//No help, variable specified on the command line.
-CMAKE_CXX_COMPILER:UNINITIALIZED=g++
+//CXX compiler
+CMAKE_CXX_COMPILER:STRING=/usr/bin/g++
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -168,19 +165,19 @@ CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib
 CMAKE_CXX_FLAGS:STRING=
 
 //Flags used by the CXX compiler during DEBUG builds.
-CMAKE_CXX_FLAGS_DEBUG:STRING=
+CMAKE_CXX_FLAGS_DEBUG:STRING=-g
 
 //Flags used by the CXX compiler during MINSIZEREL builds.
-CMAKE_CXX_FLAGS_MINSIZEREL:STRING=
+CMAKE_CXX_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
 
 //Flags used by the CXX compiler during RELEASE builds.
-CMAKE_CXX_FLAGS_RELEASE:STRING=
+CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 
 //Flags used by the CXX compiler during RELWITHDEBINFO builds.
-CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=
+CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
 //C compiler
-CMAKE_C_COMPILER:STRING=/usr/bin/cc
+CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -946,9 +943,6 @@ ZLIB_LIBRARY_REL:FILEPATH=/usr/lib/libz.so
 pkgcfg_lib_PKG_FONTCONFIG_fontconfig:FILEPATH=/usr/lib/libfontconfig.so
 
 //Path to a library.
-pkgcfg_lib_PKG_FONTCONFIG_freetype:FILEPATH=/usr/lib/libfreetype.so
-
-//Path to a library.
 pkgcfg_lib_UNZIP_minizip:FILEPATH=/usr/lib/libminizip.so
 
 //Path to a library.
@@ -1120,7 +1114,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=5
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -1231,10 +1225,10 @@ PKG_FONTCONFIG_CFLAGS_OTHER:INTERNAL=-pthread
 PKG_FONTCONFIG_FOUND:INTERNAL=1
 PKG_FONTCONFIG_INCLUDEDIR:INTERNAL=/usr/include
 PKG_FONTCONFIG_INCLUDE_DIRS:INTERNAL=/usr/include;/usr/include/freetype2;/usr/include/libpng16;/usr/include/harfbuzz;/usr/include/glib-2.0;/usr/lib/glib-2.0/include;/usr/include/sysprof-6
-PKG_FONTCONFIG_LDFLAGS:INTERNAL=-L/usr/lib;-lfontconfig;-lfreetype
+PKG_FONTCONFIG_LDFLAGS:INTERNAL=-L/usr/lib;-lfontconfig
 PKG_FONTCONFIG_LDFLAGS_OTHER:INTERNAL=
 PKG_FONTCONFIG_LIBDIR:INTERNAL=/usr/lib
-PKG_FONTCONFIG_LIBRARIES:INTERNAL=fontconfig;freetype
+PKG_FONTCONFIG_LIBRARIES:INTERNAL=fontconfig
 PKG_FONTCONFIG_LIBRARY_DIRS:INTERNAL=/usr/lib
 PKG_FONTCONFIG_LIBS:INTERNAL=
 PKG_FONTCONFIG_LIBS_L:INTERNAL=
@@ -1255,7 +1249,7 @@ PKG_FONTCONFIG_STATIC_LIBS:INTERNAL=
 PKG_FONTCONFIG_STATIC_LIBS_L:INTERNAL=
 PKG_FONTCONFIG_STATIC_LIBS_OTHER:INTERNAL=
 PKG_FONTCONFIG_STATIC_LIBS_PATHS:INTERNAL=
-PKG_FONTCONFIG_VERSION:INTERNAL=2.16.1
+PKG_FONTCONFIG_VERSION:INTERNAL=2.16.2
 PKG_FONTCONFIG_fontconfig_INCLUDEDIR:INTERNAL=
 PKG_FONTCONFIG_fontconfig_LIBDIR:INTERNAL=
 PKG_FONTCONFIG_fontconfig_PREFIX:INTERNAL=
@@ -1655,12 +1649,6 @@ ZLIB_PKGC_zzip-zlib-config_PREFIX:INTERNAL=
 ZLIB_PKGC_zzip-zlib-config_VERSION:INTERNAL=
 //x
 ZLIB_PREFIX_PATH_INT_CHECK:INTERNAL=
-//linker supports push/pop state
-_CMAKE_CXX_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
-//linker supports push/pop state
-_CMAKE_C_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
-//linker supports push/pop state
-_CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
 //CMAKE_INSTALL_PREFIX during last run
 _GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/usr/local
 __pkg_config_arguments_PKG_FONTCONFIG:INTERNAL=QUIET;fontconfig
@@ -1672,8 +1660,6 @@ __pkg_config_checked_Wayland:INTERNAL=1
 __pkg_config_checked_ZLIB_PKGC:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib_PKG_FONTCONFIG_fontconfig
 pkgcfg_lib_PKG_FONTCONFIG_fontconfig-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_PKG_FONTCONFIG_freetype
-pkgcfg_lib_PKG_FONTCONFIG_freetype-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib_UNZIP_minizip
 pkgcfg_lib_UNZIP_minizip-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib_Wayland_wayland-client
