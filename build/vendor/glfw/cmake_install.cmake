@@ -47,11 +47,6 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/home/bob/Projects/SamuraiCiao/build/vendor/glfw/src/cmake_install.cmake")
 endif()
 
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for the subdirectory.
-  include("/home/bob/Projects/SamuraiCiao/build/vendor/glfw/docs/cmake_install.cmake")
-endif()
-
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/home/bob/Projects/SamuraiCiao/vendor/glfw/include/GLFW" FILES_MATCHING REGEX "/glfw3\\.h$" REGEX "/glfw3native\\.h$")
 endif()
