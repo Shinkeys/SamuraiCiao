@@ -1,6 +1,7 @@
 .cache/
 spirv/*.spv
 
+build/
 CMakeFiles/
 CMakeCache.txt
 build.ninja
