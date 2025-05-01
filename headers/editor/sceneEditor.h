@@ -7,6 +7,12 @@
 #include "editorDebug.h"
 
 
+struct CurrentSelectionDesc
+{
+    std::string selectedObjectName;
+    bool objectSelected;
+};
+
 
 // Purpose: class to work with scene editing bounded to Opengl
 // Example: object selection by mouse
@@ -26,8 +32,9 @@ private:
     std::pair<uint32_t, uint32_t> _viewportExtent {0, 0};
     void SelectObject();
 
+
+    CurrentSelectionDesc _selectedObjectDesc;
     // Work with gizmo
-    bool _someObjectSelected { false }; 
     Gizmo _gizmo;
     void ChangeSelectionState();
 public:

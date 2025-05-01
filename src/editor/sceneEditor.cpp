@@ -67,7 +67,7 @@ void SceneEditor::HandleObjectSelection()
 
 
 
-    if(_someObjectSelected)
+    if(_selectedObjectDesc.objectSelected)
         _gizmo.RenderLoop();
 }
 
@@ -76,9 +76,9 @@ void SceneEditor::HandleObjectSelection()
 // object is currently selected or not
 void SceneEditor::ChangeSelectionState()
 {
-    if(_someObjectSelected && _window->GetKeysState().cancelSelection)
+    if(_selectedObjectDesc.objectSelected && _window->GetKeysState().cancelSelection)
     {
-        _someObjectSelected = false;
+        _selectedObjectDesc.objectSelected = false;
         return;
     }
 }
@@ -95,10 +95,6 @@ void SceneEditor::SelectObject()
         const float x = (2.0f * mouseState.xPos) / static_cast<float>(width) - 1.0f;
         const float y = 1.0f - (2.0f * mouseState.yPos) / static_cast<float>(height);
         const float z = 1.0f;
-    
-        std::cout << "Mouse pos: " << mouseState.xPos << " " << mouseState.yPos << '\n';
-        std::cout << "NDC: " << x << " " << y << " " << z << '\n';
-
 
         // making z point forwards in homo clip space
         glm::vec4 rayClip = glm::vec4(x, y, -z, 1.0f);
@@ -120,9 +116,15 @@ void SceneEditor::SelectObject()
         newRayDebug.endType   = LineDebug::EndType::END_TYPE_DIRECTION;
         _editorDebug->RequestLineDebugUpdate(newRayDebug);
         
-
+        
+        // First of all to check intersection with the gizmo
+        bool rayToGizmoResult = _selectedObjectDesc.objectSelected ? _gizmo.CheckForIntersection(rayOrigin, rayWorldNormalized) : false;
         auto rayResult = _collisionDependency->CheckForRayIntersection(rayOrigin, rayWorldNormalized);
-        if(rayResult != std::nullopt)
+        if(rayToGizmoResult)
+        {
+            // handle gizmo movement logic
+        }
+        else if(rayResult != std::nullopt)
         {
             std::cout << "Selected object is: " << rayResult.value() << '\n';
             
@@ -138,19 +140,11 @@ void SceneEditor::SelectObject()
                     return;
                 
             const glm::vec3 centerWorldSpace = (*modelMatrix) * glm::vec4(objectCenter.value(), 1.0f);
+
+            _selectedObjectDesc.objectSelected = true;
+            _selectedObjectDesc.selectedObjectName = meshName;
             _gizmo.TranslateGizmoObject(centerWorldSpace);
 
-
-            if(meshName == "gizmo_axis_x" || meshName == "gizmo_axis_y" || meshName == "gizmo_axis_z")
-            {
-
-            }
-            else
-            {
-                
-                
-                _someObjectSelected = true;
-            }
         }
     }
 }

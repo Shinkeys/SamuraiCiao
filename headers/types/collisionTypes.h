@@ -268,6 +268,8 @@ public:
 	const LineDebug& GetLineData() const { return _clickRay; }
 
 	void MoveCollider(const std::string& entityName, glm::vec3 newPos);
+	void DeactivateCollider(const std::string& entityName);
+	void ActivateCollider(const std::string& entityName);
 
 	const auto& GetObjectsHandle() const { return _objectsHandle; }
 	auto& GetObjectsHandle() 			 { return _objectsHandle; }

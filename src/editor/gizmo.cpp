@@ -36,9 +36,17 @@ void Gizmo::TranslateGizmoObject(glm::vec3 position)
 {
     _gizmoObjectTransform.worldPos = position;
 
-    _collisionDependency->MoveCollider("gizmo_axis_x", position);
-    _collisionDependency->MoveCollider("gizmo_axis_y", position);
-    _collisionDependency->MoveCollider("gizmo_axis_z", position);
+    // to do
+}
+
+void Gizmo::HideGizmoObject()
+{
+    // to do
+}
+
+void Gizmo::ShowGizmoObject()
+{
+   // to do
 }
 
 // Purpose: Apply local transformation to vertices, to basically create gizmo for every
@@ -64,24 +72,16 @@ void Gizmo::CreateGizmoHandles()
     transformZ.color    = ColorsType::BLUE;
 
 
-    const float halfCylinderExt = 3.5f;
-    const float radius = 0.25f;
-    CollisionCreateDesc axisCollider("gizmo_axis_x", aroundZ, glm::vec3(halfCylinderExt, 0.0f, 0.0f), glm::radians(-90.0f), halfCylinderExt, radius);
-    _collisionDependency->AddCommand(CollisionCmd::COLLISION_CREATE_CAPSULE, axisCollider);
-
-    axisCollider.SetName("gizmo_axis_y");
-    axisCollider.SetRotationAxisAndAngle(aroundY, 0.0f);
-    axisCollider.SetPosition(glm::vec3(0.0f, halfCylinderExt, 0.0f));
-    _collisionDependency->AddCommand(CollisionCmd::COLLISION_CREATE_CAPSULE, axisCollider);
-
-    axisCollider.SetName("gizmo_axis_z");
-    axisCollider.SetRotationAxisAndAngle(aroundX, glm::radians(90.0f));
-    axisCollider.SetPosition(glm::vec3(0.0f, 0.0f, halfCylinderExt));
-    _collisionDependency->AddCommand(CollisionCmd::COLLISION_CREATE_CAPSULE, axisCollider);
-
     _gizmoPartDescriptors.insert({GizmoGroup::GIZMO_PART_X, transformX});
     _gizmoPartDescriptors.insert({GizmoGroup::GIZMO_PART_Y, transformY});
     _gizmoPartDescriptors.insert({GizmoGroup::GIZMO_PART_Z, transformZ});
+}
+
+// Purpose: method to check if current ray casted to the scene(mouse pick)
+// intersects some part of the gizmo
+bool Gizmo::CheckForIntersection(glm::vec3 rayOrigin, glm::vec3 rayDir)
+{
+    return false;
 }
 
 
@@ -105,7 +105,7 @@ void Gizmo::CreateGeometry()
     const float cubeMaxPoint  = std::max_element(cube.vertices.begin(), cube.vertices.end(), functor)->position.y;
     const uint32_t cubeMaxInd = *std::max_element(cube.indices.begin(), cube.indices.end());
 
-    const int32_t sectorCount = 36;
+    const int32_t sectorCount = 12;
     const int32_t cylinderHeight = 7.0f;
     const int32_t cylinderRadius = 1.5f;
     GizmoPartHandle cylinder;
@@ -147,13 +147,16 @@ void Gizmo::CreateGeometry()
 
     _setup.vertices.insert(_setup.vertices.end(), cube.vertices.begin(), cube.vertices.end());
     _setup.indices.insert(_setup.indices.end(),   cube.indices.begin(),  cube.indices.end());
-
+    
+    _setup.cylinderStartIndex = static_cast<uint32_t>(_setup.indices.size());
     _setup.vertices.insert(_setup.vertices.end(), cylinder.vertices.begin(), cylinder.vertices.end());
     _setup.indices.insert(_setup.indices.end(),   cylinder.indices.begin(),  cylinder.indices.end());
+    _setup.cylinderEndIndex = static_cast<uint32_t>(_setup.indices.size());
 
+    _setup.coneStartIndex = static_cast<uint32_t>(_setup.indices.size());
     _setup.vertices.insert(_setup.vertices.end(), cone.vertices.begin(), cone.vertices.end());
     _setup.indices.insert(_setup.indices.end(),   cone.indices.begin(),  cone.indices.end());
-
+    _setup.coneEndIndex = static_cast<uint32_t>(_setup.indices.size());
 }
 
 void Gizmo::RenderLoop()

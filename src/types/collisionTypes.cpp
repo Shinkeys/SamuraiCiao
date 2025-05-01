@@ -78,15 +78,11 @@ std::optional<std::string> CollisionDependency::CheckForRayIntersection(glm::vec
             continue;
         }
 
-        std::cout << nameID.first << "\n";
-
         JPH::AABox objectAABB = optAABB.value();
         
         if(SamuraiMath::IntersectAABB(rayOrigin, rayDirection, 
             ConvertJoltVec3ToGlm(objectAABB.mMin), ConvertJoltVec3ToGlm(objectAABB.mMax)))
         {
-            std::cout << "Intersects\n";
-
             const JPH::Vec3 objectAABoxCenter = (objectAABB.mMin + objectAABB.mMax) / 2.0f;
             const float currDistance = glm::distance(rayOrigin, ConvertJoltVec3ToGlm(objectAABoxCenter));
             
@@ -119,6 +115,40 @@ void CollisionDependency::MoveCollider(const std::string& entityName, glm::vec3 
         return;
     }
     _physSystem.GetBodyInterface().MoveKinematic(*bodyID, ConvertGlmVec3ToJolt(newPos), JPH::Quat::sIdentity(), CollisionDefines::g_DeltaTime);
+}
+
+void CollisionDependency::DeactivateCollider(const std::string& entityName)
+{
+    if(_objectsHandle.find(entityName) == _objectsHandle.end())
+    {
+        std::cout << "Unable to deactivate collider, object " << entityName << " is not found in the storage\n";
+        return;
+    }
+
+    const JPH::BodyID* bodyID = _objectsHandle[entityName];
+    if(bodyID == nullptr)
+    {
+        std::cout << "Unable to deactivate collider, bodyID is nullptr for object " << entityName << '\n';
+        return;
+    }
+    _physSystem.GetBodyInterface().DeactivateBody(*bodyID);
+}
+
+void CollisionDependency::ActivateCollider(const std::string& entityName)
+{
+    if(_objectsHandle.find(entityName) == _objectsHandle.end())
+    {
+        std::cout << "Unable to activate collider, object " << entityName << " is not found in the storage\n";
+        return;
+    }
+
+    const JPH::BodyID* bodyID = _objectsHandle[entityName];
+    if(bodyID == nullptr)
+    {
+        std::cout << "Unable to activate collider, bodyID is nullptr for object " << entityName << '\n';
+        return;
+    }
+    _physSystem.GetBodyInterface().ActivateBody(*bodyID);
 }
 
 void CollisionDependency::UpdateLineData(const LineDebug& newData)

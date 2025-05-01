@@ -33,6 +33,8 @@ enum class GizmoStatus
 // To replace
 struct GizmoPartHandle
 {
+
+
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;    
 };
@@ -51,11 +53,23 @@ struct GizmoPartTransform
     ObjColor  color;
 };
 
+struct GizmoEBOSetup : public EBOSetup
+{
+    // Need those to check intersections with the vertices
+    uint32_t cylinderStartIndex;
+    uint32_t cylinderEndIndex;
+    float cylinderRadius;
+
+    uint32_t coneStartIndex;
+    uint32_t coneEndIndex;
+    float coneRadius;
+};
+
 class Gizmo
 {
 private:    
     CollisionDependency* _collisionDependency = nullptr;
-    EBOSetup _setup;
+    GizmoEBOSetup _setup;
     GizmoTotalTransform _gizmoObjectTransform;
     std::unordered_map<GizmoGroup, GizmoPartTransform> _gizmoPartDescriptors;
 
@@ -67,6 +81,9 @@ public:
     void PassCollisionDependency(CollisionDependency* dependencies);
     const std::vector<Vertex>& GetGizmoAxisVertices() const { return _setup.vertices; } 
     void TranslateGizmoObject(glm::vec3 position);
+    void HideGizmoObject();
+    void ShowGizmoObject();
+    bool CheckForIntersection(glm::vec3 rayOrigin, glm::vec3 rayDir);
     void RenderLoop();
     void Initialize();
 };
