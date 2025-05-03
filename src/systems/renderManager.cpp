@@ -8,13 +8,51 @@ namespace RenderManager
     std::unordered_map<RenderPassType, Shader> _shaderTypes;
 
     std::unordered_set<TextureDesc, TextureHashFunc> _additionalTextures;
-    std::unordered_set<MatrixDesc, MatrixHashFunc> _additionalMatrices;
-    std::unordered_set<VectorDesc, VectorHashFunc> _additionalVectors;
+    std::unordered_set<MatrixDesc, MatrixHashFunc>   _additionalMatrices;
+    std::unordered_set<VectorDesc, VectorHashFunc>   _additionalVectors;
 
+    DepthFramebuffer _depthFBO;
+}
+
+// TO do: Initialization of other structs
+
+void RenderManager::Initialize(uint32_t width, uint32_t height)
+{
+    // generating scene from light point of view
+    glGenFramebuffers(1, &_depthFBO.buffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, _depthFBO.buffer);
+
+    glGenTextures(1, &_depthFBO.texture);
+    glBindTexture(GL_TEXTURE_2D, _depthFBO.texture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, 
+        height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+
+
+    const std::array<float, 4> clampColor = {1.0f, 1.0f, 1.0f, 1.0f}; 
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, clampColor.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    // attaching texture to depth framebuffer
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+        _depthFBO.texture, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "Framebuffer incomplete\n";
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);   
 }
 
 void RenderManager::DispatchMeshToDraw(const ObjectDescriptor &objDesc, const AssetManager &manager)
 {
+    
     const CurrentModelDesc *modelDescriptor = manager.GetModelDescriptorByName(objDesc.name);
 
     if (modelDescriptor == nullptr)
@@ -33,15 +71,18 @@ void RenderManager::DispatchMeshToDraw(const ObjectDescriptor &objDesc, const As
         break;
     case EntityType::TYPE_COMPOUND_STATIC_MESH:
         _renderTypes[RenderPassType::RENDER_MAIN].push_back(modelDescriptor);
+        _renderTypes[RenderPassType::RENDER_DEPTHPASS].push_back(modelDescriptor);
         break;
     case EntityType::TYPE_COMPOUND_DYNAMIC_MESH:
         _renderTypes[RenderPassType::RENDER_MAIN].push_back(modelDescriptor);
+        _renderTypes[RenderPassType::RENDER_DEPTHPASS].push_back(modelDescriptor);
         break;
     case EntityType::TYPE_SKYBOX:
         _renderTypes[RenderPassType::RENDER_SKYBOX].push_back(modelDescriptor);
         break;
     case EntityType::TYPE_BOX_MESH:
         _renderTypes[RenderPassType::RENDER_MAIN].push_back(modelDescriptor);
+        _renderTypes[RenderPassType::RENDER_DEPTHPASS].push_back(modelDescriptor);
         break;
     default:
         std::cout << "No type of model dispatch\n";
@@ -122,8 +163,56 @@ void RenderManager::GlobalDraw(AssetManager &manager)
     }
 
     glBindVertexArray(manager.GetAssetsVAO());
+
+    // Depth pass
+    glBindFramebuffer(GL_FRAMEBUFFER, _depthFBO.buffer);
+    const auto& matrices = SamuraiCameras::g_activeCamera->GetMVP();
+    DrawDepthPass(manager, matrices.projection * matrices.view);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    // Main renderer
     DrawSkybox(manager);
     DrawMainScene(manager);
+}
+
+// Purpose: depth prepass to draw depth for forward plus renderer
+// Usage: call it whenever you need to draw scene.
+// Bind additional data such as vectors and so on using RenderPassType key.
+void RenderManager::DrawDepthPass(AssetManager& manager, const glm::mat4& viewProj)
+{
+    const RenderPassType passType = RenderPassType::RENDER_DEPTHPASS;
+    // getting shader where shadows are calculated
+    auto shaderIt = RenderManager::_shaderTypes.find(RenderPassType::RENDER_DEPTHPASS);
+
+    if(shaderIt == RenderManager::_shaderTypes.end())
+    {
+        std::cout << "Shader for shadows not found\n";
+        return;
+    }
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    Shader& shader = shaderIt->second;
+
+    shader.UseShader();
+    shader.SetMat4x4("VP", viewProj);
+    for (auto mesh : _renderTypes.find(passType)->second)
+    {
+        
+        const glm::mat4 *transformation = manager.GetTransformMatrixByName(mesh->objDesc.name);
+        if (transformation != nullptr)
+        {
+            shader.SetMat4x4("model", *transformation);
+        }
+        else shader.SetMat4x4("model", glm::mat4(1.0f));
+        for (auto it = mesh->indOffsetVertCount.begin(); it != mesh->indOffsetVertCount.end(); ++it)
+        {
+            const uint32_t vertexCount = it->second;
+            const uint32_t offset = it->first;
+            glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT,
+                           (void *)(offset + manager.GetBuffers().indices.data()));
+        }
+    }
 }
 
 void RenderManager::BindAdditionalMatrices(const RenderPassType type, Shader *shader)
@@ -205,6 +294,8 @@ void RenderManager::DrawMainScene(AssetManager &manager)
             const glm::mat4 normalMatrix =
                 glm::transpose(glm::inverse(currViewMatrix * currModelMatrix));
             shaderMainIt->second.SetMat4x4("normalMatrix", normalMatrix);
+
+
         }
 
         int32_t textureId = 0;

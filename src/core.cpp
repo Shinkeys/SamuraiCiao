@@ -8,6 +8,7 @@ bool Core::Initialize()
     {
         return false;
     }
+    RenderManager::Initialize(Window::_width, Window::_height);
     OpenglBackend::SetupOpenglBackendData(_width, _height);
     SamuraiInterface::InitImgui(_window);
 
@@ -102,7 +103,6 @@ void Core::Render()
     _shadowsHelper.DrawDepthScene(_assetManager);
     
     OpenglBackend::SetViewport(Window::_width, Window::_height);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     
     RenderManager::GlobalDraw(_assetManager);

@@ -3,7 +3,7 @@
 #include "../types/renderTypes.h"
 
 #include "../assets/assetManager.h"
-
+#include "../types/openglTypes.h"
 
 
 namespace RenderManager
@@ -12,11 +12,15 @@ namespace RenderManager
     extern std::unordered_map<RenderPassType, std::vector<const CurrentModelDesc*>> _renderTypes;
     extern std::unordered_map<RenderPassType, Shader> _shaderTypes;
     extern std::unordered_set<TextureDesc, TextureHashFunc> _additionalTextures;
-    extern std::unordered_set<MatrixDesc, MatrixHashFunc> _additionalMatrices;
+    extern std::unordered_set<MatrixDesc, MatrixHashFunc>   _additionalMatrices;
+    extern std::unordered_set<VectorDesc, VectorHashFunc>   _additionalVectors;
 
-    extern std::unordered_set<VectorDesc, VectorHashFunc> _additionalVectors;
+    extern DepthFramebuffer _depthFBO;
 
 
+    void Initialize(uint32_t width, uint32_t height);
+
+    void DrawDepthPass(AssetManager& manager, const glm::mat4& viewProj);
     void DrawSkybox(AssetManager& manager);
     void DrawMainScene(AssetManager& manager);
     // textures

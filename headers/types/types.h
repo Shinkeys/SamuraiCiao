@@ -27,18 +27,19 @@ enum class EntityType
 namespace SamuraiDefines
 {
     inline float g_fov       = 45.0f;
-    inline float g_nearPlane = 0.002f;
-    inline float g_farPlane  = 500.0f;
+    inline float g_nearPlane = 0.5f;
+    inline float g_farPlane  = 750.0f;
     inline double g_Pi       = 3.141592653589793;
     inline double g_TwoPi    = 6.28318530717958647692528676655900576;
 };
-
 
 struct ObjectDescriptor
 {
     std::string name = "";
     EntityType type = EntityType::TYPE_NONE;
 };
+
+
 
 class Vertex
 {

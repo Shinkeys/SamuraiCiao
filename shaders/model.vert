@@ -24,7 +24,6 @@ out vec3 viewlightDir;
 out vec3 lightViewFragPos;
 out vec3 lightViewLightDir;
 
-
 out vec3 normals;
 void main()
 {

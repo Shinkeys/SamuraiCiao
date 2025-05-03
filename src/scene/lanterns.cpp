@@ -23,8 +23,7 @@ void Lanterns::Prepare(AssetManager& manager)
     vectorDesc.data = _directionalLightDir;
     vectorDesc.name = lightDirShaderName;
     vectorDesc.type = RenderPassType::RENDER_MAIN;
-    if(auto shader = RenderManager::_shaderTypes.find(RenderPassType::RENDER_MAIN); shader != RenderManager::_shaderTypes.end())
-        vectorDesc.shader = &shader->second; 
+
         
     RenderManager::AttachVectorToBind(vectorDesc);
 

@@ -5,6 +5,7 @@
 #include "../systems/shaders.h"
 #include "../scene/lanterns.h"
 #include "../systems/camera.h"
+#include "../types/openglTypes.h"
 
 class ShadowsHelper
 {
@@ -12,11 +13,11 @@ private:
     // to rework
     const float _nearPlane = 0.1f;
     const float _farPlane = 500.0f;
-    uint32_t _depthFBO{0};
-    uint32_t _depthTex{0};
     std::pair<uint32_t, uint32_t> _shadowTexExtent{0, 0};
     Lanterns* _lanterns = nullptr;
+    DepthFramebuffer _frameBuffer;
 public:
+
     void PassLanterns(Lanterns* lant);
     void MakeDynamicArea(float zNear, float zFar);
     void Prepare();

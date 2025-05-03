@@ -14,7 +14,7 @@ private:
     std::unordered_map<std::string, glm::vec3> _meshCenterCache;
 public:
     std::optional<std::pair<uint32_t, uint32_t>> GetMeshStartEndIndices(const std::string& entityName) const;
-    const uint32_t GetAssetsVAO() const { return _model->GetModelsEBOData().VAO;}
+    uint32_t GetAssetsVAO() const { return _model->GetModelsEBOData().VAO;}
     void AddEntityToLoad(ObjectDescriptor objectDesc);
     void BindStructures();
     // void DrawParticularModel(const std::string& entityName);

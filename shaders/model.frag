@@ -32,9 +32,7 @@ float CalculateShadows()
     if(ndcCoords.z > 1.0)
         return 0.0;
 
-    float bias = max(0.05 * (1.0 - dot(normalize(normals), lightViewLightDir)), 0.005);
-
-
+    float bias = max(0.00035 * (1.0 - dot(normalize(normals), lightViewLightDir)), 0.0001);
 
     // pcf. getting size of each pixel(texel) and then sampling values
     // from 9 surrounding texels. dividing it only by 9 to average result
@@ -50,7 +48,7 @@ float CalculateShadows()
         {
             vec2 offsets = vec2(x * xOffset, y * yOffset);
             float pcf = texture(shadowsTexture, (ndcCoords.xy + offsets)).r;
-            shadow += currentDepth > pcf ? 1.0 : 0.0;
+            shadow += currentDepth - bias > pcf ? 1.0 : 0.0;
         }
     }
     shadow /= 9.0;
