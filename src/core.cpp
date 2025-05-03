@@ -8,6 +8,7 @@ bool Core::Initialize()
     {
         return false;
     }
+    RenderManager::Initialize(Window::_width, Window::_height);
     OpenglBackend::SetupOpenglBackendData(_width, _height);
     SamuraiInterface::InitImgui(_window);
     _renderInstance.Initialize(_width, _height);

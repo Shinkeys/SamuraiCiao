@@ -118,7 +118,6 @@ void RenderManager::AttachVectorToBind(const VectorDesc &vectorDesc)
 }
 
 
-
 // Purpose: depth prepass to draw depth for forward plus renderer
 // Usage: call it whenever you need to draw scene.
 // Bind additional data such as vectors and so on using RenderPassType key.
