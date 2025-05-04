@@ -4,6 +4,7 @@
 
 #include "../assets/assetManager.h"
 #include "../types/openglTypes.h"
+#include "forwardPlus.h"
 
 
 namespace RenderManager
@@ -15,10 +16,7 @@ namespace RenderManager
     extern std::unordered_set<MatrixDesc, MatrixHashFunc>   _additionalMatrices;
     extern std::unordered_set<VectorDesc, VectorHashFunc>   _additionalVectors;
 
-    extern DepthFramebuffer _depthFBO;
 
-
-    void Initialize(uint32_t width, uint32_t height);
 
     void DrawDepthPass(AssetManager& manager, const glm::mat4& viewProj);
     void DrawSkybox(AssetManager& manager);
@@ -34,8 +32,6 @@ namespace RenderManager
     // state change
     void DispatchMeshToDraw(const ObjectDescriptor& objDesc, const AssetManager& manager);
     void AddShaderByType(Shader&& shader, RenderPassType renderType);
-    void GlobalDraw(AssetManager& manager);
-
 
      // vectors
      void BindAdditionalVectors(const RenderPassType type, Shader* shader);

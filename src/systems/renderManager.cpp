@@ -10,45 +10,9 @@ namespace RenderManager
     std::unordered_set<TextureDesc, TextureHashFunc> _additionalTextures;
     std::unordered_set<MatrixDesc, MatrixHashFunc>   _additionalMatrices;
     std::unordered_set<VectorDesc, VectorHashFunc>   _additionalVectors;
-
-    DepthFramebuffer _depthFBO;
+    
 }
 
-// TO do: Initialization of other structs
-
-void RenderManager::Initialize(uint32_t width, uint32_t height)
-{
-    // generating scene from light point of view
-    glGenFramebuffers(1, &_depthFBO.buffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, _depthFBO.buffer);
-
-    glGenTextures(1, &_depthFBO.texture);
-    glBindTexture(GL_TEXTURE_2D, _depthFBO.texture);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, 
-        height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-
-
-    const std::array<float, 4> clampColor = {1.0f, 1.0f, 1.0f, 1.0f}; 
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, clampColor.data());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-    // attaching texture to depth framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-        _depthFBO.texture, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cout << "Framebuffer incomplete\n";
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);   
-}
 
 void RenderManager::DispatchMeshToDraw(const ObjectDescriptor &objDesc, const AssetManager &manager)
 {
@@ -153,28 +117,7 @@ void RenderManager::AttachVectorToBind(const VectorDesc &vectorDesc)
     _additionalVectors.insert(vectorDesc);
 }
 
-void RenderManager::GlobalDraw(AssetManager &manager)
-{
 
-    if (_renderTypes.size() == 0)
-    {
-        std::cout << "No commands to draw something\n";
-        return;
-    }
-
-    glBindVertexArray(manager.GetAssetsVAO());
-
-    // Depth pass
-    glBindFramebuffer(GL_FRAMEBUFFER, _depthFBO.buffer);
-    const auto& matrices = SamuraiCameras::g_activeCamera->GetMVP();
-    DrawDepthPass(manager, matrices.projection * matrices.view);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-    // Main renderer
-    DrawSkybox(manager);
-    DrawMainScene(manager);
-}
 
 // Purpose: depth prepass to draw depth for forward plus renderer
 // Usage: call it whenever you need to draw scene.
@@ -273,7 +216,13 @@ void RenderManager::DrawMainScene(AssetManager &manager)
 
     shaderMainIt->second.UseShader();
 
-    for (const auto mesh : _renderTypes.find(passType)->second)
+    const auto renderData = _renderTypes.find(passType);
+    if(renderData == _renderTypes.end())
+    {
+        std::cout << "Unable to draw main scene, no attached objects\n";
+        return;
+    }
+    for (const auto mesh : renderData->second)
     {
         // finding bounded transformations to current entity
         const glm::mat4 *transformation = manager.GetTransformMatrixByName(mesh->objDesc.name);
@@ -339,7 +288,14 @@ void RenderManager::DrawSkybox(AssetManager &manager)
     // setting matrices
     shaderSkyboxIt->second.SetMat4x4("view", cameraMatrices.view);
     shaderSkyboxIt->second.SetMat4x4("projection", cameraMatrices.projection);
-    for (const auto skybox : _renderTypes.find(passType)->second)
+
+    const auto renderData = _renderTypes.find(passType);
+    if(renderData == _renderTypes.end())
+    {
+        std::cout << "Unable to draw main scene, no attached objects\n";
+        return;
+    }
+    for (const auto skybox : renderData->second)
     {
         int32_t textureId = 0;
         for (auto it = skybox->indOffsetVertCount.begin(); it != skybox->indOffsetVertCount.end(); ++it)

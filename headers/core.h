@@ -28,6 +28,7 @@ private:
     Particles _particles;
 
     Editor _editor;
+    ForwardPlusRender _renderInstance;
 public:
     bool Initialize() override;
 };

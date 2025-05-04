@@ -8,9 +8,9 @@ bool Core::Initialize()
     {
         return false;
     }
-    RenderManager::Initialize(Window::_width, Window::_height);
     OpenglBackend::SetupOpenglBackendData(_width, _height);
     SamuraiInterface::InitImgui(_window);
+    _renderInstance.Initialize(_width, _height);
 
     Shader mainShader;
     mainShader.LoadShaders("model.vert", "model.frag");
@@ -105,7 +105,7 @@ void Core::Render()
     OpenglBackend::SetViewport(Window::_width, Window::_height);
     
     
-    RenderManager::GlobalDraw(_assetManager);
+    _renderInstance.Render(_assetManager);
     
     
     _particles.RenderParticles();
