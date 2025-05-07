@@ -8,11 +8,12 @@
 class Lanterns
 {
 private:
-    std::unordered_map<std::string, std::pair<LightType, glm::vec3>> _lightSourcesData;
-    uint32_t _lightSourcesCount = 0;
+    std::vector<LightDescriptor> _lightsStorage;
     glm::vec3 _directionalLightDir = glm::vec3(0.0f, -1.0f, -2.0f);
+
+    const uint32_t maxInfluencingLights = 512;
 public:
-    const auto& GetLightSourcesData() const { return _lightSourcesData;}
-    void AddLightSourcePos(const std::string entityName, std::pair<LightType, glm::vec3> data);
+    const auto& GetLightSources() const { return _lightsStorage;}
+    void AddLightSourceDesc(const LightDescriptor& lightDesc);
     void Prepare(AssetManager& manager);
 };

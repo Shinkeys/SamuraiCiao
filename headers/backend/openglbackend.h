@@ -22,10 +22,50 @@ namespace OpenglBackend
     ErrorCodes_Backend BindModelEBO(EBOSetup& setup);
     ErrorCodes_Backend BindModelEBO(EBOSetupUnskinned& setup);
     ErrorCodes_Backend BindModelEBO(EBOSetupBuffers& buffers, std::vector<uint32_t>& indices, std::vector<glm::vec3>& vertices);
-    ErrorCodes_Backend CreateSSBO(SSBOBind& bindData);
     ErrorCodes_Backend CreateSSBO(SSBOBindVec4& bindData);
     void SetupOpenglBackendData(int32_t width, int32_t height);
     void SetViewport(uint32_t width, uint32_t height);
+
+    template <typename T>
+    ErrorCodes_Backend CreateSSBO(SSBOBind<T>& bindData)
+    {
+        if(bindData.size == 0)
+        {
+            std::cout << "Unable to create SSBO, bind data is empty!\n";
+            return ErrorCodes_Backend::ERROR_SSBO_CREATION;
+        }
+        glCreateBuffers(1, bindData.ssboId);
+        // basically binding ssbo to write data there
+        if(bindData.type == 0x00)
+            glNamedBufferData(*bindData.ssboId, bindData.size, bindData.data, GL_DYNAMIC_DRAW);
+        else 
+            glNamedBufferData(*bindData.ssboId, bindData.size, bindData.data, bindData.type);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, *bindData.binding, *bindData.ssboId);
+
+
+        return ErrorCodes_Backend::NO_ERROR;
+    }
+    template <typename T>
+    ErrorCodes_Backend CreateSSBOImmutable(SSBOBind<T>& bindData)
+    {
+        if(bindData.size == 0)
+        {
+            std::cout << "Unable to create SSBO, bind data is empty!\n";
+            return ErrorCodes_Backend::ERROR_SSBO_CREATION;
+        }
+        glCreateBuffers(1, bindData.ssboId);
+        // basically binding ssbo to write data there
+        if(bindData.type == 0x00)
+            glNamedBufferStorage(*bindData.ssboId, bindData.size, bindData.data, GL_DYNAMIC_STORAGE_BIT);
+        else 
+            glNamedBufferStorage(*bindData.ssboId, bindData.size, bindData.data, bindData.type);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, *bindData.binding, *bindData.ssboId);
+
+
+        return ErrorCodes_Backend::NO_ERROR;
+    }
 }  
 
 

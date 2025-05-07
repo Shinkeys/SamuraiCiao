@@ -1,0 +1,93 @@
+#version 460 core
+#extension NV_shader_atomic_float : require
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+struct LightDesc
+{
+    vec3 position;
+    float radius;
+};
+
+uniform sampler2D depthTexture;
+
+const int maxLights = 512;
+uniform int lightsCounter;
+layout(std430, binding = 1) buffer lightsBuffer
+{
+    LightDesc lights[];
+};
+
+
+struct ViewFrustum
+{
+    vec4 normal[4];
+    // std430 packs it like 4*4 = 16 so no padding needed.
+    float distToPlane[4];
+};
+layout(std430, binding = 2) buffer frustumBuffer
+{
+    ViewFrustum viewFrustumsBuffer[16];
+};
+
+layout(std430, binding = 3) buffer lightsGlobalIndBuffer
+{
+    int lightsGlobalIndList[];
+};
+
+bool CheckIfLightIsInside(in int lightIndex, in ViewFrustum tileFrust)
+{
+    return false;
+}
+
+// Sphere data to handle intersection of point light.
+// If would need spotlight - use cone.
+struct Sphere
+{
+    vec3 center;
+    float radius;
+};
+
+// SHARED DATA
+shared float minDepth;
+shared float maxDepth;
+shared int globalLightIndex;
+void CullLights(int tileIndex)
+{
+    int localLightIndices[maxLights];
+    ViewFrustum frustum = viewFrustumsBuffer[tileIndex];
+    int localCounter = 0;
+    // To prevent data races
+    int lightsLocalList[maxLights];
+
+    for(int i = 0; i < lightsCounter; ++i)
+    {
+        if(CheckIfLightIsInside(i, frustum))
+        {
+            if(localCounter < maxLights)
+                lightsLocalList[localCounter++] = i;
+
+        }
+    }
+
+
+    int offset = atomicAdd(globalLightIndex, localCounter);
+    for(int i = 0; i < localCounter; ++i)
+    {
+        lightsGlobalIndList[offset + i] = lightsLocalList[i];
+    }
+}
+
+
+void main()
+{
+    // Sampling depth for the current tile
+    vec2 texCoord = gl_GlobalInvocationID.xy;
+    // Can use float because of extension, if would want to support amd - rework atomics for floats.
+    float depthFloat = texture(depthTexture, texCoord).r;
+
+    // if(gl_WorkGroupID)
+
+
+
+}

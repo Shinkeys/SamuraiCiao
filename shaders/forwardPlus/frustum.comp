@@ -1,6 +1,5 @@
 #version 460 core
 
-
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 
@@ -8,22 +7,29 @@ uniform vec3 eyePos;
 uniform mat4 inverseProjection;
 uniform vec2 screenResolution;
 
+
 struct ViewFrustum
 {
-    vec3 normal[4];
-    float dist[4];
+    vec4 normal[4];
+    // std430 packs it like 4*4 = 16 so no padding needed.
+    float distToPlane[4];
 };
 
-void ComputeViewFrustum(inout vec3 normal, inout float dist, vec3 point1, vec3 point2)
+layout(std430, binding = 1) buffer frustumBuffer
+{
+    ViewFrustum viewFrustumsBuffer[16];
+};
+
+void ComputeViewFrustum(inout vec4 normal, inout float dist, vec3 point1, vec3 point2)
 {
     vec3 dir1 = point1 - eyePos;
     vec3 dir2 = point2 - eyePos;
 
     // Normal to the plane(view frustum)
-    normal = normalize(cross(dir1, dir2));
+    normal.xyz = normalize(cross(dir1, dir2));
 
     // Distance to the origin, because normal is normalized
-    dist = dot(normal, eyePos);
+    dist = dot(normal.xyz, eyePos);
 }
 
 
@@ -77,11 +83,17 @@ void main()
 
     ViewFrustum viewFrustum;
     // left
-    ComputeViewFrustum(viewFrustum.normal[0], viewFrustum.dist[0], tilePointsView[0], tilePointsView[2]);
+    ComputeViewFrustum(viewFrustum.normal[0], viewFrustum.distToPlane[0], tilePointsView[0], tilePointsView[2]);
     // right
-    ComputeViewFrustum(viewFrustum.normal[1], viewFrustum.dist[1], tilePointsView[1], tilePointsView[3]);
+    ComputeViewFrustum(viewFrustum.normal[1], viewFrustum.distToPlane[1], tilePointsView[1], tilePointsView[3]);
     // top
-    ComputeViewFrustum(viewFrustum.normal[2], viewFrustum.dist[2], tilePointsView[0], tilePointsView[1]);
+    ComputeViewFrustum(viewFrustum.normal[2], viewFrustum.distToPlane[2], tilePointsView[0], tilePointsView[1]);
     // bottom
-    ComputeViewFrustum(viewFrustum.normal[3], viewFrustum.dist[3], tilePointsView[2], tilePointsView[3]);
+    ComputeViewFrustum(viewFrustum.normal[3], viewFrustum.distToPlane[3], tilePointsView[2], tilePointsView[3]);
+
+
+    // To verify
+    uint frustumIndex = gl_GlobalInvocationID.x;
+    if(frustumIndex < 16)
+        viewFrustumsBuffer[frustumIndex] = viewFrustum;
 }

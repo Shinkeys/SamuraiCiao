@@ -75,14 +75,14 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
 
 
         const glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, _nearPlane, _farPlane);
-        for(const auto& light : _lanterns->GetLightSourcesData())
+        for(const auto& light : _lanterns->GetLightSources())
         {
             // making different calculations for different lights, now assume that there is only 1 light on scene; TO DO
 
             glm::mat4 lightMatrix = glm::mat4(1.0f);
             const std::string lightMatrixName = "lightMatrix";
 
-            if(light.second.first == LightType::LIGHT_DIRECTIONAL)
+            if(light.type == LightDescriptor::LightType::LIGHT_DIRECTIONAL)
             {
                 const glm::vec3 lightViewPoint = glm::vec3(0.0f, 200.0f, 400.0f);
                 const glm::vec3 centerPointTemporary = glm::vec3(0.0f, 0.0f, -20.0f);
@@ -98,6 +98,9 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
             RenderManager::AttachMatrixToBind(matrixDesc);
             
             RenderManager::DrawDepthPass(manager, matrixDesc.data);
+
+
+            break;
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -1,25 +1,6 @@
 #include "../../headers/backend/openglbackend.h"
 #include "../../headers/types/types.h"
 
-ErrorCodes_Backend OpenglBackend::CreateSSBO(SSBOBind& bindData)
-{
-    if(bindData.data == nullptr || bindData.size == 0)
-    {
-        std::cout << "Unable to create SSBO, bind data is empty!\n";
-        return ErrorCodes_Backend::ERROR_SSBO_CREATION;
-    }
-    glCreateBuffers(1, bindData.ssboId);
-    // basically binding ssbo to write data there
-    if(bindData.type == 0x00)
-        glNamedBufferData(*bindData.ssboId, bindData.size, bindData.data, GL_DYNAMIC_DRAW);
-    else 
-        glNamedBufferData(*bindData.ssboId, bindData.size, bindData.data, bindData.type);
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, *bindData.binding, *bindData.ssboId);
-
-
-    return ErrorCodes_Backend::NO_ERROR;
-}
 
 ErrorCodes_Backend OpenglBackend::CreateSSBO(SSBOBindVec4& bindData)
 {

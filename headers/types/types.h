@@ -69,11 +69,22 @@ public:
     }
 };
 
-enum class LightType
+struct LightDescriptor
 {
-    LIGHT_DIRECTIONAL,
-    LIGHT_POINT,
+    enum class LightType
+    {
+        LIGHT_DIRECTIONAL,
+        LIGHT_POINT,
+    };
+
+    std::string name;
+    bool influenceScene; // Does light influence current scene
+    glm::vec3 data; // should be or direction or position, depending on the type
+    glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+    LightType type;
 };
+
+
 
 struct Matrices // MVP matrices for current camera
 {
@@ -148,7 +159,7 @@ struct VBOSetupUnskinnedVec4
     int32_t type = 0x00;
 };  
 
-
+template <typename T>
 struct SSBOBind
 {
     const uint32_t*  binding = nullptr;
@@ -156,7 +167,7 @@ struct SSBOBind
 
     int32_t type = 0x00;
     int32_t size = 0;
-    glm::vec3* data;
+    T* data;
     uint32_t* ssboId = nullptr;
 };
 
