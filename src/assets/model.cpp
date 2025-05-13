@@ -3,11 +3,13 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-CurrentModelDesc Model::LoadModel(const std::filesystem::path& modelName, EntityType type)
+CurrentModelDesc Model::LoadModel(const ObjectDescriptor& objDescriptor)
 {
     Assimp::Importer importer;
 
-	std::filesystem::path pathToModel = std::filesystem::absolute("objects/models" / modelName);
+	std::filesystem::path pathToModel = std::filesystem::absolute("objects/" / objDescriptor.storageFolder / objDescriptor.fileName);
+
+	std::cout << pathToModel.string() << std::endl;
 
 	const aiScene* scene = importer.ReadFile(pathToModel.string(), aiProcess_Triangulate |
     aiProcess_FlipUVs | aiProcess_CalcTangentSpace |  aiProcess_PreTransformVertices);
@@ -20,8 +22,10 @@ CurrentModelDesc Model::LoadModel(const std::filesystem::path& modelName, Entity
 
 	// to pass to asset manager
 	CurrentModelDesc modelDescriptor;
-	modelDescriptor.objDesc.type = type;
-	modelDescriptor.objDesc.name = modelName.string();
+	modelDescriptor.objDesc.type = objDescriptor.type;
+	modelDescriptor.objDesc.name = objDescriptor.name;
+	modelDescriptor.objDesc.fileName = objDescriptor.fileName;
+	modelDescriptor.objDesc.storageFolder = "objects/" / objDescriptor.storageFolder;
 
 	ProcessNode(scene->mRootNode, scene, modelDescriptor);
 
@@ -174,7 +178,8 @@ uint32_t Model::StbiLoadTexture(const char* fileName, bool gamma)
 void Model::ProcessMaterial(aiMaterial* material, 
 	std::array<aiTextureType, 4> textureTypes, CurrentModelDesc& modelDescriptor)
 {
-	const std::filesystem::path texturesFolder = "objects/";
+
+	std::filesystem::path texturesFolder = modelDescriptor.objDesc.storageFolder;
 	// going through all passed textures types to load every present texture
 	// storing location of every texture if present, else would be 0
 	ModelTexDesc textureDescriptor;
@@ -187,7 +192,7 @@ void Model::ProcessMaterial(aiMaterial* material,
 			aiString str;
 			material->GetTexture(textureTypes[i], j, &str);
 			
-			const std::filesystem::path pathToLoadTex = std::filesystem::absolute(texturesFolder / str.C_Str()); 
+			const std::filesystem::path pathToLoadTex = std::filesystem::absolute(texturesFolder / str.C_Str());
 			
 			// need this for gamma correction. diffuse textures mostly in sRGB space, so in non linear space
 			// so need to translate it to linear space to not apply gamma twice

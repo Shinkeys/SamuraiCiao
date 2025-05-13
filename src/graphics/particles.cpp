@@ -29,7 +29,7 @@ bool Particles::GenerateParticles()
     }
 
     const uint32_t verticesBindNumber = 1;
-    SSBOBindVec4 bindData;
+    SSBOBind<glm::vec4> bindData;
     bindData.binding = &verticesBindNumber;
     bindData.ssboId = &_ssboId;
     bindData.data = _setup.vertices.data();

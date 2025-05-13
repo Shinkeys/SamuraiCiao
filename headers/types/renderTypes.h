@@ -26,8 +26,9 @@ struct TextureDesc
     RenderPassType type;
     std::string name;
     uint32_t handle;
+    uint32_t bindSlot;
 
-    bool operator==(const TextureDesc& other) const { return name == other.name;}
+    bool operator==(const TextureDesc& other) const { return name == other.name && type == other.type;}
 };
 // matrix desc to bind needed matrices in render call
 struct MatrixDesc
@@ -37,7 +38,7 @@ struct MatrixDesc
     glm::mat4 data;
 
     // operator overload for set
-    bool operator==(const MatrixDesc& other) const { return name == other.name;}
+    bool operator==(const MatrixDesc& other) const { return name == other.name && type == other.type;}
 };
 
 
@@ -48,22 +49,35 @@ struct VectorDesc
     std::string name;
     std::variant<glm::vec2, glm::vec3, glm::vec4> data;
 
-    bool operator==(const VectorDesc& other) const { return name == other.name;}
+    bool operator==(const VectorDesc& other) const { return name == other.name && type == other.type;}
 };
 
 // to do: template hasher
 struct TextureHashFunc
 {
-    size_t operator()(const TextureDesc& type) const { return std::hash<std::string>()(type.name);}
+    size_t operator()(const TextureDesc& type) const
+    {
+        size_t hashFirst = std::hash<std::string>()(type.name);
+        size_t hashSecond = std::hash<RenderPassType>()(type.type);
+        return hashFirst ^ (hashSecond << 1);
+    }
 };
 struct MatrixHashFunc
 {
-    size_t operator()(const MatrixDesc& type) const { return std::hash<std::string>()(type.name);}
+    size_t operator()(const MatrixDesc& type) const
+    {
+        size_t hashFirst = std::hash<std::string>()(type.name);
+        size_t hashSecond = std::hash<RenderPassType>()(type.type);
+        return hashFirst ^ (hashSecond << 1);
+    }
 };
-
-
-
 struct VectorHashFunc
 {
-    size_t operator()(const VectorDesc& type) const { return std::hash<std::string>()(type.name);}
+    size_t operator()(const VectorDesc& type) const
+    {
+        size_t hashFirst = std::hash<std::string>()(type.name);
+        size_t hashSecond = std::hash<RenderPassType>()(type.type);
+        return hashFirst ^ (hashSecond << 1);
+    }
 };
+

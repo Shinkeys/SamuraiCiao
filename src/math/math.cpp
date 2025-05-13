@@ -59,20 +59,18 @@ bool SamuraiMath::SolveQuadratic(float a, float b, float c, float& x0, float& x1
 
     else if(discriminant == 0)
     {
-        x0 = -0.5 * b / a;
-        x1 = -0.5 * b / a;
+        x0 = -0.5f * b / a;
+        x1 = -0.5f * b / a;
     }
     else
     {
-        float q = (b > 0) ? -0.5 * (b + std::sqrt(discriminant)) :
-                            -0.5 * (b - std::sqrt(discriminant));
+        float q = (b > 0) ? -0.5f * (b + std::sqrt(discriminant)) :
+                            -0.5f * (b - std::sqrt(discriminant));
         
         x0 = q / a;
         x1 = c / q;
     }
     if(x0 > x1) std::swap(x0, x1);
 
-
     return true;
-
 }

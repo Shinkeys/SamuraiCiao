@@ -15,13 +15,13 @@ private:
 public:
     std::optional<std::pair<uint32_t, uint32_t>> GetMeshStartEndIndices(const std::string& entityName) const;
     uint32_t GetAssetsVAO() const { return _model->GetModelsEBOData().VAO;}
-    void AddEntityToLoad(ObjectDescriptor objectDesc);
+    void AddEntityToLoad(const ObjectDescriptor& objectDesc);
     void BindStructures();
     // void DrawParticularModel(const std::string& entityName);
     void ApplyTransformation(const std::string& entityName, const glm::mat4 modelMat);
     const auto& GetAssetStorage() const { return _assetStorage;}
     const glm::mat4* GetTransformMatrixByName(const std::string& name) const;
-    const auto& GetBuffers() const { return _model.get()->GetModelsEBOData();}
+    const auto& GetBuffers() const { return _model->GetModelsEBOData();}
     std::optional<std::vector<Vertex>> GetMeshVerticesByName(const std::string& entityName)            const;
 
     std::optional<glm::vec3> GetMeshCenterPoint(const std::string& entityName);

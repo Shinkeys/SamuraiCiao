@@ -7,7 +7,7 @@ namespace RenderManager
     std::unordered_map<RenderPassType, std::vector<const CurrentModelDesc *>> _renderTypes;
     std::unordered_map<RenderPassType, Shader> _shaderTypes;
 
-    std::unordered_set<TextureDesc, TextureHashFunc> _additionalTextures;
+    std::vector<TextureDesc> _additionalTextures;
     std::unordered_set<MatrixDesc, MatrixHashFunc>   _additionalMatrices;
     std::unordered_set<VectorDesc, VectorHashFunc>   _additionalVectors;
     
@@ -56,7 +56,7 @@ void RenderManager::DispatchMeshToDraw(const ObjectDescriptor &objDesc, const As
 
 void RenderManager::BindAdditionalVectors(const RenderPassType type, Shader *shader)
 {
-    if (_additionalVectors.size() == 0)
+    if (_additionalVectors.empty())
     {
         // std::cout << "No commands to bind additional vectors\n";
         return;
@@ -104,16 +104,22 @@ void RenderManager::AddShaderByType(Shader &&shader, RenderPassType renderType)
 
 void RenderManager::AttachTextureToDraw(const TextureDesc &texDesc)
 {
-    _additionalTextures.insert(texDesc);
+    _additionalTextures.push_back(texDesc);
 }
 
 void RenderManager::AttachMatrixToBind(const MatrixDesc &matrixDesc)
 {
+    if (_additionalMatrices.contains(matrixDesc))
+        _additionalMatrices.erase(matrixDesc);
+
     _additionalMatrices.insert(matrixDesc);
 }
 
 void RenderManager::AttachVectorToBind(const VectorDesc &vectorDesc)
 {
+    if (_additionalVectors.contains(vectorDesc))
+        _additionalVectors.erase(vectorDesc);
+
     _additionalVectors.insert(vectorDesc);
 }
 
@@ -159,7 +165,7 @@ void RenderManager::DrawDepthPass(AssetManager& manager, const glm::mat4& viewPr
 
 void RenderManager::BindAdditionalMatrices(const RenderPassType type, Shader *shader)
 {
-    if (_additionalMatrices.size() == 0)
+    if (_additionalMatrices.empty())
     {
         // std::cout << "No commands to bind additional matrices\n";
         return;
@@ -181,23 +187,20 @@ void RenderManager::BindAdditionalMatrices(const RenderPassType type, Shader *sh
 
 void RenderManager::BindAdditionalTextures(const RenderPassType type)
 {
-    if (_additionalTextures.size() == 0)
+    if (_additionalTextures.empty())
     {
         // std::cout << "No commands to bind additional textures\n";
         return;
     }
 
-    const int32_t mainShaderTextureCount = sizeof(ModelTexDesc) / sizeof(ModelTexDesc::diffuseId);
-
-    int32_t currentTextureId = 0;
     for (const auto &texture : _additionalTextures)
     {
-        if (type == RenderPassType::RENDER_MAIN)
+        if (texture.bindSlot == 0)
         {
-            currentTextureId = mainShaderTextureCount + 1;
+            std::cout << "Can't bind additional texture " << texture.name << "  Texture bind slot is 0\n";\
+            return;
         }
-        glBindTextureUnit(currentTextureId, texture.handle);
-        ++currentTextureId;
+        glBindTextureUnit(texture.bindSlot, texture.handle);
     }
 }
 

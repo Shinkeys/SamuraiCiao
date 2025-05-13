@@ -3,7 +3,7 @@
 
 #include "../../headers/assets/assetManager.h"
 #include "../systems/shaders.h"
-#include "../scene/lanterns.h"
+#include "lightSources.h"
 #include "../systems/camera.h"
 #include "../types/openglTypes.h"
 
@@ -14,11 +14,11 @@ private:
     const float _nearPlane = 0.1f;
     const float _farPlane = 500.0f;
     std::pair<uint32_t, uint32_t> _shadowTexExtent{0, 0};
-    Lanterns* _lanterns = nullptr;
+    LightSources* _lightSources = nullptr;
     DepthFramebuffer _frameBuffer;
 public:
 
-    void PassLanterns(Lanterns* lant);
+    void PassLanterns(LightSources* lant);
     void MakeDynamicArea(float zNear, float zFar);
     void Prepare();
     void DebugShadows();

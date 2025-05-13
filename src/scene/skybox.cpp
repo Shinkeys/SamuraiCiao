@@ -9,7 +9,7 @@ Skybox::Skybox(AssetManager& manager) : _assetManager{manager}
 
 uint32_t Skybox::StbiLoadCubeTexture(std::vector<std::string> entityNames)
 {
-    if(entityNames.size() == 0)
+    if(entityNames.empty())
     {
         std::cout << "Cannot load skybox, vector is empty\n";
         return 0;
@@ -55,9 +55,10 @@ uint32_t Skybox::StbiLoadCubeTexture(std::vector<std::string> entityNames)
 void Skybox::Prepare()
 {   
     ObjectDescriptor skyboxObject;
-    skyboxObject.name = "skybox.gltf";
+    skyboxObject.name = "skybox";
+    skyboxObject.fileName = "skybox.gltf";
     skyboxObject.type = EntityType::TYPE_SKYBOX;
-
+    skyboxObject.storageFolder = "Skybox";
     Shader skyboxShader;
     skyboxShader.LoadShaders("skybox.vert", "skybox.frag");
     _assetManager.AddEntityToLoad(skyboxObject);

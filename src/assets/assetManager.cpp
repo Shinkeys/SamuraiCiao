@@ -151,13 +151,13 @@ std::optional<std::pair<uint32_t, uint32_t>> AssetManager::GetMeshStartEndIndice
 }
 
 
-void AssetManager::AddEntityToLoad(ObjectDescriptor objectDesc)
+void AssetManager::AddEntityToLoad(const ObjectDescriptor& objectDesc)
 {
-    if(_assetStorage.find(objectDesc.name) == _assetStorage.end())
+    if(!_assetStorage.contains(objectDesc.name))
     {
-        _assetStorage.insert({objectDesc.name, {_model.get()->LoadModel(objectDesc.name, objectDesc.type)}});
+        _assetStorage.insert({objectDesc.name, {_model->LoadModel(objectDesc)}});
     }
-    if(_assetMatrices.find(objectDesc.name) == _assetMatrices.end())
+    if(!_assetMatrices.contains(objectDesc.name))
     {
         glm::mat4 model = glm::mat4(1.0f);
         _assetMatrices.insert({objectDesc.name, model});
@@ -177,7 +177,7 @@ void AssetManager::ApplyTransformation(const std::string& entityName, const glm:
 void AssetManager::BindStructures()
 {
     // binding all models data for opengl
-	OpenglBackend::BindModelEBO(_model.get()->GetModelsEBOData());
+	OpenglBackend::BindModelEBO(_model->GetModelsEBOData());
 }
 
 

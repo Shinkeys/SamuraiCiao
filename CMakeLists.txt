@@ -50,6 +50,7 @@ add_library(imgui STATIC
     vendor/imgui/backends/imgui_impl_glfw.cpp
     vendor/imgui/backends/imgui_impl_opengl3.cpp
     vendor/imgui/imgui_demo.cpp
+        headers/types/lightTypes.h
 )
 target_include_directories(imgui PRIVATE 
     vendor/glfw/include

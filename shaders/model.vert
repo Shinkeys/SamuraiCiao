@@ -11,39 +11,59 @@ uniform mat4 normalMatrix;
 
 uniform mat4 lightMatrix;
 
-out vec2 TexCoord;
-struct VSInput
+
+
+const uint MAX_CONCURRENT_SHADOWS_SOURCES = 4;
+struct LightsDescShadows
 {
-    vec3 viewlightDir;
+    vec3 lightsShadowsData;
+    uint lightForShadowsPresence;
 };
+uniform LightsDescShadows lightsForShadows[MAX_CONCURRENT_SHADOWS_SOURCES];
 
-uniform VSInput vsInput;
+out VERTEX_OUT
+{
+    vec2 texCoord;
+    vec3 tangentFragPos;
+    mat3 TBN;
+    vec3 normals;
 
-out vec3 viewfragPos;
-out vec3 viewlightDir;
-out vec3 lightViewFragPos;
-out vec3 lightViewLightDir;
+    vec3 viewFragPos;
 
-out vec3 normals;
+    vec3 lightViewFragPos;
+
+    // Can't output structure, sadge
+    vec3 lightsShadowsData[MAX_CONCURRENT_SHADOWS_SOURCES];
+    vec3 lightViewFragPos[MAX_CONCURRENT_SHADOWS_SOURCES];
+    uint lightForShadowsPresence[MAX_CONCURRENT_SHADOWS_SOURCES];
+} vertex_out;
+
+
 void main()
 {
     gl_Position  = projection * view * model * vec4(aPos, 1.0);
-    TexCoord = aTexCoord;
-    // to check
-    lightViewLightDir = vec3(mat3(lightMatrix) * vsInput.viewlightDir);
-    lightViewFragPos = vec3(lightMatrix * model * vec4(aPos, 1.0));
+    vertex_out.texCoord = aTexCoord;
+    // This is basically only for lights which affects shadow mapping(e.g should produce shadows)
+    for(uint i = 0; i < MAX_CONCURRENT_SHADOWS_SOURCES; ++i)
+    {
+        if(lightsForShadows[i].lightForShadowsPresence > 0)
+        {
+            vertex_out.lightsShadowsData[i] = vec3(mat3(lightMatrix) * lightsForShadows[i].lightsShadowsData);
+            vertex_out.lightViewFragPos[i] = vec3(lightMatrix * model * vec4(aPos, 1.0));
+        }
+    }
 
     // normal mapping
     // calculating tangents, normals via normal matrix because if model would have heterogeneous
     // scale, would break normals, tangents etc
-    normals = normalize(mat3(normalMatrix) * aNormal);
+    vec3 normals = normalize(mat3(normalMatrix) * aNormal);
     vec3 tangents = normalize(mat3(normalMatrix) * aTangent);
     vec3 bitangents = normalize(cross(normals, tangents));
     // Gram-Schmidt process to make vectors orthogonal back
     tangents = normalize(tangents - dot(tangents, normals) * normals);
 
-    mat3 TBN = transpose(mat3(tangents, bitangents, normals));
-    
-    viewlightDir = vec3(TBN * mat3(view * model) * vec3(vsInput.viewlightDir));
-    viewfragPos = vec3(TBN * mat3(view * model) * vec3(aPos));
+    vertex_out.normals = normals;
+    vertex_out.TBN = transpose(mat3(tangents, bitangents, normals));
+    vertex_out.viewFragPos = vec3(view * model * vec4(aPos, 1.0));
+    vertex_out.tangentFragPos = vertex_out.TBN * aPos;
 }

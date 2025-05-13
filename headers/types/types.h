@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <optional>
 #include <queue>
+#include <filesystem>
 
 class Shader;
 
@@ -35,7 +36,9 @@ namespace SamuraiDefines
 
 struct ObjectDescriptor
 {
-    std::string name = "";
+    std::string name;
+    std::string fileName;
+    std::filesystem::path storageFolder;
     EntityType type = EntityType::TYPE_NONE;
 };
 
@@ -68,23 +71,6 @@ public:
         return *this;
     }
 };
-
-struct LightDescriptor
-{
-    enum class LightType
-    {
-        LIGHT_DIRECTIONAL,
-        LIGHT_POINT,
-    };
-
-    std::string name;
-    bool influenceScene; // Does light influence current scene
-    glm::vec3 data; // should be or direction or position, depending on the type
-    glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
-    LightType type;
-};
-
-
 
 struct Matrices // MVP matrices for current camera
 {
@@ -168,16 +154,6 @@ struct SSBOBind
     int32_t type = 0x00;
     int32_t size = 0;
     T* data;
-    uint32_t* ssboId = nullptr;
-};
-
-struct SSBOBindVec4
-{
-    const uint32_t*  binding = nullptr;
-
-    int32_t type = 0x00;
-    int32_t size = 0;
-    glm::vec4* data;
     uint32_t* ssboId = nullptr;
 };
 

@@ -12,7 +12,7 @@ namespace RenderManager
     extern std::unordered_map<std::string, const CurrentModelDesc*> _meshDispatchesHandle;
     extern std::unordered_map<RenderPassType, std::vector<const CurrentModelDesc*>> _renderTypes;
     extern std::unordered_map<RenderPassType, Shader> _shaderTypes;
-    extern std::unordered_set<TextureDesc, TextureHashFunc> _additionalTextures;
+    extern std::vector<TextureDesc> _additionalTextures;
     extern std::unordered_set<MatrixDesc, MatrixHashFunc>   _additionalMatrices;
     extern std::unordered_set<VectorDesc, VectorHashFunc>   _additionalVectors;
 
@@ -36,6 +36,4 @@ namespace RenderManager
      // vectors
      void BindAdditionalVectors(const RenderPassType type, Shader* shader);
      void AttachVectorToBind(const VectorDesc& vectorDesc);
-};  
-
-
+};

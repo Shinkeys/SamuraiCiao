@@ -1,25 +1,60 @@
 #version 460 core
 
-
-in vec2 TexCoord;
-
 layout(binding = 1) uniform sampler2D diffuse;
 layout(binding = 2) uniform sampler2D specular;
 layout(binding = 3) uniform sampler2D normal;
 layout(binding = 4) uniform sampler2D emission;
+layout(binding = 5) uniform sampler2D shadowsTexture;
+
+// Lights grid for forward+ render
+layout(rg32ui, binding = 6) uniform uimage2D lightsGrid;
+
+struct ObjectTextures
+{
+    vec3 diffuseTex;
+    vec3 specularTex;
+    vec3 emissionTex;
+    vec3 normalTex;
+};
+
+
 uniform bool normalMapping;
 
-in vec3 viewfragPos;
-in vec3 viewlightDir;
-in vec3 lightViewLightDir;
 
-in vec3 lightViewFragPos;
+const uint MAX_CONCURRENT_SHADOWS_SOURCES = 4;
+in VERTEX_OUT
+{
+    vec2 texCoord;
+    vec3 tangentFragPos;
+    mat3 TBN;
+    vec3 normals;
+
+    vec3 viewFragPos;
+
+    vec3 lightsShadowsData[MAX_CONCURRENT_SHADOWS_SOURCES];
+    vec3 lightViewFragPos[MAX_CONCURRENT_SHADOWS_SOURCES];
+    uint lightForShadowsPresence[MAX_CONCURRENT_SHADOWS_SOURCES];
+} fragment_in;
 
 
-in vec3 normals;
+const int LIGHT_DIRECTIONAL = 0;
+const int LIGHT_POINT = 1;
+struct LightDesc
+{
+    vec3 data;
+    vec3 color;
+    float radius;
+    int type;
+    bool affectsOnShadows;
+};
 
-uniform sampler2D shadowsTexture;
-float CalculateShadows()
+// DATA SHOULD BE IN VIEW SPACE
+layout(std430, binding = 7) buffer lightsBuffer
+{
+    LightDesc lights[];
+};
+
+float CalculateShadows(vec3 lightViewFragPos, vec3 normals, vec3 lightViewLightDir)
 {
     vec3 perspDivide = lightViewFragPos.xyz;
 
@@ -57,65 +92,153 @@ float CalculateShadows()
     return shadow;
 }
 
+float Square(float x)
+{
+    return x * x;
+}
+
+float AttenuatePointLight(vec3 viewLightPos, vec3 viewFragPos, float radius)
+{
+    const float distance = length(viewLightPos - viewFragPos);
+    const float decaySpeed = 1.0;
+    const float maxIntensity = 2.5; // basically represents 'start' point of the light brightness
+    const float s = distance / radius;
+    const float sqrS = Square(s);
+    // check if distance < radius, otherwise would get wrong lightness
+    // values at larger distances
+    if(s >= 1.0)
+        return 0.0;
+
+    return maxIntensity * Square(1 - sqrS) / (1 + decaySpeed * sqrS);
+}
+
+vec3 CalculatePointLight(ObjectTextures textures)
+{
+    const float lightColorAmbient = 0.22;
+
+    vec3 lightDir = normalize(fragment_in.viewFragPos - fragment_in.viewLightData);
+    vec3 viewDirection = normalize(-fragment_in.viewFragPos);
+
+    if(normalMapping)
+    {
+        // Convert to tangent space
+        lightDir = fragment_in.TBN * lightDir;
+        viewDirection = fragment_in.TBN * viewDirection;
+    }
+    const float dotProduct = dot(textures.normalTex, lightDir);
+    float diffuseLight = max(dotProduct, 0.0);
+    vec3 diffuseVec = diffuseLight * lightDescriptor.color;
+
+
+    const vec3 halfwayDirection = normalize(lightDir + viewDirection);
+    const float specularShininess = 32;
+    const float specularLight = pow(max(dot(textures.normalTex, halfwayDirection), 0.0), specularShininess);
+    vec3 specularVec = specularLight * textures.specularTex * lightDescriptor.color;
+
+    const vec3 ambientVec = lightColorAmbient * textures.diffuseTex;
+
+    const vec3 emissionVec = textures.emissionTex;
+
+    float attenuation = AttenuatePointLight(fragment_in.viewLightData, fragment_in.viewFragPos, lightDescriptor.radius);
+
+    diffuseVec  *= attenuation;
+    specularVec *= attenuation;
+
+    return ambientVec + diffuseVec + specularVec + emissionVec;
+}
+
+vec3 CalculateDirectionalLight(ObjectTextures textures)
+{
+    const float lightColorAmbient = 0.32;
+    vec3 lightDir = normalize(fragment_in.viewLightData);
+    vec3 viewDirection = normalize(fragment_in.viewFragPos);
+    if(normalMapping)
+    {
+        // Convert to tangent space
+        lightDir = fragment_in.TBN * lightDir;
+        viewDirection = fragment_in.TBN * viewDirection;
+    }
+    // diffuse
+    const float dotProduct = dot(textures.normalTex, lightDir);
+    const float diffuseLightPower = 1.75;
+    float diffuseLight = max(dotProduct, 0.0);
+    vec3  diffuseVec = diffuseLight * textures.diffuseTex * diffuseLightPower * lightDescriptor.color;
+
+    // specular
+    // blinn phong model with halfway vector is far more useful than phong model as halfway never exceeds angle 90
+    // except cases when light dir under the ground
+    const vec3 halfwayDirection = normalize(lightDir + viewDirection);
+    const float specularShininess = 32;
+    const float specularLight = pow(max(dot(textures.normalTex, halfwayDirection), 0.0), specularShininess);
+    vec3 specularVec = specularLight * textures.specularTex * lightDescriptor.color;
+
+    // ambient
+    const vec3 ambientVec = lightColorAmbient * textures.diffuseTex;
+    // emission
+    const vec3 emissionVec = textures.emissionTex;
+
+    return ambientVec + diffuseVec + specularVec + emissionVec;
+}
 
 vec3 CalculateLighting()
 {
+    ObjectTextures textures;
     // textures
-    vec3 diffuseTex = vec3(1.0, 1.0, 1.0);
-    diffuseTex = texture(diffuse, TexCoord).rgb;
-    
-    vec3 specularTex = vec3(0.0, 0.0, 0.0);
-    specularTex = texture(specular, TexCoord).rgb;
+    textures.diffuseTex = vec3(1.0, 1.0, 1.0);
+    textures.diffuseTex = texture(diffuse, fragment_in.texCoord).rgb;
 
-    vec3 emissionTex = vec3(1.0, 1.0, 0.0);
-    emissionTex = texture(emission, TexCoord).rgb;
+    textures.specularTex = vec3(0.0, 0.0, 0.0);
+    textures.specularTex = texture(specular, fragment_in.texCoord).rgb;
 
-    vec3 normalMap = normals;
+    textures.emissionTex = vec3(1.0, 1.0, 0.0);
+    textures.emissionTex = texture(emission, fragment_in.texCoord).rgb;
+
+    textures.normalTex = fragment_in.normals;
     if(normalMapping == true)
     {
-        normalMap = texture(normal, TexCoord).rgb;
+        textures.normalTex = texture(normal, fragment_in.texCoord).rgb;
         // converting from [0,1] range to [-1,1], otherwise normals would look only 1 side
-        normalMap = normalMap * 2.0 - 1.0;
+        textures.normalTex = textures.normalTex * 2.0 - 1.0;
     }
 
-    // lights
-    const float lightColorAmbient = 0.25;
-    const vec3 lightColorDiffuse = vec3(0.5, 0.5, 0.5);
-    const vec3 lightColorSpecular = vec3(1.0, 1.0, 1.0);
+
+    vec3 colors = vec3(0.0);
+    float shadow = 0.0;
+    switch(lightDescriptor.type)
+    {
+    case LIGHT_DIRECTIONAL:
+        colors = CalculateDirectionalLight(textures);
+
+        if(lightDescriptor.affectsOnShadows)
+        {
+            for(uint i = 0; i < MAX_CONCURRENT_SHADOWS_SOURCES; ++i)
+            {
+                if(fragment_in.lightForShadowsPresence[i] > 0)
+                    shadow += CalculateShadows(fragment_in.lightViewFragPos[i], textures.normalTex, fragment_in.lightsShadowsData[i]);
+            }
+        }
+
+        break;
+    case LIGHT_POINT:
+        colors = CalculatePointLight(textures);
+
+        if(lightDescriptor.affectsOnShadows)
+        {
+            const vec3 lightViewDir = fragment_in.lightViewFragPos - fragment_in.lightViewLightData;
+            for(uint i = 0; i < MAX_CONCURRENT_SHADOWS_SOURCES; ++i)
+            {
+                if(fragment_in.lightForShadowsPresence[i] > 0)
+                    shadow += CalculateShadows(fragment_in.lightViewFragPos[i], textures.normalTex, fragment_in.lightsShadowsData[i]);
+            }
+        }
+        break;
+
+    default:
+        return colors;
+    }
 
 
-    const vec3 lightDirection = normalize(-viewlightDir);
-
-    // diffuse
-    const float dotProduct = dot(normalMap, lightDirection);
-    const float diffuseLightPower = 5.0;
-    float diffuseLight = max(dotProduct, 0.0);
-    vec3 diffuseVec = (diffuseLight * diffuseTex * diffuseLightPower) * lightColorDiffuse;
-
-    // specular
-    const vec3 viewDirection = normalize(-viewfragPos);
-    // blinn phong model with halfway vector is far more useful than phong model as halfway never exceeds angle 90
-    // except cases when light dir under the ground
-    const vec3 halfwayDirection = normalize(-lightDirection + viewDirection);
-    const float specularShininess = 32;
-    const float specularLight = pow(max(dot(viewDirection, halfwayDirection), 0.0), specularShininess);
-    vec3 specularVec = (specularLight * specularTex) * lightColorSpecular;
-
-    // ambient
-    const vec3 ambientVec = lightColorAmbient * diffuseTex;
-
-    // attenuation means that light attenuate depends on distance
-    const vec3 imaginarySunPos = viewfragPos - vec3(0.0f, 2.5f, -2.0f);
-    const float distance = length(imaginarySunPos - viewfragPos);
-    const float attenuation = 1.0 / (distance);
-
-    diffuseVec *= attenuation;
-    specularVec *= attenuation;
-
-
-    const float shadow = CalculateShadows();
-
-    vec3 res = ((ambientVec) * (1.0 - shadow)) + (diffuseVec + specularVec + emissionTex);
+    vec3 res = (1.0 - shadow) * colors;
     return res;
 }
 

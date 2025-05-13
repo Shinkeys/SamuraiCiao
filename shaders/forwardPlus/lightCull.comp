@@ -1,18 +1,21 @@
 #version 460 core
-#extension NV_shader_atomic_float : require
+
+
+#define INT_MAX 2147483647
+#define INT_MIN -2147483647 - 1
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 struct LightDesc
 {
-    vec3 position;
+    vec3 positionView;
     float radius;
 };
 
 uniform sampler2D depthTexture;
-
-const int maxLights = 512;
+uniform mat4 inverseProjection;
 uniform int lightsCounter;
+
 layout(std430, binding = 1) buffer lightsBuffer
 {
     LightDesc lights[];
@@ -27,57 +30,61 @@ struct ViewFrustum
 };
 layout(std430, binding = 2) buffer frustumBuffer
 {
-    ViewFrustum viewFrustumsBuffer[16];
+    ViewFrustum viewFrustumsBuffer[];
 };
 
 layout(std430, binding = 3) buffer lightsGlobalIndBuffer
 {
-    int lightsGlobalIndList[];
+    uint lightsGlobalIndList[];
 };
 
-bool CheckIfLightIsInside(in int lightIndex, in ViewFrustum tileFrust)
-{
-    return false;
-}
+// Need this grid to store start index and count of lights for the current tile in frag shader
+layout(rg32ui, binding = 4) uniform uimage2D lightsGrid;
 
-// Sphere data to handle intersection of point light.
-// If would need spotlight - use cone.
-struct Sphere
-{
-    vec3 center;
-    float radius;
-};
 
 // SHARED DATA
-shared float minDepth;
-shared float maxDepth;
-shared int globalLightIndex;
-void CullLights(int tileIndex)
+shared uint minDepth;
+shared uint maxDepth;
+shared uint frustumIndex; // current frustum of the actual tile
+shared uint localLightCount;
+shared uint localLightIndices[1024];
+shared uint lightGridStartIndex;
+
+void AppendLightOpaque(uint lightIndex)
 {
-    int localLightIndices[maxLights];
-    ViewFrustum frustum = viewFrustumsBuffer[tileIndex];
-    int localCounter = 0;
-    // To prevent data races
-    int lightsLocalList[maxLights];
-
-    for(int i = 0; i < lightsCounter; ++i)
-    {
-        if(CheckIfLightIsInside(i, frustum))
-        {
-            if(localCounter < maxLights)
-                lightsLocalList[localCounter++] = i;
-
-        }
-    }
-
-
-    int offset = atomicAdd(globalLightIndex, localCounter);
-    for(int i = 0; i < localCounter; ++i)
-    {
-        lightsGlobalIndList[offset + i] = lightsLocalList[i];
-    }
+    uint index = atomicAdd(localLightCount, 1);
+    if(index < 1024)
+        localLightIndices[index]  = lightIndex;
 }
 
+bool CheckIntersection(LightDesc light, ViewFrustum tileFrustum, float zNear, float zFar)
+{
+    // Inversed because gl is righthanded
+    if(light.positionView.z - light.radius > zNear || light.positionView.z + light.radius < zFar)
+        return false;
+
+
+    for(int i = 0; i < 4;  ++i)
+    {
+        // Inversed because gl is righthanded
+        bool sphereInsidePlane = dot(tileFrustum.normal[i].xyz, light.positionView) - tileFrustum.distToPlane[i] < -light.radius;
+        if(sphereInsidePlane)
+            return false;
+
+    }
+
+    return true;
+}
+
+vec4 ClipToView(vec4 data)
+{
+    // Convert clip to view
+    vec4 dataView = inverseProjection * data;
+    // Perspective division
+    dataView /= dataView.w;
+
+    return dataView;
+}
 
 void main()
 {
@@ -85,9 +92,69 @@ void main()
     vec2 texCoord = gl_GlobalInvocationID.xy;
     // Can use float because of extension, if would want to support amd - rework atomics for floats.
     float depthFloat = texture(depthTexture, texCoord).r;
+    uint depthUint = floatBitsToUint(depthFloat);
 
-    // if(gl_WorkGroupID)
+    // Locking instantiation of the SHARED variables only for the first thread in the workgroup
+    if(gl_LocalInvocationIndex == 0)
+    {
+        minDepth = INT_MAX;
+        maxDepth = 0;
+        localLightCount = 0;
+        frustumIndex = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y;
+    }
 
+    // Synchronize all the threads in the current workgroup
+    barrier();
+
+    atomicMin(minDepth, depthUint);
+    atomicMin(maxDepth, depthUint);
+
+    barrier();
+
+    float minDepthFloat = uintBitsToFloat(minDepth);
+    float maxDepthFloat = uintBitsToFloat(maxDepth);
+
+    // Need those as frustums computed in the view space
+    float minDepthView  = ClipToView(vec4(0.0, 0.0, minDepthFloat, 1.0)).z;
+    float maxDepthView  = ClipToView(vec4(0.0, 0.0, maxDepthFloat, 1.0)).z;
+    float nearPlaneView = ClipToView(vec4(0.0, 0.0, 0.0, 1.0)).z;
+
+
+    // Basically processing 256 lights in parallel
+    uint totalThreadCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
+    uint passCount = (lightsCounter + totalThreadCount - 1) / totalThreadCount;
+
+    for(uint i = 0; i < passCount; ++i)
+    {
+        uint lightIndex = i * totalThreadCount + gl_LocalInvocationIndex;
+
+        // Preventing overrun(out of bounds)
+        lightIndex = min(lightIndex, lightsCounter);
+
+        if(CheckIntersection(lights[lightIndex], viewFrustumsBuffer[frustumIndex], nearPlaneView, maxDepthView))
+        {
+            AppendLightOpaque(lightIndex);
+        }
+    }
+
+    barrier();
+
+    if(gl_LocalInvocationIndex == 0)
+    {
+        uint startIndex = atomicAdd(lightGridStartIndex, localLightCount);
+        ivec2 coords = ivec2(gl_LocalInvocationID.xy);
+        imageStore(lightsGrid, coords, uvec4(startIndex, localLightCount, 0, 0)); // unlucky cuz need to use uvec4 only
+    }
+
+    barrier();
+
+
+//    // to check
+    uint threadsInGroup = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
+    for(uint i = gl_LocalInvocationIndex; i < localLightCount; i += threadsInGroup)
+    {
+        lightsGlobalIndList[i] = localLightIndices[i];
+    }
 
 
 }

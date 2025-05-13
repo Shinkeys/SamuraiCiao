@@ -2,7 +2,7 @@
 #include "window.h"
 #include "scene/temple.h"
 #include "scene/skybox.h"
-#include "scene/lanterns.h"
+#include "graphics/lightSources.h"
 #include "graphics/shadows.h"
 #include "systems/renderManager.h"
 #include "systems/shaders.h"
@@ -20,7 +20,7 @@ private:
     void Render() override;
 
     void InterfaceUpdate();
-    Lanterns _lanternsObjects;
+    LightSources _lanternsObjects;
     AssetManager _assetManager;
     ShadowsHelper _shadowsHelper;
     

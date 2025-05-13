@@ -4,9 +4,9 @@
 #include "../../headers/systems/interface.h"
 
 
-void ShadowsHelper::PassLanterns(Lanterns* lant)
+void ShadowsHelper::PassLanterns(LightSources* lant)
 {
-    _lanterns = lant;
+    _lightSources = lant;
 }
 
 
@@ -27,7 +27,7 @@ void ShadowsHelper::Prepare()
         _shadowTexExtent.second, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
 
-    const std::array<float, 4> clampColor = {1.0f, 1.0f, 1.0f, 1.0f}; 
+    constexpr std::array<float, 4> clampColor = {0.5f, 0.5f, 0.5f, 1.0f};
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, clampColor.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -58,7 +58,7 @@ void ShadowsHelper::Prepare()
     depthTexDesc.name = "shadowsTexture";
     depthTexDesc.type = RenderPassType::RENDER_MAIN;
     depthTexDesc.handle = _frameBuffer.texture;
-
+    depthTexDesc.bindSlot = 5;
 
     RenderManager::AttachTextureToDraw(depthTexDesc);
 
@@ -68,27 +68,28 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
 {
     glBindVertexArray(manager.GetAssetsVAO());
     
-    if(_lanterns != nullptr)
+    if(_lightSources != nullptr)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer.buffer);
         OpenglBackend::SetViewport(_shadowTexExtent.first, _shadowTexExtent.second);
 
 
         const glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, _nearPlane, _farPlane);
-        for(const auto& light : _lanterns->GetLightSources())
+        for(const auto& light : _lightSources->GetLightSources())
         {
-            // making different calculations for different lights, now assume that there is only 1 light on scene; TO DO
+            if (light.second.type != LightDescriptor::LightType::LIGHT_DIRECTIONAL)
+                continue;
 
             glm::mat4 lightMatrix = glm::mat4(1.0f);
             const std::string lightMatrixName = "lightMatrix";
 
-            if(light.type == LightDescriptor::LightType::LIGHT_DIRECTIONAL)
+            if(light.second.type == LightDescriptor::LightType::LIGHT_DIRECTIONAL)
             {
-                const glm::vec3 lightViewPoint = glm::vec3(0.0f, 200.0f, 400.0f);
+                const glm::vec3 lightViewPoint = glm::vec3(0.0f, 150.0f, 355.0f);
                 const glm::vec3 centerPointTemporary = glm::vec3(0.0f, 0.0f, -20.0f);
                 const glm::mat4 lightView = glm::lookAt(lightViewPoint, centerPointTemporary, glm::vec3(0.0f, 1.0f, 0.0f));
                 lightMatrix = lightProj * lightView;
-                
+
             }
             // adding this matrix to draw in main pass too
             MatrixDesc matrixDesc;
@@ -96,11 +97,9 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
             matrixDesc.name = lightMatrixName;
             matrixDesc.type = RenderPassType::RENDER_MAIN;
             RenderManager::AttachMatrixToBind(matrixDesc);
-            
+
             RenderManager::DrawDepthPass(manager, matrixDesc.data);
 
-
-            break;
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
