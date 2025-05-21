@@ -17,25 +17,22 @@ const uint MAX_CONCURRENT_SHADOWS_SOURCES = 4;
 struct LightsDescShadows
 {
     vec3 lightsShadowsData;
-    uint lightForShadowsPresence;
+    bool lightForShadowsPresence;
 };
 uniform LightsDescShadows lightsForShadows[MAX_CONCURRENT_SHADOWS_SOURCES];
 
 out VERTEX_OUT
 {
     vec2 texCoord;
-    vec3 tangentFragPos;
     mat3 TBN;
-    vec3 normals;
 
-    vec3 viewFragPos;
-
-    vec3 lightViewFragPos;
+    vec3 worldFragPos;
+    vec3 backupNormals;
 
     // Can't output structure, sadge
     vec3 lightsShadowsData[MAX_CONCURRENT_SHADOWS_SOURCES];
     vec3 lightViewFragPos[MAX_CONCURRENT_SHADOWS_SOURCES];
-    uint lightForShadowsPresence[MAX_CONCURRENT_SHADOWS_SOURCES];
+
 } vertex_out;
 
 
@@ -46,7 +43,7 @@ void main()
     // This is basically only for lights which affects shadow mapping(e.g should produce shadows)
     for(uint i = 0; i < MAX_CONCURRENT_SHADOWS_SOURCES; ++i)
     {
-        if(lightsForShadows[i].lightForShadowsPresence > 0)
+        if(lightsForShadows[i].lightForShadowsPresence)
         {
             vertex_out.lightsShadowsData[i] = vec3(mat3(lightMatrix) * lightsForShadows[i].lightsShadowsData);
             vertex_out.lightViewFragPos[i] = vec3(lightMatrix * model * vec4(aPos, 1.0));
@@ -56,14 +53,14 @@ void main()
     // normal mapping
     // calculating tangents, normals via normal matrix because if model would have heterogeneous
     // scale, would break normals, tangents etc
-    vec3 normals = normalize(mat3(normalMatrix) * aNormal);
-    vec3 tangents = normalize(mat3(normalMatrix) * aTangent);
-    vec3 bitangents = normalize(cross(normals, tangents));
+    vec3 normals = normalize(mat3(model) * aNormal);
+    vec3 tangents = normalize(mat3(model) * aTangent);
     // Gram-Schmidt process to make vectors orthogonal back
     tangents = normalize(tangents - dot(tangents, normals) * normals);
+    vec3 bitangents = normalize(cross(normals, tangents));
 
-    vertex_out.normals = normals;
-    vertex_out.TBN = transpose(mat3(tangents, bitangents, normals));
-    vertex_out.viewFragPos = vec3(view * model * vec4(aPos, 1.0));
-    vertex_out.tangentFragPos = vertex_out.TBN * aPos;
+    vertex_out.TBN = mat3(tangents, bitangents, normals);
+    vertex_out.worldFragPos = vec3(model * vec4(aPos, 1.0));
+    vertex_out.backupNormals = aNormal;
+
 }

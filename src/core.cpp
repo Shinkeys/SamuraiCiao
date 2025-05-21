@@ -59,7 +59,8 @@ bool Core::Initialize()
     skyboxObject.Prepare();
 
     // Lantern to do
-    _lanternsObjects.Prepare(_assetManager);
+    _lightSources.Prepare(_assetManager);
+    _renderInstance.PassLightSources(_lightSources);
     
     RenderManager::DispatchMeshToDraw(characterObject, _assetManager);
     RenderManager::DispatchMeshToDraw(groundObject, _assetManager);
@@ -67,7 +68,7 @@ bool Core::Initialize()
     RenderManager::AddShaderByType(std::move(mainShader), RenderPassType::RENDER_MAIN);
     
     // shadows
-    _shadowsHelper.PassLanterns(&_lanternsObjects);
+    _shadowsHelper.PassLanterns(&_lightSources);
     _shadowsHelper.Prepare();
     _assetManager.BindStructures();
 
@@ -139,7 +140,7 @@ void Core::InterfaceUpdate()
         _particles.EnableParticles();
         _collision.InterfaceUpdate();
         _editor.InterfaceUpdate();
-        _lanternsObjects.InterfaceLightsCreation();
+        _lightSources.InterfaceLightsCreation();
 
         // must be last: finishing frame
         SamuraiInterface::RenderImgui();

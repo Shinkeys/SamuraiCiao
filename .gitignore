@@ -19,6 +19,9 @@ imgui.ini
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
+# Clion
+.idea/*
+
 # Local History for Visual Studio Code
 .history/
 

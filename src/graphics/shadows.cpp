@@ -77,13 +77,13 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
         const glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, _nearPlane, _farPlane);
         for(const auto& light : _lightSources->GetLightSources())
         {
-            if (light.second.type != LightDescriptor::LightType::LIGHT_DIRECTIONAL)
+            if (light.second.type != LightType::LIGHT_DIRECTIONAL)
                 continue;
 
             glm::mat4 lightMatrix = glm::mat4(1.0f);
             const std::string lightMatrixName = "lightMatrix";
 
-            if(light.second.type == LightDescriptor::LightType::LIGHT_DIRECTIONAL)
+            if(light.second.type == LightType::LIGHT_DIRECTIONAL)
             {
                 const glm::vec3 lightViewPoint = glm::vec3(0.0f, 150.0f, 355.0f);
                 const glm::vec3 centerPointTemporary = glm::vec3(0.0f, 0.0f, -20.0f);

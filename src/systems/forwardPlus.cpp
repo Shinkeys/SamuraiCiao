@@ -26,74 +26,60 @@
 //     }
 // }
 
-void ForwardPlusRender::InitializeFrustumCull(uint32_t width, uint32_t height)
+
+void ForwardPlusRender::PassLightSources(LightSources& lightSources)
 {
-    _frustumCompute.LoadComputeShader("forwardPlus/frustum.comp");
-    // Data to dispatch comp shader
-    // Split screen into 16x16(pixels) tiles
-    _frustumComputeInitializers.numGroupsX = std::ceil(+(width  / _frustumComputeInitializers.tileSize));
-    _frustumComputeInitializers.numGroupsY = std::ceil(+(height / _frustumComputeInitializers.tileSize));
-
-
-    // Init SSBO
-    const int32_t tilesCount =  _frustumComputeInitializers.numGroupsX * _frustumComputeInitializers.numGroupsY;
-    constexpr uint32_t viewFrustumBindNum = 1;
-    SSBOBind<ViewFrustumDesc> bindData;
-    bindData.binding = &viewFrustumBindNum;
-    bindData.ssboId = &_frustumSSBO.id;
-    bindData.data = nullptr;
-    bindData.size = sizeof(ViewFrustumDesc) * tilesCount;
-    bindData.type = GL_MAP_PERSISTENT_BIT | GL_MAP_READ_BIT;
-    if(OpenglBackend::CreateSSBOImmutable(bindData) == ErrorCodes_Backend::ERROR_SSBO_CREATION)
-    {
-        std::cout << "Unable to initialize light cull, ssbo is not created\n";
-        return;
-    }
-
-
-    _frustumCompute.UseShader();
-    _frustumCompute.SetVec2("screenResolution", glm::vec2(static_cast<float>(width), static_cast<float>(height)));
-    _frustumCompute.SetVec3("eyePos", SamuraiCameras::g_activeCamera->GetPosition());
-        
-    const glm::mat4& proj = SamuraiCameras::g_activeCamera->GetMVP().projection;
-    const glm::mat4 inverseProj = glm::inverse(proj);
-    _frustumCompute.SetMat4x4("inverseProjection", inverseProj);
-
-    glDispatchCompute(_frustumComputeInitializers.numGroupsX, _frustumComputeInitializers.numGroupsY, 1);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
+    _lightSources = &lightSources;
 }
 
-void ForwardPlusRender::InitializeLightCull()
+void ForwardPlusRender::InitializeLightCull(uint32_t width, uint32_t height)
 {
     _lightCullCompute.LoadComputeShader("forwardPlus/lightCull.comp");
 
-    _lightCullInitializers.lightGridTexWidth = _frustumComputeInitializers.numGroupsX;
-    _lightCullInitializers.lightGridTexHeight = _frustumComputeInitializers.numGroupsY;
-    _lightCullInitializers.lightGridBindId = 4;
-    _lightCullInitializers.maxLights = 1024;
+    _lightCullInitializers.numGroupsX = std::ceil(+(width / 16));
+    _lightCullInitializers.numGroupsY = std::ceil(+(height / 16));
 
-    // Init SSBO
-    constexpr uint32_t lightCullBindNum = 1;
-    SSBOBind<LightDesc> bindData;
-    bindData.binding = &lightCullBindNum;
-    bindData.ssboId = &_frustumSSBO.id;
-    bindData.data = nullptr;
-    bindData.size = sizeof(LightDesc) * _lightCullInitializers.maxLights;
-    bindData.type = GL_MAP_PERSISTENT_BIT | GL_MAP_READ_BIT;
-    if(OpenglBackend::CreateSSBOImmutable(bindData) == ErrorCodes_Backend::ERROR_SSBO_CREATION)
+    size_t numberOfTiles = _lightCullInitializers.numGroupsX * _lightCullInitializers.numGroupsY;
+
+    _lightCullInitializers.lightGridTexWidth  = _lightCullInitializers.numGroupsX;
+    _lightCullInitializers.lightGridTexHeight = _lightCullInitializers.numGroupsY;
+    _lightCullInitializers.lightGridBindId = 3;
+
+    // Buffer light indices
+    constexpr uint32_t globalLightIndicesBindNum = 2;
+    SSBOBind<int32_t> indicesBindData;
+    _lightIndexList.lightIndicesBindID = 2;
+    indicesBindData.binding = &_lightIndexList.lightIndicesBindID;
+    indicesBindData.ssboId  = &_lightIndexList.lightIndicesHandle;
+    _lightIndexList.lightIndices.insert(_lightIndexList.lightIndices.end(), LightDefines::g_max_lights_simultaneously * LightDefines::g_max_lights_per_tile, -1);
+    indicesBindData.data    = _lightIndexList.lightIndices.data();
+    indicesBindData.size    = sizeof(int32_t) *  LightDefines::g_max_lights_simultaneously * LightDefines::g_max_lights_per_tile;
+    indicesBindData.type    = GL_DYNAMIC_STORAGE_BIT;
+    if(OpenglBackend::CreateSSBOImmutable(indicesBindData) == ErrorCodes_Backend::ERROR_SSBO_CREATION)
     {
-        std::cout << "Unable to initialize light cull, ssbo is not created\n";
-        return;
+        std::cout << "Unable to initialize lights indices buffer, SSBO is not created\n";
+    }
+
+
+    // Buffer for counter into lightIndices buff
+    SSBOBind<uint32_t> globalIndexBindData;
+    _lightIndexList.globalIndexBindID = 5;
+    globalIndexBindData.binding = &_lightIndexList.globalIndexBindID;
+    globalIndexBindData.ssboId  = &_lightIndexList.globalIndexHandle;
+    globalIndexBindData.data    = nullptr;
+    globalIndexBindData.size    = sizeof(uint32_t);
+    globalIndexBindData.type    = GL_DYNAMIC_STORAGE_BIT;
+    if(OpenglBackend::CreateSSBOImmutable(globalIndexBindData) == ErrorCodes_Backend::ERROR_SSBO_CREATION)
+    {
+        std::cout << "Unable to initialize lights indices buffer, SSBO is not created\n";
     }
 
     // Lighting grid should be represented as 2d texture
-
     glGenTextures(1,  &_lightCullInitializers.lightGridTexHandle);
     glBindTexture(GL_TEXTURE_2D, _lightCullInitializers.lightGridTexHandle);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, static_cast<GLsizei>(_lightCullInitializers.lightGridTexWidth),
-        static_cast<GLsizei>(_lightCullInitializers.lightGridTexHeight), 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32UI, static_cast<GLsizei>(_lightCullInitializers.lightGridTexWidth),
+        static_cast<GLsizei>(_lightCullInitializers.lightGridTexHeight), 0, GL_RG_INTEGER, GL_UNSIGNED_INT, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -102,30 +88,43 @@ void ForwardPlusRender::InitializeLightCull()
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-
-    TextureDesc texDesc;
-    texDesc.name = "lightsGrid";
-    texDesc.handle = _lightCullInitializers.lightGridTexHandle;
-    texDesc.type = RenderPassType::RENDER_MAIN;
-    texDesc.bindSlot = 6;
-    RenderManager::AttachTextureToDraw(texDesc);
-
 }
 
 void ForwardPlusRender::Initialize(uint32_t width, uint32_t height)
 {
     InitializeDepthBuffer(width, height);
-    InitializeFrustumCull(width, height);
-    InitializeLightCull();
+    InitializeLightCull(width, height);
+}
+void ForwardPlusRender::SetUniformsForRender(Shader& shader) const
+{
+    glm::vec3 directionalLightDir = _lightSources->GetDirectionalLightDir();
+    shader.SetVec3("directionalLightDir", directionalLightDir);
+    glm::vec3 cameraPosition = SamuraiCameras::g_activeCamera->GetPosition();
+    shader.SetVec3("cameraPosition", cameraPosition);
+
+
+    // binding lights grid for the main render pass
+    glBindImageTexture(6, _lightCullInitializers.lightGridTexHandle, 0,  GL_FALSE, 0, GL_READ_ONLY, GL_RG32UI);
+    // binding SSBO with lights data for the main render pass
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, _lightSources->GetLightBuffersHandle().lightsHandle);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, _lightIndexList.lightIndicesHandle);
+
+
 }
 
 
-void ForwardPlusRender::Render(AssetManager& manager) const
+void ForwardPlusRender::Render(AssetManager& manager)
 {
+    if (_lightSources == nullptr)
+    {
+        std::cout << "You forgot to pass dependency of lights to the render class\n";
+        return;
+    }
+
     glBindVertexArray(manager.GetAssetsVAO());
 
     DepthPrePass(manager);
-    // LightCullPass();
+    LightCullPass();
 
 
     // Setting variables to the shader
@@ -138,32 +137,22 @@ void ForwardPlusRender::Render(AssetManager& manager) const
     auto shaderMainIt = RenderManager::_shaderTypes.find(RenderPassType::RENDER_MAIN);
     if (shaderMainIt != RenderManager::_shaderTypes.end())
     {
+        auto& shader = shaderMainIt->second;
+        shader.UseShader();
+        for (int32_t i = 0; i < LightDefines::g_max_lights_affecting_shadows; ++i)
+        {
+            const auto& descriptor = _lightSources->GetLightsInfluencingShadows()[i];
+            shader.SetVec3("lightsForShadows[" + std::to_string(i) + "].lightsShadowsData", descriptor.second.lightsShadowsData);
+            shader.SetBool("lightsForShadows[" + std::to_string(i) + "].lightForShadowsPresence", descriptor.second.affectingShadows);
+        }
 
-        shaderMainIt->second.UseShader();
-        shaderMainIt->second.Set
+        SetUniformsForRender(shader);
     }
     else
     {
         std::cout << "Shader for forward plus render binding is not found\n";
     }
     RenderManager::DrawMainScene(manager);
-}
-
-void ForwardPlusRender::LightCullPass()
-{
-    _lightCullCompute.UseShader();
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, _lightCullSSBO.id);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, _frustumSSBO.id);
-
-    glBindImageTexture(_lightCullInitializers.lightGridBindId, GL_TEXTURE_2D, 0,  GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32UI);
-
-    int32_t lightsCounterUniform = 0;
-    _lightCullCompute.SetInt("lightsCounter", lightsCounterUniform);
-
-
-    // ??? to do
-    glDispatchCompute(_frustumComputeInitializers.numGroupsX, _frustumComputeInitializers.numGroupsY, 1);
-    
 
 }
 
@@ -178,9 +167,8 @@ void ForwardPlusRender::DepthPrePass(AssetManager& manager) const
 
 void ForwardPlusRender::Update(const Window& window) const
 {
-    // if (window.)
-}
 
+}
 
 
 void ForwardPlusRender::InitializeDepthBuffer(uint32_t width, uint32_t height)
@@ -195,6 +183,8 @@ void ForwardPlusRender::InitializeDepthBuffer(uint32_t width, uint32_t height)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width),
         static_cast<GLsizei>(height), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
+    _depthFBO.size.x = static_cast<float>(width);
+    _depthFBO.size.y = static_cast<float>(height);
 
     constexpr std::array<float, 4> clampColor = {1.0f, 1.0f, 1.0f, 1.0f};
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, clampColor.data());
@@ -215,4 +205,32 @@ void ForwardPlusRender::InitializeDepthBuffer(uint32_t width, uint32_t height)
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);   
+}
+
+void ForwardPlusRender::LightCullPass()
+{
+    _lightCullCompute.UseShader();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, _lightSources->GetLightBuffersHandle().lightsHandle);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, _lightIndexList.lightIndicesBindID, _lightIndexList.lightIndicesHandle);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, _lightIndexList.globalIndexBindID, _lightIndexList.globalIndexHandle);
+    glBindImageTexture(_lightCullInitializers.lightGridBindId, _lightCullInitializers.lightGridTexHandle, 0,  GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32UI);
+
+
+    glBindTextureUnit(4, _depthFBO.texture);
+    const uint32_t lightsCounterUniform = static_cast<uint32_t>(_lightSources->GetLightSources().size());
+    _lightCullCompute.SetUInt("lightsCounter", lightsCounterUniform);
+    const auto& matrices = SamuraiCameras::g_activeCamera->GetMVP();
+    const glm::mat4 inverseProj = glm::inverse(matrices.projection);
+    _lightCullCompute.SetMat4x4("inverseProjection", inverseProj);
+    _lightCullCompute.SetMat4x4("view", matrices.view);
+    _lightCullCompute.SetMat4x4("projection", matrices.projection);
+
+    _lightCullCompute.SetVec2("depthTextureExtent", _depthFBO.size);
+    // ??? to do
+    glDispatchCompute(_lightCullInitializers.numGroupsX, _lightCullInitializers.numGroupsY, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_UNIFORM_BARRIER_BIT | GL_ATOMIC_COUNTER_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    // restoring global index value
+    uint32_t newCounter = 0;
+    glNamedBufferSubData(_lightIndexList.globalIndexHandle, 0, sizeof(uint32_t), &newCounter);
 }

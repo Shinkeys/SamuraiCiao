@@ -3,39 +3,72 @@
 #include "imgui.h"
 #include "../../headers/systems/renderManager.h"
 #include "../../headers/systems/camera.h"
+#include "../../headers/backend/openglbackend.h"
+
+
+#include "../../headers/types/random.h"
 
 void LightSources::Prepare(AssetManager& manager)
 {
-    ObjectDescriptor sunObject;
-    sunObject.name = "sun.gltf";
-    sunObject.type = EntityType::TYPE_COMPOUND_STATIC_MESH;
-
-    VectorDesc vectorDesc;
-    vectorDesc.data = _directionalLightDir;
-    vectorDesc.name = lightDirShaderName;
-    vectorDesc.type = RenderPassType::RENDER_MAIN;
-
-        
-    RenderManager::AttachVectorToBind(vectorDesc);
-
     LightDescriptor lightDesc;
-    std::string lightName = "Sun";
-    lightDesc.type = LightDescriptor::LightType::LIGHT_DIRECTIONAL;
-    lightDesc.data = _directionalLightDir;
-    lightDesc.affectsShadows = true;
-    AddLightSourceDesc(lightDesc, lightName);
+    std::string lightName = "Red";
+    lightDesc.type = LightType::LIGHT_POINT;
+    lightDesc.data = glm::vec4(0.0f, 5.0f, 25.0f, 1.0f);
+    lightDesc.color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    AddLightSourceDesc(lightDesc, lightName, true);
+
+    lightName = "Green";
+    lightDesc.type = LightType::LIGHT_POINT;
+    lightDesc.data = glm::vec4(0.0f, 5.0f, -25.0f, 1.0f);
+    lightDesc.color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+    AddLightSourceDesc(lightDesc, lightName, false);
+
+    lightName = "Blue";
+    lightDesc.type = LightType::LIGHT_POINT;
+    lightDesc.data = glm::vec4(0.0f, 5.0f, 10.0f, 1.0f);
+    lightDesc.color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    AddLightSourceDesc(lightDesc, lightName, false);
+
+    // for (int j = 0; j < 4; ++j)
+    // {
+    //     for (int i = 0; i < 32; ++i)
+    //     {
+    //         lightName = lightName + std::to_string(j) + "_" + std::to_string(i);
+    //         lightDesc.data = glm::vec4(0.0f, 5.0f, static_cast<float>(j) + static_cast<float>(i), 1.0f);
+    //         lightDesc.type = LightType::LIGHT_POINT;
+    //         lightDesc.color = glm::vec4(Random::RandomFloat(0.0f, 1.0f), Random::RandomFloat(0.0f, 1.0f), Random::RandomFloat(0.0f, 1.0f), 1.0f);
+    //         AddLightSourceDesc(lightDesc, lightName, false);
+    //     }
+    //
+    // }
 
 
-    lightName = "Lantern";
-    lightDesc.type = LightDescriptor::LightType::LIGHT_POINT;
-    lightDesc.data = glm::vec3(5.0f, 5.0f, 15.0f);
-    lightDesc.color = glm::vec3(0.28f, 0.12f, 0.60f);
-    lightDesc.radius = 5.0f;
-    lightDesc.affectsShadows = false;
+    CreateLightBuffers();
+}
 
-    AddLightSourceDesc(lightDesc, lightName);
+
+void LightSources::CreateLightBuffers()
+{
+    for (const auto& light : _lightsStorage)
+    {
+        _lightsBufferHandle.lights.push_back(light.second);
+    }
+
+    // Init SSBO
+    _lightsBufferHandle.lightsBindID = 1;
+    SSBOBind<LightDescriptor> bindData;
+    bindData.binding = &_lightsBufferHandle.lightsBindID;
+    bindData.ssboId = &_lightsBufferHandle.lightsHandle;
+    bindData.data = _lightsBufferHandle.lights.data();
+    bindData.size = sizeof(LightDescriptor) * LightDefines::g_max_lights_simultaneously;
+    bindData.type = GL_DYNAMIC_STORAGE_BIT;
+    if(OpenglBackend::CreateSSBOImmutable(bindData) == ErrorCodes_Backend::ERROR_SSBO_CREATION)
+    {
+        std::cout << "Unable to initialize light cull, ssbo is not created\n";
+    }
 
 }
+
 
 // Purpose: method to work with imgui to create new lights
 void LightSources::InterfaceLightsCreation()
@@ -51,6 +84,42 @@ void LightSources::InterfaceLightsCreation()
         ImGui::InputText("Name: ", _createLightDesc.nameBuffer, sizeof(_createLightDesc.nameBuffer));
         ImGui::InputFloat3("Position: ", _createLightDesc.position, "%.1f", 0);
         ImGui::InputFloat3("Color: ", _createLightDesc.color, "%.1f", 0);
+        ImGui::Checkbox("Affect shadows: ", &_createLightDesc.affectsShadows);
+
+
+        static LightType currentItemSelectedType = _createLightDesc.type;
+        if (ImGui::BeginCombo("Select light type: ", ""))
+        {
+            constexpr int32_t lightTypesCount = static_cast<int32_t>(LightType::LIGHT_TYPES_COUNT);
+
+            for (int32_t i = 0; i < lightTypesCount; ++i)
+            {
+                auto type = static_cast<LightType>(i);
+                bool isSelected = (currentItemSelectedType == type);
+
+                const char* name = nullptr;
+
+                switch (type)
+                {
+                case LightType::LIGHT_DIRECTIONAL:
+                    name = "Directional";
+                    break;
+                case LightType::LIGHT_POINT:
+                    name = "Point";
+                    break;
+                default:
+                    name = "Unknown";
+                    return;
+                }
+
+                if (ImGui::Selectable(name, isSelected))
+                    currentItemSelectedType = type;
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
 
         if (ImGui::Button("Create"))
         {
@@ -63,16 +132,17 @@ void LightSources::InterfaceLightsCreation()
             LightDescriptor lightDesc;
 
             auto lightName = std::string(_createLightDesc.nameBuffer);
-            lightDesc.data = glm::vec3(_createLightDesc.position[0], _createLightDesc.position[1], _createLightDesc.position[2]);
-            lightDesc.color = glm::vec3(_createLightDesc.color[0], _createLightDesc.color[1], _createLightDesc.color[2]);
+            lightDesc.data = glm::vec4(_createLightDesc.position[0], _createLightDesc.position[1], _createLightDesc.position[2], 1.0f);
+            lightDesc.color = glm::vec4(_createLightDesc.color[0], _createLightDesc.color[1], _createLightDesc.color[2], 1.0f);
+            lightDesc.type = currentItemSelectedType;
 
-            AddLightSourceDesc(lightDesc, lightName);
+            AddLightSourceDesc(lightDesc, lightName, _createLightDesc.affectsShadows);
         }
 
     }
 }
 
-void LightSources::AddLightSourceWithShadowInfluence(const std::string& lightName, glm::vec3 lightData)
+void LightSources::AddLightSourceWithShadowInfluence(const std::string& lightName, LightDescriptor& lightDesc)
 {
     auto duplicateIt  = std::find_if(_lightsForShadowsStorage.begin(), _lightsForShadowsStorage.end(),  [&lightName](const auto& pair)
     {
@@ -80,29 +150,33 @@ void LightSources::AddLightSourceWithShadowInfluence(const std::string& lightNam
     });
     if (duplicateIt != _lightsForShadowsStorage.end())
     {
-        duplicateIt->second.lightsShadowsData = lightData;
-        duplicateIt->second.lightForShadowsPresence = 1;
+        duplicateIt->second.lightsShadowsData = lightDesc.data;
+        duplicateIt->second.affectingShadows = true;
         return;
     }
 
-    auto freeSpaceIt = std::find_if(_lightsForShadowsStorage.begin(), _lightsForShadowsStorage.end(), [](const auto& pair)
+
+    for (int32_t i = 0; i < _lightsForShadowsStorage.size(); ++i)
     {
-        return pair.second.lightForShadowsPresence <= 0;
-    });
-    if (freeSpaceIt != _lightsForShadowsStorage.end())
-    {
-        freeSpaceIt->second.lightsShadowsData = lightData;
-        freeSpaceIt->second.lightForShadowsPresence = 1;
-        return;
+        if (_lightsForShadowsStorage[i].second.affectingShadows == false)
+        {
+            _lightsForShadowsStorage[i].first = lightName;
+            _lightsForShadowsStorage[i].second.lightsShadowsData = lightDesc.data;
+            _lightsForShadowsStorage[i].second.affectingShadows = true;
+
+            // Storing index into shadows storage buffer
+            lightDesc.shadowsDataIndex = i;
+            return;
+        }
     }
 
-    // No duplicates in array and no free space found, change the farthest light on the new one
-    float newLightDistance =  glm::length(lightData);
+    // No duplicates in the array and no free space found, change the farthest light on the new one
+    float newLightDistance =  glm::length(lightDesc.data);
     int32_t newIndex  = -1;
     for (int32_t i = 0; i < _lightsForShadowsStorage.size(); ++i)
     {
         const float currentDistance = glm::length(_lightsForShadowsStorage[i].second.lightsShadowsData);
-        if (currentDistance > newLightDistance)
+        if (currentDistance >= newLightDistance)
         {
             newLightDistance = currentDistance;
             newIndex = i;
@@ -113,11 +187,59 @@ void LightSources::AddLightSourceWithShadowInfluence(const std::string& lightNam
         return;
 
     _lightsForShadowsStorage[newIndex].first = lightName;
-    _lightsForShadowsStorage[newIndex].second.lightsShadowsData = lightData;
-    _lightsForShadowsStorage[newIndex].second.lightForShadowsPresence = 1;
+    _lightsForShadowsStorage[newIndex].second.lightsShadowsData = lightDesc.data;
+
+    // // removing state from the previous element
+    // auto it = _lightsStorage.find(lightName);
+    // if (it != _lightsStorage.end())
+    // {
+    //     it->second.shadowsDataIndex = -1;
+    //     UpdateLightBuffer()
+    // }
+    lightDesc.shadowsDataIndex = newIndex;
 }
 
-void LightSources::AddLightSourceDesc(const LightDescriptor& lightDesc, const std::string& lightName)
+void LightSources::UpdateLightBuffer(LightUpdateCommand command, const std::string& lightName)
+{
+    if (_lightsBufferHandle.lights.size() > LightDefines::g_max_lights_simultaneously)
+    {
+        return;
+    }
+
+    switch (command)
+    {
+    case LightUpdateCommand::ADD_LIGHT:
+    {
+        const auto it = _lightsStorage.find(lightName);
+        if (it != _lightsStorage.end())
+        {
+            // if buffer is created
+            if (_lightsBufferHandle.lightsHandle > 0)
+            {
+                _lightsBufferHandle.lights.push_back(it->second);
+                const uint32_t offset = static_cast<uint32_t>(_lightsBufferHandle.lights.size() - 1) * sizeof(LightDescriptor);
+                glNamedBufferSubData(_lightsBufferHandle.lightsHandle, offset, sizeof(LightDescriptor), &_lightsBufferHandle.lights.back());
+            }
+        }
+    }
+        break;
+
+    case LightUpdateCommand::REMOVE_LIGHT:
+        // TO DO
+        break;
+    case LightUpdateCommand::UPDATE_LIGHT:
+        // TO DO
+        break;
+
+    default:
+        std::cout << "No such a command for light buffer update\n";
+    }
+
+
+
+}
+
+void LightSources::AddLightSourceDesc(LightDescriptor& lightDesc, const std::string& lightName, bool affectShadows)
 {
     auto lightIt = _lightsStorage.find(lightName);
     if (lightIt != _lightsStorage.end())
@@ -132,15 +254,15 @@ void LightSources::AddLightSourceDesc(const LightDescriptor& lightDesc, const st
             }
         }
     }
+
+    if (affectShadows)
+        AddLightSourceWithShadowInfluence(lightName, lightDesc);
+    else
+        lightDesc.shadowsDataIndex = -1;
+
     std::cout << "Created light source\n";
     // To do: light remove from scene
     _lightsStorage.insert({lightName, lightDesc});
 
-    AddLightSourceWithShadowInfluence(lightName, lightDesc.data);
+    UpdateLightBuffer(LightUpdateCommand::ADD_LIGHT, lightName);
 }
-
-
-
-
-
-

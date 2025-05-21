@@ -17,42 +17,60 @@ struct ObjectTextures
     vec3 normalTex;
 };
 
-
-uniform bool normalMapping;
+const int LIGHT_POINT = 1;
 
 
 const uint MAX_CONCURRENT_SHADOWS_SOURCES = 4;
 in VERTEX_OUT
 {
     vec2 texCoord;
-    vec3 tangentFragPos;
     mat3 TBN;
-    vec3 normals;
 
-    vec3 viewFragPos;
+    vec3 worldFragPos;
+    vec3 backupNormals;
 
+// for shadows
     vec3 lightsShadowsData[MAX_CONCURRENT_SHADOWS_SOURCES];
     vec3 lightViewFragPos[MAX_CONCURRENT_SHADOWS_SOURCES];
-    uint lightForShadowsPresence[MAX_CONCURRENT_SHADOWS_SOURCES];
+
 } fragment_in;
 
 
-const int LIGHT_DIRECTIONAL = 0;
-const int LIGHT_POINT = 1;
 struct LightDesc
 {
-    vec3 data;
-    vec3 color;
+    vec4 data;
+    vec4 color;
     float radius;
     int type;
-    bool affectsOnShadows;
+
+    // If light is used for a shadow produce
+    int shadowsDataIndex;
+
+    int padding;
 };
 
-// DATA SHOULD BE IN VIEW SPACE
-layout(std430, binding = 7) buffer lightsBuffer
+// ONLY POINT AND SPOT(TO DO) LIGHTS
+layout(std430, binding = 7) readonly buffer lightsBuffer
 {
     LightDesc lights[];
 };
+
+layout(std430, binding = 8) buffer lightsGlobalIndBuffer
+{
+    int lightsIndexList[];
+};
+
+struct LightCalcResult
+{
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 emission;
+    vec3 specular;
+};
+
+uniform vec3 directionalLightDir;
+uniform vec3 cameraPosition;
+uniform bool normalMapping;
 
 float CalculateShadows(vec3 lightViewFragPos, vec3 normals, vec3 lightViewLightDir)
 {
@@ -97,9 +115,9 @@ float Square(float x)
     return x * x;
 }
 
-float AttenuatePointLight(vec3 viewLightPos, vec3 viewFragPos, float radius)
+float AttenuatePointLight(vec3 lightPos, vec3 fragPos, float radius)
 {
-    const float distance = length(viewLightPos - viewFragPos);
+    const float distance = length(lightPos - fragPos);
     const float decaySpeed = 1.0;
     const float maxIntensity = 2.5; // basically represents 'start' point of the light brightness
     const float s = distance / radius;
@@ -112,57 +130,57 @@ float AttenuatePointLight(vec3 viewLightPos, vec3 viewFragPos, float radius)
     return maxIntensity * Square(1 - sqrS) / (1 + decaySpeed * sqrS);
 }
 
-vec3 CalculatePointLight(ObjectTextures textures)
+LightCalcResult CalculatePointLight(ObjectTextures textures, LightDesc lightDesc)
 {
     const float lightColorAmbient = 0.22;
 
-    vec3 lightDir = normalize(fragment_in.viewFragPos - fragment_in.viewLightData);
-    vec3 viewDirection = normalize(-fragment_in.viewFragPos);
+    vec3 lightPos = lightDesc.data.xyz;
+    vec3 lightDir = normalize(-(fragment_in.worldFragPos - lightPos));
+    vec3 viewDirection = normalize(cameraPosition - fragment_in.worldFragPos);
 
-    if(normalMapping)
-    {
-        // Convert to tangent space
-        lightDir = fragment_in.TBN * lightDir;
-        viewDirection = fragment_in.TBN * viewDirection;
-    }
     const float dotProduct = dot(textures.normalTex, lightDir);
     float diffuseLight = max(dotProduct, 0.0);
-    vec3 diffuseVec = diffuseLight * lightDescriptor.color;
+    vec3 diffuseVec = diffuseLight * lightDesc.color.xyz;
 
 
     const vec3 halfwayDirection = normalize(lightDir + viewDirection);
     const float specularShininess = 32;
     const float specularLight = pow(max(dot(textures.normalTex, halfwayDirection), 0.0), specularShininess);
-    vec3 specularVec = specularLight * textures.specularTex * lightDescriptor.color;
+    vec3 specularVec = specularLight * textures.specularTex * lightDesc.color.xyz;
 
     const vec3 ambientVec = lightColorAmbient * textures.diffuseTex;
 
     const vec3 emissionVec = textures.emissionTex;
 
-    float attenuation = AttenuatePointLight(fragment_in.viewLightData, fragment_in.viewFragPos, lightDescriptor.radius);
+//    // TO CHECK ATTENUATION!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    float attenuation = AttenuatePointLight(lightDesc.data.xyz, fragment_in.worldFragPos, lightDesc.radius);
 
     diffuseVec  *= attenuation;
     specularVec *= attenuation;
 
-    return ambientVec + diffuseVec + specularVec + emissionVec;
+    LightCalcResult result;
+    result.ambient = ambientVec;
+    result.specular = specularVec;
+    result.diffuse = diffuseVec;
+    result.emission = emissionVec;
+    return result;
+
+
 }
 
-vec3 CalculateDirectionalLight(ObjectTextures textures)
+LightCalcResult CalculateDirectionalLight(ObjectTextures textures)
 {
-    const float lightColorAmbient = 0.32;
-    vec3 lightDir = normalize(fragment_in.viewLightData);
-    vec3 viewDirection = normalize(fragment_in.viewFragPos);
-    if(normalMapping)
-    {
-        // Convert to tangent space
-        lightDir = fragment_in.TBN * lightDir;
-        viewDirection = fragment_in.TBN * viewDirection;
-    }
+    const float lightColorAmbient = 0.12;
+    // Convert to tangent space
+    vec3 lightDir = normalize(directionalLightDir);
+    vec3 viewDirection = normalize(cameraPosition - fragment_in.worldFragPos);
+
     // diffuse
     const float dotProduct = dot(textures.normalTex, lightDir);
-    const float diffuseLightPower = 1.75;
+    const float diffuseLightPower = 1.25;
     float diffuseLight = max(dotProduct, 0.0);
-    vec3  diffuseVec = diffuseLight * textures.diffuseTex * diffuseLightPower * lightDescriptor.color;
+    const vec3 dirLightColor = vec3(0.5, 0.5, 0.5);
+    vec3  diffuseVec = diffuseLight * textures.diffuseTex * diffuseLightPower * dirLightColor;
 
     // specular
     // blinn phong model with halfway vector is far more useful than phong model as halfway never exceeds angle 90
@@ -170,14 +188,19 @@ vec3 CalculateDirectionalLight(ObjectTextures textures)
     const vec3 halfwayDirection = normalize(lightDir + viewDirection);
     const float specularShininess = 32;
     const float specularLight = pow(max(dot(textures.normalTex, halfwayDirection), 0.0), specularShininess);
-    vec3 specularVec = specularLight * textures.specularTex * lightDescriptor.color;
+    vec3 specularVec = specularLight * textures.specularTex * dirLightColor;
 
     // ambient
     const vec3 ambientVec = lightColorAmbient * textures.diffuseTex;
     // emission
     const vec3 emissionVec = textures.emissionTex;
 
-    return ambientVec + diffuseVec + specularVec + emissionVec;
+    LightCalcResult result;
+    result.ambient = ambientVec;
+    result.specular = specularVec;
+    result.diffuse = diffuseVec;
+    result.emission = emissionVec;
+    return result;
 }
 
 vec3 CalculateLighting()
@@ -193,52 +216,71 @@ vec3 CalculateLighting()
     textures.emissionTex = vec3(1.0, 1.0, 0.0);
     textures.emissionTex = texture(emission, fragment_in.texCoord).rgb;
 
-    textures.normalTex = fragment_in.normals;
-    if(normalMapping == true)
+    if(normalMapping)
     {
         textures.normalTex = texture(normal, fragment_in.texCoord).rgb;
         // converting from [0,1] range to [-1,1], otherwise normals would look only 1 side
         textures.normalTex = textures.normalTex * 2.0 - 1.0;
+        textures.normalTex = normalize(fragment_in.TBN * textures.normalTex);
     }
-
-
-    vec3 colors = vec3(0.0);
-    float shadow = 0.0;
-    switch(lightDescriptor.type)
+    else
     {
-    case LIGHT_DIRECTIONAL:
-        colors = CalculateDirectionalLight(textures);
-
-        if(lightDescriptor.affectsOnShadows)
-        {
-            for(uint i = 0; i < MAX_CONCURRENT_SHADOWS_SOURCES; ++i)
-            {
-                if(fragment_in.lightForShadowsPresence[i] > 0)
-                    shadow += CalculateShadows(fragment_in.lightViewFragPos[i], textures.normalTex, fragment_in.lightsShadowsData[i]);
-            }
-        }
-
-        break;
-    case LIGHT_POINT:
-        colors = CalculatePointLight(textures);
-
-        if(lightDescriptor.affectsOnShadows)
-        {
-            const vec3 lightViewDir = fragment_in.lightViewFragPos - fragment_in.lightViewLightData;
-            for(uint i = 0; i < MAX_CONCURRENT_SHADOWS_SOURCES; ++i)
-            {
-                if(fragment_in.lightForShadowsPresence[i] > 0)
-                    shadow += CalculateShadows(fragment_in.lightViewFragPos[i], textures.normalTex, fragment_in.lightsShadowsData[i]);
-            }
-        }
-        break;
-
-    default:
-        return colors;
+        textures.normalTex = fragment_in.backupNormals;
     }
 
+    // Selecting index of current pixel to proceed lights
+    ivec2 location = ivec2(gl_FragCoord.xy);
+    ivec2 tileIndex = location / ivec2(16, 16);
 
-    vec3 res = (1.0 - shadow) * colors;
+    uint startOffset = imageLoad(lightsGrid, tileIndex).x;
+    uint lightsCount = imageLoad(lightsGrid, tileIndex).y;
+
+    LightCalcResult totalColorResult;
+    float shadow = 0.0;
+    for(uint i = 0; i < lightsCount; ++i)
+    {
+        uint lightIndex = lightsIndexList[i + startOffset];
+        LightDesc light = lights[lightIndex];
+
+        LightCalcResult currentItColorRes;
+        switch(light.type)
+            {
+
+        case LIGHT_POINT:
+            currentItColorRes = CalculatePointLight(textures, light);
+            if(light.shadowsDataIndex != -1)
+            {
+                shadow += CalculateShadows(fragment_in.lightsShadowsData[light.shadowsDataIndex],
+                        textures.normalTex, fragment_in.lightViewFragPos[light.shadowsDataIndex]);
+            }
+            break;
+
+        // TO DO: SPOT LIGHT IF WOULD NEED
+        default:
+            break;
+        }
+
+
+        totalColorResult.diffuse  += currentItColorRes.diffuse;
+        totalColorResult.specular += currentItColorRes.specular;
+    }
+
+    // Directional light
+    LightCalcResult directionalLightRes;
+    directionalLightRes = CalculateDirectionalLight(textures);
+
+    totalColorResult.diffuse  += directionalLightRes.diffuse;
+    totalColorResult.specular += directionalLightRes.specular;
+
+    // Need to calculate ambient and emission only once.
+    const float lightColorAmbient = 0.15;
+    const vec3 ambientVec  = lightColorAmbient * textures.diffuseTex;
+    const vec3 emissionVec = textures.emissionTex;
+
+    const vec3 finalColor = ambientVec + totalColorResult.diffuse
+            + totalColorResult.specular + emissionVec;
+
+    vec3 res = (1.0 - shadow) * finalColor;
     return res;
 }
 
@@ -248,7 +290,6 @@ out vec4 FragColor;
 void main()
 {
     vec3 result = CalculateLighting();
-
     FragColor = vec4(result, 1.0);
     // gamma correction
     const float gamma = 2.2;

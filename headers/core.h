@@ -20,7 +20,7 @@ private:
     void Render() override;
 
     void InterfaceUpdate();
-    LightSources _lanternsObjects;
+    LightSources _lightSources;
     AssetManager _assetManager;
     ShadowsHelper _shadowsHelper;
     

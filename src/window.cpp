@@ -23,8 +23,8 @@ bool Window::Initialize()
     _width = static_cast<uint32_t>(videoMode->width);
     _height = static_cast<uint32_t>(videoMode->height);
 
-    _lastMouseHeight = _height / 2;
-    _lastMouseWidth = _width / 2;
+    _lastMouseHeight = static_cast<float>(_height) / 2.0f;
+    _lastMouseWidth = static_cast<float>(_width) / 2.0f;
 
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
