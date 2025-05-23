@@ -43,12 +43,12 @@ struct LightDescCompute
 
 struct LightIndexList
 {
-    uint32_t lightIndicesBindID;
-    uint32_t lightIndicesHandle;
+    uint32_t lightIndicesBindID{ 0 };
+    uint32_t lightIndicesHandle{ 0 };
     std::vector<int32_t> lightIndices;
 
-    uint32_t globalIndexBindID;
-    uint32_t globalIndexHandle;
+    uint32_t globalIndexBindID{ 0 };
+    uint32_t globalIndexHandle{ 0 };
 };
 
 class AssetManager;

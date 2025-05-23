@@ -20,6 +20,7 @@ struct LightDesc
 };
 
 
+
 uniform mat4 view;
 uniform mat4 projection;
 uniform uint lightsCounter;

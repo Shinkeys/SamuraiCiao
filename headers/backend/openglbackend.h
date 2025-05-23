@@ -34,11 +34,13 @@ namespace OpenglBackend
             return ErrorCodes_Backend::ERROR_SSBO_CREATION;
         }
         glCreateBuffers(1, bindData.ssboId);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, *bindData.ssboId);
         // basically binding ssbo to write data there
         if(bindData.type == 0x00)
             glNamedBufferData(*bindData.ssboId, bindData.size, bindData.data, GL_DYNAMIC_DRAW);
         else 
             glNamedBufferData(*bindData.ssboId, bindData.size, bindData.data, bindData.type);
+
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, *bindData.binding, *bindData.ssboId);
 
@@ -54,6 +56,7 @@ namespace OpenglBackend
             return ErrorCodes_Backend::ERROR_SSBO_CREATION;
         }
         glCreateBuffers(1, bindData.ssboId);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, *bindData.ssboId);
         // basically binding ssbo to write data there
         if(bindData.type == 0x00)
             glNamedBufferStorage(*bindData.ssboId, bindData.size, bindData.data, GL_DYNAMIC_STORAGE_BIT);

@@ -1,9 +1,6 @@
 #include "../headers/window.h"
 #include "../headers/systems/interface.h"
 
-Window::Window()
-{
-}
 
 Window::~Window()
 {
@@ -42,9 +39,6 @@ bool Window::Initialize()
         return false;
     }
 
-    //MSAA
-    glfwWindowHint(GLFW_SAMPLES, 8);
-
     glfwMakeContextCurrent(_window);
     // initialize GLAD
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -53,6 +47,9 @@ bool Window::Initialize()
         glfwTerminate();
         return false;
     }
+    //MSAA
+    glfwWindowHint(GLFW_SAMPLES, 8);
+
     
     glfwSetWindowUserPointer(_window, this);
     glfwSetFramebufferSizeCallback(_window, FramebufferSizeCallback);

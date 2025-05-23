@@ -8,7 +8,7 @@
 
 #include "../../headers/types/random.h"
 
-void LightSources::Prepare(AssetManager& manager)
+void LightSources::Prepare()
 {
     LightDescriptor lightDesc;
     std::string lightName = "Red";
@@ -29,18 +29,18 @@ void LightSources::Prepare(AssetManager& manager)
     lightDesc.color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
     AddLightSourceDesc(lightDesc, lightName, false);
 
-    // for (int j = 0; j < 4; ++j)
-    // {
-    //     for (int i = 0; i < 32; ++i)
-    //     {
-    //         lightName = lightName + std::to_string(j) + "_" + std::to_string(i);
-    //         lightDesc.data = glm::vec4(0.0f, 5.0f, static_cast<float>(j) + static_cast<float>(i), 1.0f);
-    //         lightDesc.type = LightType::LIGHT_POINT;
-    //         lightDesc.color = glm::vec4(Random::RandomFloat(0.0f, 1.0f), Random::RandomFloat(0.0f, 1.0f), Random::RandomFloat(0.0f, 1.0f), 1.0f);
-    //         AddLightSourceDesc(lightDesc, lightName, false);
-    //     }
-    //
-    // }
+     /*for (int j = 0; j < 4; ++j)
+     {
+         for (int i = 0; i < 32; ++i)
+         {
+             lightName = lightName + std::to_string(j) + "_" + std::to_string(i);
+             lightDesc.data = glm::vec4(0.0f, 5.0f, static_cast<float>(j) + static_cast<float>(i), 1.0f);
+             lightDesc.type = LightType::LIGHT_POINT;
+             lightDesc.color = glm::vec4(Random::RandomFloat(0.0f, 1.0f), Random::RandomFloat(0.0f, 1.0f), Random::RandomFloat(0.0f, 1.0f), 1.0f);
+             AddLightSourceDesc(lightDesc, lightName, false);
+         }
+    
+     }*/
 
 
     CreateLightBuffers();
@@ -60,7 +60,7 @@ void LightSources::CreateLightBuffers()
     bindData.binding = &_lightsBufferHandle.lightsBindID;
     bindData.ssboId = &_lightsBufferHandle.lightsHandle;
     bindData.data = _lightsBufferHandle.lights.data();
-    bindData.size = sizeof(LightDescriptor) * LightDefines::g_max_lights_simultaneously;
+    bindData.size = static_cast<int32_t>(sizeof(LightDescriptor) * _lightsBufferHandle.lights.size());
     bindData.type = GL_DYNAMIC_STORAGE_BIT;
     if(OpenglBackend::CreateSSBOImmutable(bindData) == ErrorCodes_Backend::ERROR_SSBO_CREATION)
     {

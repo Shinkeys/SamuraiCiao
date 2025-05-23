@@ -250,8 +250,8 @@ vec3 CalculateLighting()
             currentItColorRes = CalculatePointLight(textures, light);
             if(light.shadowsDataIndex != -1)
             {
-                shadow += CalculateShadows(fragment_in.lightsShadowsData[light.shadowsDataIndex],
-                        textures.normalTex, fragment_in.lightViewFragPos[light.shadowsDataIndex]);
+               // shadow += CalculateShadows(fragment_in.lightsShadowsData[light.shadowsDataIndex],
+                      //  textures.normalTex, fragment_in.lightViewFragPos[light.shadowsDataIndex]);
             }
             break;
 

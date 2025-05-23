@@ -15,8 +15,8 @@ uint32_t Skybox::StbiLoadCubeTexture(std::vector<std::string> entityNames)
         return 0;
     }
 
-    int32_t width;
-    int32_t height;
+    int32_t width = 0;
+    int32_t height = 0;
     int32_t texChannels;
 
     uint32_t textureID = 0;

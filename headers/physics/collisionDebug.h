@@ -50,7 +50,7 @@ private:
     virtual void                        Release() override { if(--_refCount == 0) delete this;}
 
 public:
-    int32_t _numOfTriangles;
+    int32_t _numOfTriangles{ 0 };
     bool _usesIndices = false;
 
     // would make getters/setters to make it more prominent

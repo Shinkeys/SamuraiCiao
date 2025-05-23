@@ -63,8 +63,8 @@ std::optional<glm::vec3> AssetManager::GetMeshCenterPoint(const std::string& ent
     uint32_t startOffset = indVert.value().first;
     const uint32_t endIndex = indVert.value().second;
 
-    const float lowest = std::numeric_limits<float>::lowest();
-    const float maximum = std::numeric_limits<float>::max();
+    constexpr float lowest = std::numeric_limits<float>::lowest();
+    constexpr float maximum = std::numeric_limits<float>::max();
 
     glm::vec3 minPoint = glm::vec3(maximum);
     glm::vec3 maxPoint = glm::vec3(lowest);

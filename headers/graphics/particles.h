@@ -4,8 +4,8 @@
 class Particles
 {
 private:
-    uint32_t _ssboId;
-    uint32_t _numberOfParticles{1024};
+    uint32_t _ssboId{ 0 };
+    uint32_t _numberOfParticles{ 1024 };
     VBOSetupUnskinnedVec4 _setup;
     bool _particlesEnabled = true;
     void ExecuteCompShader();

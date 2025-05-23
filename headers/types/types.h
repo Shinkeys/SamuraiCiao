@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <optional>
 #include <queue>
+#include <array>
 #include <filesystem>
 
 class Shader;
@@ -151,9 +152,9 @@ struct SSBOBind
     const uint32_t*  binding = nullptr;
 
 
-    int32_t type = 0x00;
+    GLbitfield type = 0x00;
     int32_t size = 0;
-    T* data;
+    T* data = nullptr;
     uint32_t* ssboId = nullptr;
 };
 

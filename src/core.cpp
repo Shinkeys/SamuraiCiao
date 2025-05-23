@@ -59,7 +59,7 @@ bool Core::Initialize()
     skyboxObject.Prepare();
 
     // Lantern to do
-    _lightSources.Prepare(_assetManager);
+    _lightSources.Prepare();
     _renderInstance.PassLightSources(_lightSources);
     
     RenderManager::DispatchMeshToDraw(characterObject, _assetManager);

@@ -1,6 +1,11 @@
 .cache/
 spirv/*.spv
 
+# Visual Studio specific
+out/
+.vs/*
+
+
 build/
 CMakeFiles/
 CMakeCache.txt

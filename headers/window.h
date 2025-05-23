@@ -74,7 +74,6 @@ public:
 	Keys GetKeysState()              const  { return _keys;  }
     void ResetMouse();
     Mouse GetMouseState()            const  { return _mouse; }
-    Window();
     void Run();
     virtual ~Window();
 };

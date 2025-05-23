@@ -44,7 +44,7 @@ namespace CollisionDefines
 #ifdef JPH_ENABLE_ASSERTS
 
 // Callback for asserts, connect this to your own assert handler if you have one
-static bool AssertFailedImpl(const char *inExpression, const char *inMessage, const char *inFile, uint inLine)
+static bool AssertFailedImpl(const char *inExpression, const char *inMessage, const char *inFile, JPH::uint inLine)
 {
 	// Print to the TTY
 	std::cout << inFile << ":" << inLine << ": (" << inExpression << ") " << (inMessage != nullptr? inMessage : "") << std::endl;
@@ -95,7 +95,7 @@ public:
 		mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
 	}
 
-	virtual uint					GetNumBroadPhaseLayers() const override
+	virtual JPH::uint					GetNumBroadPhaseLayers() const override
 	{
 		return BroadPhaseLayers::NUM_LAYERS;
 	}

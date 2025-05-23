@@ -13,10 +13,10 @@ enum class LightType : int32_t
 struct LightDescriptor
 {
     // VEC4 used to ADJUST it to the std430 layout on gpu which creates padding to 16 for every vec3
-    glm::vec4 data; // should be or direction or position, depending on the type
+    glm::vec4 data = glm::vec4(-100.0f, -100.0f, -100.0f, -100.0f); // should be or direction or position, depending on the type
     glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     float   radius  = 15.0f; // used only for point light
-    LightType type = LightType::LIGHT_POINT;
+    LightType type  = LightType::LIGHT_POINT;
 
     int32_t shadowsDataIndex = -1;
 
