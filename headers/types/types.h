@@ -98,7 +98,7 @@ struct EBOSetup
     uint32_t VBO{0};
     uint32_t EBO{0};
 
-    int32_t type = 0x00;
+    GLbitfield type = 0x00;
 };
 
 
@@ -118,6 +118,8 @@ struct EBOSetupUnskinned
     uint32_t VAO{0};
     uint32_t VBO{0};
     uint32_t EBO{0};
+
+    GLbitfield type = 0x00;
 };
 
 struct EBOSetupBuffers
@@ -133,7 +135,7 @@ struct VBOSetupUnskinned
     uint32_t VAO{0};
     uint32_t VBO{0};
 
-    int32_t type = 0x00;
+    GLbitfield type = 0x00;
 };  
 
 
@@ -143,7 +145,7 @@ struct VBOSetupUnskinnedVec4
     uint32_t VAO{0};
     uint32_t VBO{0};
 
-    int32_t type = 0x00;
+    GLbitfield type = 0x00;
 };  
 
 template <typename T>

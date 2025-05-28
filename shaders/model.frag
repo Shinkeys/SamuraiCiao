@@ -9,6 +9,9 @@ layout(binding = 5) uniform sampler2D shadowsTexture;
 // Lights grid for forward+ render
 layout(rg32ui, binding = 6) uniform uimage2D lightsGrid;
 
+const int PIXELS_PER_TILE = 16;
+
+
 struct ObjectTextures
 {
     vec3 diffuseTex;
@@ -32,7 +35,6 @@ in VERTEX_OUT
 // for shadows
     vec3 lightsShadowsData[MAX_CONCURRENT_SHADOWS_SOURCES];
     vec3 lightViewFragPos[MAX_CONCURRENT_SHADOWS_SOURCES];
-
 } fragment_in;
 
 
@@ -62,15 +64,17 @@ layout(std430, binding = 8) buffer lightsGlobalIndBuffer
 
 struct LightCalcResult
 {
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 emission;
-    vec3 specular;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 emission;
+    vec4 specular;
 };
 
 uniform vec3 directionalLightDir;
 uniform vec3 cameraPosition;
 uniform bool normalMapping;
+uniform ivec2 screenDimension;
+
 
 float CalculateShadows(vec3 lightViewFragPos, vec3 normals, vec3 lightViewLightDir)
 {
@@ -154,15 +158,15 @@ LightCalcResult CalculatePointLight(ObjectTextures textures, LightDesc lightDesc
 
 //    // TO CHECK ATTENUATION!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     float attenuation = AttenuatePointLight(lightDesc.data.xyz, fragment_in.worldFragPos, lightDesc.radius);
-
+    
     diffuseVec  *= attenuation;
     specularVec *= attenuation;
 
     LightCalcResult result;
-    result.ambient = ambientVec;
-    result.specular = specularVec;
-    result.diffuse = diffuseVec;
-    result.emission = emissionVec;
+    result.ambient = vec4(ambientVec, 1.0);
+    result.specular = vec4(specularVec, 1.0);
+    result.diffuse = vec4(diffuseVec, 1.0);
+    result.emission = vec4(emissionVec, 1.0);
     return result;
 
 
@@ -196,10 +200,10 @@ LightCalcResult CalculateDirectionalLight(ObjectTextures textures)
     const vec3 emissionVec = textures.emissionTex;
 
     LightCalcResult result;
-    result.ambient = ambientVec;
-    result.specular = specularVec;
-    result.diffuse = diffuseVec;
-    result.emission = emissionVec;
+    result.ambient = vec4(ambientVec, 1.0);
+    result.specular = vec4(specularVec, 1.0);
+    result.diffuse = vec4(diffuseVec, 1.0);
+    result.emission = vec4(emissionVec, 1.0);
     return result;
 }
 
@@ -229,17 +233,20 @@ vec3 CalculateLighting()
     }
 
     // Selecting index of current pixel to proceed lights
-    ivec2 location = ivec2(gl_FragCoord.xy);
-    ivec2 tileIndex = location / ivec2(16, 16);
+    ivec2 location = ivec2(gl_FragCoord.x, gl_FragCoord.y) / PIXELS_PER_TILE;
+    // ivec2 tileIndex = ivec2(floor(location) / PIXELS_PER_TILE); // To reduce noiseness floor is useful
 
-    uint startOffset = imageLoad(lightsGrid, tileIndex).x;
-    uint lightsCount = imageLoad(lightsGrid, tileIndex).y;
+    uvec2 tileData = imageLoad(lightsGrid, location).xy;
 
     LightCalcResult totalColorResult;
+    totalColorResult.ambient = vec4(0.0, 0.0, 0.0, 1.0);
+    totalColorResult.diffuse = vec4(0.0, 0.0, 0.0, 1.0);
+    totalColorResult.specular = vec4(0.0, 0.0, 0.0, 1.0);
+    totalColorResult.emission = vec4(0.0, 0.0, 0.0, 1.0);
     float shadow = 0.0;
-    for(uint i = 0; i < lightsCount; ++i)
+    for(uint i = 0; i < tileData.y; ++i)
     {
-        uint lightIndex = lightsIndexList[i + startOffset];
+        uint lightIndex = lightsIndexList[i + tileData.x];
         LightDesc light = lights[lightIndex];
 
         LightCalcResult currentItColorRes;
@@ -250,8 +257,8 @@ vec3 CalculateLighting()
             currentItColorRes = CalculatePointLight(textures, light);
             if(light.shadowsDataIndex != -1)
             {
-               // shadow += CalculateShadows(fragment_in.lightsShadowsData[light.shadowsDataIndex],
-                      //  textures.normalTex, fragment_in.lightViewFragPos[light.shadowsDataIndex]);
+                shadow += CalculateShadows(fragment_in.lightsShadowsData[light.shadowsDataIndex],
+                        textures.normalTex, fragment_in.lightViewFragPos[light.shadowsDataIndex]);
             }
             break;
 
@@ -268,7 +275,7 @@ vec3 CalculateLighting()
     // Directional light
     LightCalcResult directionalLightRes;
     directionalLightRes = CalculateDirectionalLight(textures);
-
+    
     totalColorResult.diffuse  += directionalLightRes.diffuse;
     totalColorResult.specular += directionalLightRes.specular;
 
@@ -277,8 +284,8 @@ vec3 CalculateLighting()
     const vec3 ambientVec  = lightColorAmbient * textures.diffuseTex;
     const vec3 emissionVec = textures.emissionTex;
 
-    const vec3 finalColor = ambientVec + totalColorResult.diffuse
-            + totalColorResult.specular + emissionVec;
+    const vec3 finalColor = ambientVec + totalColorResult.diffuse.xyz
+            + totalColorResult.specular.xyz + emissionVec;
 
     vec3 res = (1.0 - shadow) * finalColor;
     return res;

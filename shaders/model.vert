@@ -25,14 +25,12 @@ out VERTEX_OUT
 {
     vec2 texCoord;
     mat3 TBN;
-
     vec3 worldFragPos;
     vec3 backupNormals;
 
     // Can't output structure, sadge
     vec3 lightsShadowsData[MAX_CONCURRENT_SHADOWS_SOURCES];
     vec3 lightViewFragPos[MAX_CONCURRENT_SHADOWS_SOURCES];
-
 } vertex_out;
 
 

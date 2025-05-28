@@ -48,7 +48,7 @@ bool Core::Initialize()
     _assetManager.AddEntityToLoad(groundObject);
     glm::mat4 groundModel = glm::mat4(1.0f);
     groundModel = glm::translate(groundModel, glm::vec3(0.0f, 0.0f, 0.0f));
-    groundModel = glm::scale(groundModel, glm::vec3(1.5f));
+    groundModel = glm::scale(groundModel, glm::vec3(5   .0f));
     _assetManager.ApplyTransformation(groundObject.name, groundModel);
 
     Temple templeObject(_assetManager);
@@ -93,6 +93,7 @@ void Core::Update()
     SamuraiCameras::g_activeCamera->Update(Window::GetWindowPointer());
     _collision.Update();
     _editor.Update();
+    _renderInstance.Update(Window::GetWindowPointer());
 
     // passing light pos in view to the shader
     // const glm::vec3 lightPosView = _lanternsObjects.LightPositionViewSpace(_camera.GetMVP());

@@ -204,6 +204,7 @@ void RenderManager::BindAdditionalTextures(const RenderPassType type)
     }
 }
 
+
 void RenderManager::DrawMainScene(AssetManager &manager)
 {
     const RenderPassType passType = RenderPassType::RENDER_MAIN;

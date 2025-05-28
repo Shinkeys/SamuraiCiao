@@ -18,6 +18,8 @@ struct Keys
 
     // If some object selected, gizmo is displayed. This variable is used to cancel it
     bool cancelSelection { false };
+
+    bool debugScene{ false };
 };
 
 struct Mouse

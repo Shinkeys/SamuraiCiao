@@ -75,11 +75,8 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
 
 
         const glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, _nearPlane, _farPlane);
-        for(const auto& light : _lightSources->GetLightSources())
+        for(const auto& light : _lightSources->GetLightsInfluencingShadows())
         {
-            if (light.second.type != LightType::LIGHT_DIRECTIONAL)
-                continue;
-
             glm::mat4 lightMatrix = glm::mat4(1.0f);
             const std::string lightMatrixName = "lightMatrix";
 
@@ -89,8 +86,17 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
                 const glm::vec3 centerPointTemporary = glm::vec3(0.0f, 0.0f, -20.0f);
                 const glm::mat4 lightView = glm::lookAt(lightViewPoint, centerPointTemporary, glm::vec3(0.0f, 1.0f, 0.0f));
                 lightMatrix = lightProj * lightView;
-
             }
+            else if (light.second.type == LightType::LIGHT_POINT)
+            {
+                const glm::vec3 lightViewPoint = light.second.lightsShadowsData;
+                const glm::vec3 centerPointTemporary = glm::vec3(0.0f, 0.0f, 0.0f);
+                const glm::mat4 lightView = glm::lookAt(lightViewPoint, centerPointTemporary, glm::vec3(0.0f, 1.0f, 0.0f));
+                lightMatrix = lightProj * lightView;
+            }
+
+
+
             // adding this matrix to draw in main pass too
             MatrixDesc matrixDesc;
             matrixDesc.data = std::move(lightMatrix);
@@ -99,7 +105,6 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
             RenderManager::AttachMatrixToBind(matrixDesc);
 
             RenderManager::DrawDepthPass(manager, matrixDesc.data);
-
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

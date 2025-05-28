@@ -4,43 +4,56 @@
 #include "../../headers/systems/renderManager.h"
 #include "../../headers/systems/camera.h"
 #include "../../headers/backend/openglbackend.h"
-
-
 #include "../../headers/types/random.h"
+#include "../../headers/utilities/geometryUtil.h"
 
 void LightSources::Prepare()
 {
     LightDescriptor lightDesc;
     std::string lightName = "Red";
+    
+
+
     lightDesc.type = LightType::LIGHT_POINT;
-    lightDesc.data = glm::vec4(0.0f, 5.0f, 25.0f, 1.0f);
+    lightDesc.data = glm::vec4(0.0f, 5.0f, 17.0f, 1.0f);
     lightDesc.color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     AddLightSourceDesc(lightDesc, lightName, true);
 
-    lightName = "Green";
-    lightDesc.type = LightType::LIGHT_POINT;
-    lightDesc.data = glm::vec4(0.0f, 5.0f, -25.0f, 1.0f);
-    lightDesc.color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-    AddLightSourceDesc(lightDesc, lightName, false);
 
-    lightName = "Blue";
-    lightDesc.type = LightType::LIGHT_POINT;
-    lightDesc.data = glm::vec4(0.0f, 5.0f, 10.0f, 1.0f);
-    lightDesc.color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-    AddLightSourceDesc(lightDesc, lightName, false);
+    //lightName = "Green";
+    //lightDesc.type = LightType::LIGHT_POINT;
+    //lightDesc.data = glm::vec4(0.0f, 5.0f, -25.0f, 1.0f);
+    //lightDesc.color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+    //AddLightSourceDesc(lightDesc, lightName, false);
 
-     /*for (int j = 0; j < 4; ++j)
+    //lightName = "Blue";
+    //lightDesc.type = LightType::LIGHT_POINT;
+    //lightDesc.data = glm::vec4(0.0f, 5.0f, 10.0f, 1.0f);
+    //lightDesc.color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    //AddLightSourceDesc(lightDesc, lightName, false);
+
+
+    float lastPos = -150.0f;
+    float lastX = -150.0f;
+     for (int j = 0; j < 4; ++j)
      {
-         for (int i = 0; i < 32; ++i)
+         for (int i = 0; i < 64; ++i)
          {
              lightName = lightName + std::to_string(j) + "_" + std::to_string(i);
-             lightDesc.data = glm::vec4(0.0f, 5.0f, static_cast<float>(j) + static_cast<float>(i), 1.0f);
+             lightDesc.data = glm::vec4(Random::RandomFloat(-150.0f, 150.0f), 5.0f, Random::RandomFloat(-150.0f, 150.0f), 1.0f);
+             
              lightDesc.type = LightType::LIGHT_POINT;
-             lightDesc.color = glm::vec4(Random::RandomFloat(0.0f, 1.0f), Random::RandomFloat(0.0f, 1.0f), Random::RandomFloat(0.0f, 1.0f), 1.0f);
+             lightDesc.color = glm::vec4(Random::RandomFloat(0.0f, 1.0f), Random::RandomFloat(0.0f, 1.0f), 
+                 Random::RandomFloat(0.0f, 1.0f), 1.0f);
              AddLightSourceDesc(lightDesc, lightName, false);
+
+             lastX += 15.0f;
+             lastPos += 15.0f;
+
+             
          }
     
-     }*/
+     }
 
 
     CreateLightBuffers();
@@ -152,6 +165,7 @@ void LightSources::AddLightSourceWithShadowInfluence(const std::string& lightNam
     {
         duplicateIt->second.lightsShadowsData = lightDesc.data;
         duplicateIt->second.affectingShadows = true;
+        duplicateIt->second.type = lightDesc.type;
         return;
     }
 
@@ -163,6 +177,7 @@ void LightSources::AddLightSourceWithShadowInfluence(const std::string& lightNam
             _lightsForShadowsStorage[i].first = lightName;
             _lightsForShadowsStorage[i].second.lightsShadowsData = lightDesc.data;
             _lightsForShadowsStorage[i].second.affectingShadows = true;
+            _lightsForShadowsStorage[i].second.type = lightDesc.type;
 
             // Storing index into shadows storage buffer
             lightDesc.shadowsDataIndex = i;
@@ -188,6 +203,7 @@ void LightSources::AddLightSourceWithShadowInfluence(const std::string& lightNam
 
     _lightsForShadowsStorage[newIndex].first = lightName;
     _lightsForShadowsStorage[newIndex].second.lightsShadowsData = lightDesc.data;
+    _lightsForShadowsStorage[newIndex].second.type = lightDesc.type;
 
     // // removing state from the previous element
     // auto it = _lightsStorage.find(lightName);

@@ -35,6 +35,7 @@ private:
     std::unordered_map<std::string, LightDescriptor> _lightsStorage;
     glm::vec3 _directionalLightDir = glm::vec3(0.0f, 1.5f, 4.5f);
 
+
     std::array<std::pair<std::string, LightsAffectingShadowsDesc>, LightDefines::g_max_lights_affecting_shadows> _lightsForShadowsStorage;
     CreateLightDesc _createLightDesc { };
 

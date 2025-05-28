@@ -28,13 +28,14 @@ struct LightDescriptor
 struct LightsAffectingShadowsDesc
 {
     glm::vec3 lightsShadowsData = glm::vec3(-100.0f);
+    LightType type = LightType::LIGHT_POINT;
     bool affectingShadows = false; // If > 0, then light data is filled
 };
 
 
 namespace LightDefines
 {
-    inline constexpr int32_t g_max_lights_per_tile = 128;
+    inline constexpr int32_t g_max_lights_per_tile = 64;
     inline constexpr int32_t g_max_lights_affecting_shadows = 4;
     inline constexpr int32_t g_max_lights_simultaneously = 1024;
 };

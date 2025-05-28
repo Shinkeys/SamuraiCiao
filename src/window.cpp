@@ -1,7 +1,7 @@
 #include "../headers/window.h"
 #include "../headers/systems/interface.h"
 
-
+ 
 Window::~Window()
 {
     Cleanup();
@@ -22,7 +22,6 @@ bool Window::Initialize()
 
     _lastMouseHeight = static_cast<float>(_height) / 2.0f;
     _lastMouseWidth = static_cast<float>(_width) / 2.0f;
-
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -52,6 +51,8 @@ bool Window::Initialize()
 
     
     glfwSetWindowUserPointer(_window, this);
+    // Making fullscreen
+    // glfwSetWindowMonitor(_window, primaryMonitor, 0, 0, _width, _height, videoMode->refreshRate);
     glfwSetFramebufferSizeCallback(_window, FramebufferSizeCallback);
     glfwSetCursorPosCallback(_window, CursorPosCallback);
     glfwSetKeyCallback(_window, KeyCallback);
@@ -193,6 +194,12 @@ void Window::ProceedKeys(int key)
             EnableCursor();
         else
             DisableCursor();
+    }
+
+    if (key == GLFW_KEY_F3)
+    {
+        _keys.debugScene = !_keys.debugScene;
+
     }
 }
 void Window::ResetKey(int key)

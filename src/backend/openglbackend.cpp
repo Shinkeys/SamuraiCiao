@@ -104,10 +104,18 @@ ErrorCodes_Backend OpenglBackend::BindModelEBO(EBOSetupUnskinned& setup)
     glGenBuffers(1, &setup.EBO);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, setup.EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, setup.indices.size() * sizeof(uint32_t), setup.indices.data(), GL_STATIC_DRAW);
-
     glBindBuffer(GL_ARRAY_BUFFER, setup.VBO);
-    glBufferData(GL_ARRAY_BUFFER, setup.vertices.size() * sizeof(glm::vec3), setup.vertices.data(), GL_STATIC_DRAW);
+
+    if (setup.type == 0x00)
+    {
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, setup.indices.size() * sizeof(uint32_t), setup.indices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, setup.vertices.size() * sizeof(glm::vec3), setup.vertices.data(), GL_STATIC_DRAW);
+    }
+    else
+    {
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, setup.indices.size() * sizeof(uint32_t), setup.indices.data(), setup.type);
+        glBufferData(GL_ARRAY_BUFFER, setup.vertices.size() * sizeof(glm::vec3), setup.vertices.data(), setup.type);
+    }
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
