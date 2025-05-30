@@ -10,6 +10,7 @@ Originally this engine started it's way on Linux/vscode using OpenGL functionali
 You can still build it on Windows using CMake.
 
 # What's already done
+[x] Forward+ rendering<br>
 [x] Mesh loader<br>
 [x] Basic lighting and shadows<br>
 [x] Gamma correction<br>

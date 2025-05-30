@@ -55,6 +55,7 @@ class ForwardPlusRender
 private:
     LightSources* _lightSources = nullptr;
 
+    bool _drawShadows{ true };
 
     Shader _lightCullCompute;
 
@@ -76,6 +77,7 @@ private:
     void DebugRenderPass();
     void SetUniformsForRender(Shader& shader) const;
 public:
+    void HandleInterface();
     void PassLightSources(LightSources& lightSources);
     void Initialize(uint32_t width, uint32_t height);
     void Update(const Window* window);

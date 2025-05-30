@@ -52,6 +52,7 @@ private:
     virtual void Render() = 0;
 
     void HandleMouseSpin();
+
     
     // inputs
     Keys _keys;

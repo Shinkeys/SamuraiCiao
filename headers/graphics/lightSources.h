@@ -52,6 +52,7 @@ public:
     void InterfaceLightsCreation();
     const auto& GetLightSources() const { return _lightsStorage;}
     const auto& GetLightsInfluencingShadows() const { return _lightsForShadowsStorage; }
+    const auto& GetDirLightData() const { return _directionalLightDir; }
     const LightBuffersHandle& GetLightBuffersHandle() const { return _lightsBufferHandle; }
     glm::vec3 GetDirectionalLightDir() const { return _directionalLightDir; }
     void Prepare();

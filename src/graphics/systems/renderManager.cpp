@@ -145,8 +145,7 @@ void RenderManager::DrawDepthPass(AssetManager& manager, const glm::mat4& viewPr
     shader.UseShader();
     shader.SetMat4x4("VP", viewProj);
     for (auto mesh : _renderTypes.find(passType)->second)
-    {
-        
+    {        
         const glm::mat4 *transformation = manager.GetTransformMatrixByName(mesh->objDesc.name);
         if (transformation != nullptr)
         {

@@ -1,6 +1,7 @@
 #include "../../headers/systems/forwardPlus.h"
 #include "../../headers/systems/camera.h"
 #include "../../headers/systems/renderManager.h"
+#include "../../headers/systems/interface.h"
 
 
 // void ForwardPlusRender::GatherLightsInfo(const LightSources& lightsInstance)
@@ -122,12 +123,16 @@ void ForwardPlusRender::Initialize(uint32_t width, uint32_t height)
 }
 void ForwardPlusRender::SetUniformsForRender(Shader& shader) const
 {
-    glm::vec3 directionalLightDir = _lightSources->GetDirectionalLightDir();
-    shader.SetVec3("directionalLightDir", directionalLightDir);
+    if (_drawShadows)
+    {
+        glm::vec3 directionalLightDir = _lightSources->GetDirectionalLightDir();
+        shader.SetVec3("directionalLightDir", directionalLightDir);
+    }
     glm::vec3 cameraPosition = SamuraiCameras::g_activeCamera->GetPosition();
     shader.SetVec3("cameraPosition", cameraPosition);
     // TEMP
     shader.SetIVec2("screenDimension", glm::ivec2(2560, 1440));
+    shader.SetBool("drawShadows", _drawShadows);
 
     // binding lights grid for the main render pass
     glBindImageTexture(6, _lightCullInitializers.lightGridTexHandle, 0,  GL_FALSE, 0, GL_READ_ONLY, GL_RG32UI);
@@ -164,8 +169,11 @@ void ForwardPlusRender::Render(AssetManager& manager)
 
     glBindVertexArray(manager.GetAssetsVAO());
 
-    DepthPrePass(manager);
-    LightCullPass();
+    if (!_drawShadows)
+    {
+        DepthPrePass(manager);
+        LightCullPass();
+    }
 
 
     // Setting variables to the shader
@@ -180,13 +188,6 @@ void ForwardPlusRender::Render(AssetManager& manager)
     {
         auto& shader = shaderMainIt->second;
         shader.UseShader();
-        for (int32_t i = 0; i < LightDefines::g_max_lights_affecting_shadows; ++i)
-        {
-            const auto& descriptor = _lightSources->GetLightsInfluencingShadows()[i];
-            shader.SetVec3("lightsForShadows[" + std::to_string(i) + "].lightsShadowsData", descriptor.second.lightsShadowsData);
-            shader.SetBool("lightsForShadows[" + std::to_string(i) + "].lightForShadowsPresence", descriptor.second.affectingShadows);
-        }
-
         SetUniformsForRender(shader);
     }
     else
@@ -207,6 +208,11 @@ void ForwardPlusRender::DepthPrePass(AssetManager& manager) const
     const auto& matrices = SamuraiCameras::g_activeCamera->GetMVP();    
     RenderManager::DrawDepthPass(manager, matrices.projection * matrices.view);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void ForwardPlusRender::HandleInterface()
+{
+    ImGui::Checkbox("Shadows", &_drawShadows);
 }
 
 void ForwardPlusRender::Update(const Window* window)
@@ -230,7 +236,6 @@ void ForwardPlusRender::Update(const Window* window)
 
 void ForwardPlusRender::InitializeDepthBuffer(uint32_t width, uint32_t height)
 {
-    // generating scene from light point of view
     glGenFramebuffers(1, &_depthFBO.buffer);
     glBindFramebuffer(GL_FRAMEBUFFER, _depthFBO.buffer);
 

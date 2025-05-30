@@ -1,7 +1,6 @@
 #include "../headers/window.h"
 #include "../headers/systems/interface.h"
 
- 
 Window::~Window()
 {
     Cleanup();
@@ -39,6 +38,7 @@ bool Window::Initialize()
     }
 
     glfwMakeContextCurrent(_window);
+    glfwSwapInterval(1);
     // initialize GLAD
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -153,6 +153,7 @@ void Window::CursorPosCallback(GLFWwindow* window, double xPos, double yPos)
     app->ProceedMouseMovement(xPos, yPos);
 }
 
+
 void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     Window* app = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
@@ -236,13 +237,14 @@ void Window::KeyCallback(GLFWwindow* window, int key, int scan, int action, int 
 
 void Window::Run()
 {
-    if(!Initialize())
+    if (!Initialize())
     {
         std::cerr << "Unable to initialize window\n";
         return;
     }
     while(!glfwWindowShouldClose(_window))
     {
+
         HandleMouseSpin();
         Update();
         if(_keys.sceneEditor)
@@ -262,6 +264,9 @@ void Window::Cleanup()
     SamuraiInterface::DestroyImgui();
     glfwTerminate();
 }
+
+
+
 
 
 void Window::DisableCursor()

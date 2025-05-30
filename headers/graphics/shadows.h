@@ -11,8 +11,10 @@ class ShadowsHelper
 {
 private:
     // to rework
-    const float _nearPlane = 0.1f;
-    const float _farPlane = 500.0f;
+    const float _dirLightNearPlane = 0.1f;
+    const float _dirLightFarPlane = 500.0f;
+
+    const float _pointLightNearPlane = 0.07f;
     std::pair<uint32_t, uint32_t> _shadowTexExtent{0, 0};
     LightSources* _lightSources = nullptr;
     DepthFramebuffer _frameBuffer;

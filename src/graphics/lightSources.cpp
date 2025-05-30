@@ -14,10 +14,10 @@ void LightSources::Prepare()
     
 
 
-    lightDesc.type = LightType::LIGHT_POINT;
+    /*lightDesc.type = LightType::LIGHT_POINT;
     lightDesc.data = glm::vec4(0.0f, 5.0f, 17.0f, 1.0f);
     lightDesc.color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-    AddLightSourceDesc(lightDesc, lightName, true);
+    AddLightSourceDesc(lightDesc, lightName, true);*/
 
 
     //lightName = "Green";
@@ -37,19 +37,19 @@ void LightSources::Prepare()
     float lastX = -150.0f;
      for (int j = 0; j < 4; ++j)
      {
-         for (int i = 0; i < 64; ++i)
+         for (int i = 0; i < 256; ++i)
          {
              lightName = lightName + std::to_string(j) + "_" + std::to_string(i);
-             lightDesc.data = glm::vec4(Random::RandomFloat(-150.0f, 150.0f), 5.0f, Random::RandomFloat(-150.0f, 150.0f), 1.0f);
+             lightDesc.data = glm::vec4(Random::RandomFloat(-250.0, 250.0f), 5.0f, Random::RandomFloat(-250.0, 250.0f), 1.0f);
              
              lightDesc.type = LightType::LIGHT_POINT;
              lightDesc.color = glm::vec4(Random::RandomFloat(0.0f, 1.0f), Random::RandomFloat(0.0f, 1.0f), 
                  Random::RandomFloat(0.0f, 1.0f), 1.0f);
              AddLightSourceDesc(lightDesc, lightName, false);
-
+    
              lastX += 15.0f;
              lastPos += 15.0f;
-
+    
              
          }
     
@@ -166,6 +166,7 @@ void LightSources::AddLightSourceWithShadowInfluence(const std::string& lightNam
         duplicateIt->second.lightsShadowsData = lightDesc.data;
         duplicateIt->second.affectingShadows = true;
         duplicateIt->second.type = lightDesc.type;
+        duplicateIt->second.radius = lightDesc.radius;
         return;
     }
 
@@ -178,6 +179,7 @@ void LightSources::AddLightSourceWithShadowInfluence(const std::string& lightNam
             _lightsForShadowsStorage[i].second.lightsShadowsData = lightDesc.data;
             _lightsForShadowsStorage[i].second.affectingShadows = true;
             _lightsForShadowsStorage[i].second.type = lightDesc.type;
+            _lightsForShadowsStorage[i].second.radius = lightDesc.radius;
 
             // Storing index into shadows storage buffer
             lightDesc.shadowsDataIndex = i;
@@ -204,6 +206,7 @@ void LightSources::AddLightSourceWithShadowInfluence(const std::string& lightNam
     _lightsForShadowsStorage[newIndex].first = lightName;
     _lightsForShadowsStorage[newIndex].second.lightsShadowsData = lightDesc.data;
     _lightsForShadowsStorage[newIndex].second.type = lightDesc.type;
+    _lightsForShadowsStorage[newIndex].second.radius = lightDesc.radius;
 
     // // removing state from the previous element
     // auto it = _lightsStorage.find(lightName);

@@ -28,7 +28,8 @@ struct LightDescriptor
 struct LightsAffectingShadowsDesc
 {
     glm::vec3 lightsShadowsData = glm::vec3(-100.0f);
-    LightType type = LightType::LIGHT_POINT;
+    float radius = 15.0f;
+    LightType type = LightType::LIGHT_TYPES_COUNT;
     bool affectingShadows = false; // If > 0, then light data is filled
 };
 

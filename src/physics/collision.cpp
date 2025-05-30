@@ -1,4 +1,4 @@
-#include "../../headers/physics/collision.h"
+﻿#include "../../headers/physics/collision.h"
 #include "../../headers/systems/interface.h"
 #include "../../headers/backend/openglbackend.h"
 
@@ -385,7 +385,6 @@ void Collision::Update()
 {
     // PrePhysicsCamUpdate();
     // Calculate cam collision, new position...
-    
     _playerCollision.Update(_tempAllocator.get());
     
     _physSystem.Update(CollisionDefines::g_DeltaTime, CollisionDefines::g_CollisionSteps, _tempAllocator.get(), &_jobSystem);

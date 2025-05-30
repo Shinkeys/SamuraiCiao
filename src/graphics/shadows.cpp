@@ -23,14 +23,14 @@ void ShadowsHelper::Prepare()
     glGenTextures(1, &_frameBuffer.texture);
     glBindTexture(GL_TEXTURE_2D, _frameBuffer.texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, _shadowTexExtent.first, 
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, _shadowTexExtent.first,
         _shadowTexExtent.second, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
 
-    constexpr std::array<float, 4> clampColor = {0.5f, 0.5f, 0.5f, 1.0f};
+    constexpr std::array<float, 4> clampColor = { 1.0f, 1.0f, 1.0f, 1.0f };
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, clampColor.data());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
@@ -40,12 +40,12 @@ void ShadowsHelper::Prepare()
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         std::cout << "Framebuffer incomplete\n";
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);   
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Creating shader for depth passes
     Shader depthShader;
@@ -73,40 +73,30 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
         glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer.buffer);
         OpenglBackend::SetViewport(_shadowTexExtent.first, _shadowTexExtent.second);
 
+        const auto& light = _lightSources->GetDirLightData();
+        glm::mat4 lightMatrix = glm::mat4(1.0f);
+        std::string lightMatrixName = "";
 
-        const glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, _nearPlane, _farPlane);
-        for(const auto& light : _lightSources->GetLightsInfluencingShadows())
-        {
-            glm::mat4 lightMatrix = glm::mat4(1.0f);
-            const std::string lightMatrixName = "lightMatrix";
-
-            if(light.second.type == LightType::LIGHT_DIRECTIONAL)
-            {
-                const glm::vec3 lightViewPoint = glm::vec3(0.0f, 150.0f, 355.0f);
-                const glm::vec3 centerPointTemporary = glm::vec3(0.0f, 0.0f, -20.0f);
-                const glm::mat4 lightView = glm::lookAt(lightViewPoint, centerPointTemporary, glm::vec3(0.0f, 1.0f, 0.0f));
-                lightMatrix = lightProj * lightView;
-            }
-            else if (light.second.type == LightType::LIGHT_POINT)
-            {
-                const glm::vec3 lightViewPoint = light.second.lightsShadowsData;
-                const glm::vec3 centerPointTemporary = glm::vec3(0.0f, 0.0f, 0.0f);
-                const glm::mat4 lightView = glm::lookAt(lightViewPoint, centerPointTemporary, glm::vec3(0.0f, 1.0f, 0.0f));
-                lightMatrix = lightProj * lightView;
-            }
+        lightMatrixName = "lightMatrixDirLight";
+        const glm::mat4 lightProj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, _dirLightNearPlane, _dirLightFarPlane);
+        const glm::vec3 lightViewPoint = glm::vec3(0.0f, 150.0f, 355.0f);
+        const glm::vec3 centerPointTemporary = glm::vec3(0.0f, 0.0f, -20.0f);
+        const glm::mat4 lightView = glm::lookAt(lightViewPoint, centerPointTemporary, glm::vec3(0.0f, 1.0f, 0.0f));
+        lightMatrix = lightProj * lightView;
 
 
+        // adding this matrix to draw in main pass too
+        MatrixDesc matrixDesc;
+        matrixDesc.data = lightMatrix;
+        matrixDesc.name = lightMatrixName;
+        matrixDesc.type = RenderPassType::RENDER_MAIN;
+        RenderManager::AttachMatrixToBind(matrixDesc);
 
-            // adding this matrix to draw in main pass too
-            MatrixDesc matrixDesc;
-            matrixDesc.data = std::move(lightMatrix);
-            matrixDesc.name = lightMatrixName;
-            matrixDesc.type = RenderPassType::RENDER_MAIN;
-            RenderManager::AttachMatrixToBind(matrixDesc);
+        // Binding depth texture
+        
 
-            RenderManager::DrawDepthPass(manager, matrixDesc.data);
-        }
-
+        RenderManager::DrawDepthPass(manager, matrixDesc.data);
+            
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
     else std::cout << "Lanterns object is nullptr\n";
@@ -116,16 +106,17 @@ void ShadowsHelper::DrawDepthScene(AssetManager& manager)
 
 void ShadowsHelper::DebugShadows()
 {
-    static bool shadows = false;
-    ImGui::Checkbox("Shadows", &shadows);
-    if(shadows)
-    {  
-       ImGui::Text("Depth texture:");
-       // For flip
-       ImVec2 uv0 = ImVec2(1.0f, 1.0f);
-       ImVec2 uv1 = ImVec2(0.0f, 0.0f);
-       ImGui::Image(_frameBuffer.texture, ImVec2{512.0f, 512.0f}, uv0, uv1);
-    }
+    //static bool shadows = false;
+    //ImGui::Checkbox("Shadows", &shadows);
+    //if(shadows)
+    //{  
+    //   
+    //   ImGui::Text("Depth texture:");
+    //   // For flip
+    //   ImVec2 uv0 = ImVec2(1.0f, 1.0f);
+    //   ImVec2 uv1 = ImVec2(0.0f, 0.0f);
+    //   ImGui::Image(_frameBuffer.texture, ImVec2{512.0f, 512.0f}, uv0, uv1);
+    //}
 }
 
 void ShadowsHelper::MakeDynamicArea(float zNear, float zFar)

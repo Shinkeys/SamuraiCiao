@@ -27,17 +27,17 @@ bool Core::Initialize()
     model = glm::scale(model, glm::vec3(0.5f));
     _assetManager.ApplyTransformation(characterObject.name, model);
 
-    ObjectDescriptor sponza;
-    sponza.name     = "sponza";
-    sponza.fileName = "sponza.obj";
-    sponza.storageFolder = "Sponza";
-    // Temporary as doesn't need collider for now
-    sponza.type = EntityType::TYPE_COMPOUND_DYNAMIC_MESH;
-    _assetManager.AddEntityToLoad(sponza);
-    glm::mat4 sponzaModel = glm::mat4(1.0f);
-    sponzaModel = glm::translate(sponzaModel, glm::vec3(100.0f, 0.0f, 0.0f));
-    sponzaModel = glm::scale(sponzaModel, glm::vec3(0.03f));
-    _assetManager.ApplyTransformation(sponza.name, sponzaModel);
+    //ObjectDescriptor sponza;
+    //sponza.name     = "sponza";
+    //sponza.fileName = "sponza.obj";
+    //sponza.storageFolder = "Sponza";
+    //// Temporary as doesn't need collider for now
+    //sponza.type = EntityType::TYPE_COMPOUND_DYNAMIC_MESH;
+    //_assetManager.AddEntityToLoad(sponza);
+    //glm::mat4 sponzaModel = glm::mat4(1.0f);
+    //sponzaModel = glm::translate(sponzaModel, glm::vec3(100.0f, 0.0f, 0.0f));
+    //sponzaModel = glm::scale(sponzaModel, glm::vec3(0.03f));
+    //_assetManager.ApplyTransformation(sponza.name, sponzaModel);
 
 
     ObjectDescriptor groundObject;
@@ -48,7 +48,7 @@ bool Core::Initialize()
     _assetManager.AddEntityToLoad(groundObject);
     glm::mat4 groundModel = glm::mat4(1.0f);
     groundModel = glm::translate(groundModel, glm::vec3(0.0f, 0.0f, 0.0f));
-    groundModel = glm::scale(groundModel, glm::vec3(5   .0f));
+    groundModel = glm::scale(groundModel, glm::vec3(5.0f));
     _assetManager.ApplyTransformation(groundObject.name, groundModel);
 
     Temple templeObject(_assetManager);
@@ -64,7 +64,7 @@ bool Core::Initialize()
     
     RenderManager::DispatchMeshToDraw(characterObject, _assetManager);
     RenderManager::DispatchMeshToDraw(groundObject, _assetManager);
-    RenderManager::DispatchMeshToDraw(sponza, _assetManager);
+    //RenderManager::DispatchMeshToDraw(sponza, _assetManager);
     RenderManager::AddShaderByType(std::move(mainShader), RenderPassType::RENDER_MAIN);
     
     // shadows
@@ -126,6 +126,7 @@ void Core::Render()
     
     InterfaceUpdate();
 
+
     glfwSwapBuffers(Window::_window);
     glfwPollEvents();
 }
@@ -142,6 +143,7 @@ void Core::InterfaceUpdate()
         _collision.InterfaceUpdate();
         _editor.InterfaceUpdate();
         _lightSources.InterfaceLightsCreation();
+        _renderInstance.HandleInterface();
 
         // must be last: finishing frame
         SamuraiInterface::RenderImgui();

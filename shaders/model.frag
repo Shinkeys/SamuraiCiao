@@ -4,6 +4,7 @@ layout(binding = 1) uniform sampler2D diffuse;
 layout(binding = 2) uniform sampler2D specular;
 layout(binding = 3) uniform sampler2D normal;
 layout(binding = 4) uniform sampler2D emission;
+// layout(binding = 5) uniform sampler2DArray shadowsTexturesArray;
 layout(binding = 5) uniform sampler2D shadowsTexture;
 
 // Lights grid for forward+ render
@@ -20,8 +21,8 @@ struct ObjectTextures
     vec3 normalTex;
 };
 
-const int LIGHT_POINT = 1;
-
+const int LIGHT_TYPE_DIRECTIONAL = 0;
+const int LIGHT_TYPE_POINT = 1;
 
 const uint MAX_CONCURRENT_SHADOWS_SOURCES = 4;
 in VERTEX_OUT
@@ -35,6 +36,10 @@ in VERTEX_OUT
 // for shadows
     vec3 lightsShadowsData[MAX_CONCURRENT_SHADOWS_SOURCES];
     vec3 lightViewFragPos[MAX_CONCURRENT_SHADOWS_SOURCES];
+    flat int  lightShadowsType[MAX_CONCURRENT_SHADOWS_SOURCES];
+
+    vec3 dirLightShadowsData;
+    vec3 dirLightFragPos;
 } fragment_in;
 
 
@@ -64,17 +69,17 @@ layout(std430, binding = 8) buffer lightsGlobalIndBuffer
 
 struct LightCalcResult
 {
-    vec4 ambient;
-    vec4 diffuse;
-    vec4 emission;
-    vec4 specular;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 emission;
+    vec3 specular;
 };
 
 uniform vec3 directionalLightDir;
 uniform vec3 cameraPosition;
 uniform bool normalMapping;
 uniform ivec2 screenDimension;
-
+uniform bool drawShadows;
 
 float CalculateShadows(vec3 lightViewFragPos, vec3 normals, vec3 lightViewLightDir)
 {
@@ -163,10 +168,10 @@ LightCalcResult CalculatePointLight(ObjectTextures textures, LightDesc lightDesc
     specularVec *= attenuation;
 
     LightCalcResult result;
-    result.ambient = vec4(ambientVec, 1.0);
-    result.specular = vec4(specularVec, 1.0);
-    result.diffuse = vec4(diffuseVec, 1.0);
-    result.emission = vec4(emissionVec, 1.0);
+    result.ambient = ambientVec;
+    result.specular = specularVec;
+    result.diffuse = diffuseVec;
+    result.emission = emissionVec;
     return result;
 
 
@@ -200,10 +205,10 @@ LightCalcResult CalculateDirectionalLight(ObjectTextures textures)
     const vec3 emissionVec = textures.emissionTex;
 
     LightCalcResult result;
-    result.ambient = vec4(ambientVec, 1.0);
-    result.specular = vec4(specularVec, 1.0);
-    result.diffuse = vec4(diffuseVec, 1.0);
-    result.emission = vec4(emissionVec, 1.0);
+    result.ambient = ambientVec;
+    result.specular = specularVec;
+    result.diffuse = diffuseVec;
+    result.emission = emissionVec;
     return result;
 }
 
@@ -239,56 +244,56 @@ vec3 CalculateLighting()
     uvec2 tileData = imageLoad(lightsGrid, location).xy;
 
     LightCalcResult totalColorResult;
-    totalColorResult.ambient = vec4(0.0, 0.0, 0.0, 1.0);
-    totalColorResult.diffuse = vec4(0.0, 0.0, 0.0, 1.0);
-    totalColorResult.specular = vec4(0.0, 0.0, 0.0, 1.0);
-    totalColorResult.emission = vec4(0.0, 0.0, 0.0, 1.0);
+    totalColorResult.ambient  = vec3(0.0, 0.0, 0.0);
+    totalColorResult.diffuse  = vec3(0.0, 0.0, 0.0);
+    totalColorResult.specular = vec3(0.0, 0.0, 0.0);
+    totalColorResult.emission = vec3(0.0, 0.0, 0.0);
     float shadow = 0.0;
-    for(uint i = 0; i < tileData.y; ++i)
+    if(!drawShadows)
     {
-        uint lightIndex = lightsIndexList[i + tileData.x];
-        LightDesc light = lights[lightIndex];
+        for(uint i = 0; i < tileData.y; ++i)
+        {
+            uint lightIndex = lightsIndexList[i + tileData.x];
+            LightDesc light = lights[lightIndex];
 
-        LightCalcResult currentItColorRes;
-        switch(light.type)
+            LightCalcResult currentItColorRes;
+            switch(light.type)
             {
 
-        case LIGHT_POINT:
-            currentItColorRes = CalculatePointLight(textures, light);
-            if(light.shadowsDataIndex != -1)
-            {
-                shadow += CalculateShadows(fragment_in.lightsShadowsData[light.shadowsDataIndex],
-                        textures.normalTex, fragment_in.lightViewFragPos[light.shadowsDataIndex]);
+            case LIGHT_TYPE_POINT:
+                currentItColorRes = CalculatePointLight(textures, light);
+                break;
+
+            // TO DO: SPOT LIGHT IF WOULD NEED
+            default:
+                break;
             }
-            break;
-
-        // TO DO: SPOT LIGHT IF WOULD NEED
-        default:
-            break;
+            totalColorResult.diffuse  += currentItColorRes.diffuse;
+            totalColorResult.specular += currentItColorRes.specular;
         }
 
+        vec3 finalColor = vec3(0.0);
+        // Need to calculate ambient and emission only once.
+        const float lightColorAmbient = 0.15;
+        const vec3 ambientVec  = lightColorAmbient * textures.diffuseTex;
+        const vec3 emissionVec = textures.emissionTex;
 
-        totalColorResult.diffuse  += currentItColorRes.diffuse;
-        totalColorResult.specular += currentItColorRes.specular;
+        finalColor = ambientVec + totalColorResult.diffuse.xyz
+        + totalColorResult.specular.xyz + emissionVec;
+
+        return finalColor;
     }
 
-    // Directional light
-    LightCalcResult directionalLightRes;
-    directionalLightRes = CalculateDirectionalLight(textures);
+    vec3 shadowedLight = vec3(0.0);
     
-    totalColorResult.diffuse  += directionalLightRes.diffuse;
-    totalColorResult.specular += directionalLightRes.specular;
-
-    // Need to calculate ambient and emission only once.
-    const float lightColorAmbient = 0.15;
-    const vec3 ambientVec  = lightColorAmbient * textures.diffuseTex;
-    const vec3 emissionVec = textures.emissionTex;
-
-    const vec3 finalColor = ambientVec + totalColorResult.diffuse.xyz
-            + totalColorResult.specular.xyz + emissionVec;
-
-    vec3 res = (1.0 - shadow) * finalColor;
-    return res;
+    LightCalcResult directionalLightRes;
+      directionalLightRes = CalculateDirectionalLight(textures);
+    
+    shadow = CalculateShadows(fragment_in.dirLightFragPos,
+        textures.normalTex, fragment_in.dirLightShadowsData);
+    shadowedLight = (1.0 - shadow) * (directionalLightRes.diffuse + directionalLightRes.specular);
+    return shadowedLight;
+    
 }
 
 
